@@ -1,0 +1,103 @@
+import Link from "next/link";
+import {
+  BarChart3,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  Settings2,
+  Users,
+  Wrench,
+} from "lucide-react";
+import { formatPrice, type AdminDashboardData } from "@/lib/ev-domain";
+import { cn } from "@/lib/utils";
+
+const items = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "appointments", label: "Appointments", icon: CalendarDays },
+  { id: "customers", label: "Customers", icon: Users },
+  { id: "users", label: "Users", icon: Wrench },
+  { id: "emails", label: "Emails", icon: Mail },
+  { id: "invoices", label: "Invoices", icon: FileText },
+  { id: "payments", label: "Payments", icon: CreditCard },
+  { id: "settings", label: "Settings", icon: Settings2 },
+] as const;
+
+export type AdminView = (typeof items)[number]["id"];
+
+export function AdminSidebar({
+  dashboard,
+  sessionEmail,
+  view,
+}: {
+  dashboard: AdminDashboardData;
+  sessionEmail: string;
+  view: string;
+}) {
+  return (
+    <aside className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-sm shadow-slate-200/70 backdrop-blur xl:sticky xl:top-5 xl:self-start">
+      <div className="border-b border-slate-100 px-4 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-teal-300">
+            EV
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">EV Check</p>
+            <p className="mt-1 text-sm font-semibold text-slate-950">Command center</p>
+            <p className="truncate text-xs text-slate-500">{sessionEmail}</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex gap-2 overflow-x-auto px-3 py-3 xl:grid xl:grid-cols-1 xl:overflow-visible">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = view === item.id;
+          return (
+            <Link
+              key={item.id}
+              href={`/admin?view=${item.id}`}
+              className={cn(
+                "flex min-w-[9rem] items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition xl:min-w-0",
+                active
+                  ? "bg-teal-600 text-white shadow-sm shadow-teal-500/30"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-slate-100 px-4 py-4">
+        <div className="grid grid-cols-3 gap-2">
+          <SidebarStat label="Today" value={String(dashboard.stats.todayAppointments)} />
+          <SidebarStat label="Open" value={String(dashboard.stats.pendingAppointments)} />
+          <SidebarStat label="Due" value={formatPrice(dashboard.stats.outstandingRevenue)} />
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 px-4 py-4">
+        <form action="/api/admin/logout" method="POST">
+          <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
+            <LogOut className="h-4 w-4" />
+            Log out
+          </button>
+        </form>
+      </div>
+    </aside>
+  );
+}
+
+function SidebarStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2">
+      <span className="block truncate text-[11px] font-medium text-slate-500">{label}</span>
+      <strong className="mt-1 block truncate text-xs text-slate-950">{value}</strong>
+    </div>
+  );
+}

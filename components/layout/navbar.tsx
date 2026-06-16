@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import useScroll from "@/lib/hooks/use-scroll";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { LayoutDashboard } from "lucide-react";
 
 export default function NavBar() {
@@ -22,31 +21,20 @@ export default function NavBar() {
           <Link href="/" className="flex items-center font-display text-2xl">
             <Image
               src="/logo.png"
-              alt="Precedent logo"
+              alt="EV Check logo"
               width="30"
               height="30"
               className="mr-2 rounded-sm"
             ></Image>
-            <p>Precedent</p>
+            <p>EV Check</p>
           </Link>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="rounded-full border border-black bg-black px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black">
-                Sign In
-              </button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton>
-              <UserButton.MenuItems>
-                <UserButton.Link
-                  label="Dashboard"
-                  labelIcon={<LayoutDashboard className="h-4 w-4" />}
-                  href="/"
-                />
-              </UserButton.MenuItems>
-            </UserButton>
-          </SignedIn>
+          <Link
+            href="/admin/login"
+            className="inline-flex items-center gap-2 rounded-full border border-black bg-black px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-black"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
         </div>
       </div>
     </>

@@ -1,0 +1,577 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import {
+  BarChart3,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Mail,
+  Search,
+  Settings2,
+  User,
+  Users,
+} from "lucide-react";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminSidebar, type AdminView } from "@/components/admin/admin-sidebar";
+import { KpiCard } from "@/components/admin/kpi-card";
+import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  formatPrice,
+  formatShortDate,
+  invoiceLabels,
+  paymentLabels,
+  statusLabels,
+  type AdminDashboardData,
+  type Appointment,
+  type AppointmentStatus,
+} from "@/lib/ev-domain";
+import { getAdminDashboardData } from "@/lib/server/dashboard";
+import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
+import { isMailConfigured } from "@/lib/server/mail";
+import { cn } from "@/lib/utils";
+
+export const metadata = {
+  title: "Admin - EV Check",
+  robots: { index: false, follow: false },
+};
+
+const views: AdminView[] = [
+  "overview",
+  "appointments",
+  "customers",
+  "users",
+  "emails",
+  "invoices",
+  "payments",
+  "settings",
+];
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams?: { view?: string; q?: string; status?: string; saved?: string; error?: string };
+}) {
+  const session = verifySessionToken(cookies().get(ADMIN_COOKIE_NAME)?.value, "admin");
+  if (!session) redirect("/admin/login");
+
+  const dashboard = await getAdminDashboardData();
+  const view = views.includes(searchParams?.view as AdminView)
+    ? (searchParams?.view as AdminView)
+    : "overview";
+  const query = String(searchParams?.q || "").trim().toLowerCase();
+  const status = String(searchParams?.status || "");
+  const visibleAppointments = dashboard.appointments.filter((appointment) => {
+    const matchesQuery =
+      !query ||
+      [
+        appointment.customerName,
+        appointment.customerEmail,
+        appointment.customerPhone,
+        appointment.registrationNumber,
+        appointment.vehicleLabel,
+        appointment.serviceLabel,
+        appointment.areaName,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    const matchesStatus = !status || appointment.status === status;
+    return matchesQuery && matchesStatus;
+  });
+
+  return (
+    <AdminShell>
+      <div className="grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)]">
+        <AdminSidebar dashboard={dashboard} sessionEmail={session.email} view={view} />
+        <section className="min-w-0 space-y-4">
+          {!dashboard.databaseConfigured ? (
+            <Notice tone="amber">
+              DATABASE_URL is not configured, so EV Check is showing demo dashboard data. Add the
+              database env var to persist customers, appointments, settings, users, and emails.
+            </Notice>
+          ) : null}
+          {dashboard.databaseError ? <Notice tone="rose">{dashboard.databaseError}</Notice> : null}
+          {searchParams?.saved ? <Notice tone="teal">Changes saved.</Notice> : null}
+          {searchParams?.error ? <Notice tone="rose">The action could not be completed.</Notice> : null}
+
+          {view === "overview" ? <Overview dashboard={dashboard} appointments={visibleAppointments} /> : null}
+          {view === "appointments" ? (
+            <AppointmentsView
+              appointments={visibleAppointments}
+              query={query}
+              status={status}
+              dashboard={dashboard}
+            />
+          ) : null}
+          {view === "customers" ? <CustomersView dashboard={dashboard} /> : null}
+          {view === "users" ? <UsersView dashboard={dashboard} /> : null}
+          {view === "emails" ? <EmailsView dashboard={dashboard} /> : null}
+          {view === "invoices" ? <InvoicesView appointments={visibleAppointments} /> : null}
+          {view === "payments" ? <PaymentsView appointments={visibleAppointments} /> : null}
+          {view === "settings" ? <SettingsView dashboard={dashboard} /> : null}
+        </section>
+      </div>
+    </AdminShell>
+  );
+}
+
+function Notice({ children, tone }: { children: React.ReactNode; tone: "amber" | "rose" | "teal" }) {
+  const styles = {
+    amber: "border-amber-200 bg-amber-50 text-amber-800",
+    rose: "border-rose-200 bg-rose-50 text-rose-700",
+    teal: "border-teal-200 bg-teal-50 text-teal-700",
+  };
+  return <div className={cn("rounded-2xl border px-4 py-3 text-sm font-medium", styles[tone])}>{children}</div>;
+}
+
+function Panel({
+  title,
+  description,
+  icon: Icon,
+  children,
+  action,
+}: {
+  title: string;
+  description?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm shadow-slate-200/70 backdrop-blur">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+            <Icon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+            {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
+          </div>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Overview({
+  dashboard,
+  appointments,
+}: {
+  dashboard: AdminDashboardData;
+  appointments: Appointment[];
+}) {
+  const upcoming = appointments
+    .filter((item) => item.status !== "cancelled")
+    .sort((a, b) => `${a.appointmentDate}T${a.appointmentTime}`.localeCompare(`${b.appointmentDate}T${b.appointmentTime}`))
+    .slice(0, 6);
+  const statusCounts = ["pending", "approved", "completed", "cancelled"].map((status) => ({
+    status: status as AppointmentStatus,
+    count: appointments.filter((item) => item.status === status).length,
+  }));
+  const maxCount = Math.max(1, ...statusCounts.map((item) => item.count));
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard label="Today" value={String(dashboard.stats.todayAppointments)} detail="Appointments today" icon={CalendarDays} />
+        <KpiCard label="Total" value={String(dashboard.stats.totalAppointments)} detail="All appointments" icon={FileText} tone="slate" />
+        <KpiCard label="Pending" value={String(dashboard.stats.pendingAppointments)} detail="Needs review" icon={BarChart3} tone="amber" />
+        <KpiCard label="Revenue" value={formatPrice(dashboard.stats.totalRevenue)} detail={`${formatPrice(dashboard.stats.outstandingRevenue)} open`} icon={CreditCard} tone="emerald" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <Panel title="Upcoming appointments" description="Next work that needs attention" icon={CalendarDays}>
+          <AppointmentTable appointments={upcoming} compact />
+        </Panel>
+
+        <Panel title="Status distribution" description="Operational balance across all checks" icon={BarChart3}>
+          <div className="grid gap-3">
+            {statusCounts.map((item) => (
+              <div key={item.status}>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-slate-700">{statusLabels[item.status]}</span>
+                  <span className="text-slate-500">{item.count}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-teal-600" style={{ width: `${(item.count / maxCount) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function AppointmentsView({
+  appointments,
+  query,
+  status,
+  dashboard,
+}: {
+  appointments: Appointment[];
+  query: string;
+  status: string;
+  dashboard: AdminDashboardData;
+}) {
+  return (
+    <Panel
+      title="Appointments"
+      description="Search, filter, approve, complete, cancel, and annotate EV checks."
+      icon={CalendarDays}
+      action={
+        <form className="flex flex-wrap items-center gap-2" action="/admin" method="GET">
+          <input type="hidden" name="view" value="appointments" />
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input name="q" defaultValue={query} className="w-56 pl-9" placeholder="Search appointments" />
+          </div>
+          <select
+            name="status"
+            defaultValue={status}
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10"
+          >
+            <option value="">All statuses</option>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <Button type="submit" variant="outline">Filter</Button>
+        </form>
+      }
+    >
+      <AppointmentTable appointments={appointments} editable databaseConfigured={dashboard.databaseConfigured} />
+    </Panel>
+  );
+}
+
+function AppointmentTable({
+  appointments,
+  compact = false,
+  editable = false,
+  databaseConfigured = false,
+}: {
+  appointments: Appointment[];
+  compact?: boolean;
+  editable?: boolean;
+  databaseConfigured?: boolean;
+}) {
+  if (appointments.length === 0) return <EmptyState text="No appointments match this view." />;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px] text-left text-sm">
+        <thead className="text-xs uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-slate-100">
+            <th className="px-3 py-3 font-semibold">Customer</th>
+            <th className="px-3 py-3 font-semibold">Vehicle</th>
+            <th className="px-3 py-3 font-semibold">Appointment</th>
+            <th className="px-3 py-3 font-semibold">Status</th>
+            <th className="px-3 py-3 font-semibold text-right">Total</th>
+            {editable ? <th className="px-3 py-3 font-semibold">Action</th> : null}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {appointments.map((appointment) => (
+            <tr key={appointment.id} className="align-top hover:bg-slate-50/70">
+              <td className="px-3 py-3">
+                <p className="font-semibold text-slate-950">{appointment.customerName}</p>
+                <p className="text-xs text-slate-500">{appointment.customerEmail}</p>
+              </td>
+              <td className="px-3 py-3">
+                <p className="font-semibold text-slate-800">{appointment.vehicleLabel}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{appointment.registrationNumber}</p>
+              </td>
+              <td className="px-3 py-3">
+                <p className="font-semibold text-slate-800">
+                  {formatShortDate(appointment.appointmentDate)} at {appointment.appointmentTime}
+                </p>
+                <p className="text-xs text-slate-500">{appointment.serviceLabel}</p>
+              </td>
+              <td className="px-3 py-3">
+                <div className="flex flex-wrap gap-1.5">
+                  <StatusBadge status={appointment.status} />
+                  {!compact ? <PaymentBadge status={appointment.paymentStatus} /> : null}
+                </div>
+              </td>
+              <td className="px-3 py-3 text-right font-semibold text-slate-950">{formatPrice(appointment.total)}</td>
+              {editable ? (
+                <td className="px-3 py-3">
+                  <details className="group">
+                    <summary className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 marker:content-[''] hover:border-teal-300 hover:text-teal-700">
+                      Update
+                    </summary>
+                    <form action={`/api/admin/bookings/${appointment.id}`} method="POST" className="mt-2 grid w-64 gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-lg">
+                      <select name="status" defaultValue={appointment.status} className="h-9 rounded-xl border border-slate-200 px-2 text-sm">
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                      <Textarea name="admin_notes" defaultValue={appointment.adminNotes} className="min-h-20 text-xs" />
+                      <input type="hidden" name="return_view" value="appointments" />
+                      <Button type="submit" disabled={!databaseConfigured} className="h-9 text-xs">
+                        Save
+                      </Button>
+                    </form>
+                  </details>
+                </td>
+              ) : null}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CustomersView({ dashboard }: { dashboard: AdminDashboardData }) {
+  const appointmentsByCustomer = new Map<string, Appointment[]>();
+  for (const appointment of dashboard.appointments) {
+    appointmentsByCustomer.set(appointment.customerId, [
+      ...(appointmentsByCustomer.get(appointment.customerId) || []),
+      appointment,
+    ]);
+  }
+
+  return (
+    <Panel title="Customers" description="Customer records, portal links, and appointment history." icon={Users}>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {dashboard.customers.map((customer) => {
+          const appointments = appointmentsByCustomer.get(customer.id) || [];
+          return (
+            <article key={customer.id} className="rounded-2xl border border-slate-100 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-slate-950">{customer.name}</h3>
+                  <p className="text-sm text-slate-500">{customer.email}</p>
+                  <p className="mt-1 text-sm text-slate-500">{customer.phone}</p>
+                </div>
+                <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
+                  {appointments.length} checks
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-slate-600">{[customer.address, customer.postalCode, customer.city].filter(Boolean).join(", ")}</p>
+              <a className="mt-4 inline-flex text-sm font-semibold text-teal-700 hover:text-teal-900" href={`/kunde/${customer.portalToken || customer.id}`}>
+                Open portal
+              </a>
+            </article>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+function UsersView({ dashboard }: { dashboard: AdminDashboardData }) {
+  return (
+    <Panel title="Admin users and field users" description="The previous agent dashboard is adapted here as EV Check service users." icon={User}>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {dashboard.users.map((user) => (
+          <article key={user.id} className="rounded-2xl border border-slate-100 bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-slate-950">{user.fullName}</h3>
+                <p className="text-sm text-slate-500">{user.email}</p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold capitalize text-slate-700">
+                {user.role}
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">{user.workingArea}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {user.assignedServices.map((service) => (
+                <span key={service} className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
+                  {service}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function EmailsView({ dashboard }: { dashboard: AdminDashboardData }) {
+  return (
+    <Panel title="Email automation" description="SMTP status, automation toggles, test emails, and recent delivery logs." icon={Mail}>
+      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-950">SMTP status</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {isMailConfigured() ? "SMTP env vars are present." : "SMTP is not fully configured."}
+          </p>
+          <form action="/api/admin/test-email" method="POST" className="mt-4 grid gap-2">
+            <Input name="to" type="email" placeholder="Send test to email" defaultValue={dashboard.settings.adminNotifyEmail} />
+            <Button type="submit" disabled={!dashboard.databaseConfigured && !isMailConfigured()}>
+              Send test email
+            </Button>
+          </form>
+        </div>
+        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-950">Recent email logs</p>
+          <div className="mt-3 grid gap-2">
+            {dashboard.emailLogs.length > 0 ? (
+              dashboard.emailLogs.map((email) => (
+                <article key={email.id} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold text-slate-800">{email.subject}</p>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">{email.status}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{email.recipientRole} - {email.recipient}</p>
+                  {email.errorMessage ? <p className="mt-1 text-xs text-rose-600">{email.errorMessage}</p> : null}
+                </article>
+              ))
+            ) : (
+              <EmptyState text="No email delivery logs yet." />
+            )}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function InvoicesView({ appointments }: { appointments: Appointment[] }) {
+  const invoiceAppointments = appointments.filter((item) => item.invoiceStatus !== "not_requested" || item.invoiceNumber);
+  return (
+    <Panel title="Invoices" description="Invoice-ready checks and payment follow-up." icon={FileText}>
+      {invoiceAppointments.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-3">Invoice</th>
+                <th className="px-3 py-3">Customer</th>
+                <th className="px-3 py-3">Status</th>
+                <th className="px-3 py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {invoiceAppointments.map((appointment) => (
+                <tr key={appointment.id}>
+                  <td className="px-3 py-3 font-semibold">{appointment.invoiceNumber || "Draft"}</td>
+                  <td className="px-3 py-3">{appointment.customerName}</td>
+                  <td className="px-3 py-3">{invoiceLabels[appointment.invoiceStatus]}</td>
+                  <td className="px-3 py-3 text-right font-semibold">{formatPrice(appointment.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState text="No invoices yet." />
+      )}
+    </Panel>
+  );
+}
+
+function PaymentsView({ appointments }: { appointments: Appointment[] }) {
+  const unpaid = appointments.filter((item) => item.paymentStatus !== "paid" && item.status !== "cancelled");
+  return (
+    <Panel title="Payments" description="Outstanding revenue and payment status." icon={CreditCard}>
+      {unpaid.length > 0 ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {unpaid.map((appointment) => (
+            <article key={appointment.id} className="rounded-2xl border border-slate-100 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-bold text-slate-950">{appointment.customerName}</p>
+                  <p className="text-sm text-slate-500">{appointment.serviceLabel}</p>
+                </div>
+                <PaymentBadge status={appointment.paymentStatus} />
+              </div>
+              <p className="mt-4 text-2xl font-bold text-slate-950">{formatPrice(appointment.total)}</p>
+              <p className="mt-1 text-sm text-slate-500">{paymentLabels[appointment.paymentStatus]}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState text="No outstanding payments." />
+      )}
+    </Panel>
+  );
+}
+
+function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
+  const settings = dashboard.settings;
+  return (
+    <Panel title="Settings" description="Company, appointment, service area, and email automation settings." icon={Settings2}>
+      <form action="/api/admin/settings" method="POST" className="grid gap-5">
+        <div className="grid gap-3 md:grid-cols-3">
+          <Field label="Company name"><Input name="company_name" defaultValue={settings.companyName} /></Field>
+          <Field label="Support email"><Input name="support_email" type="email" defaultValue={settings.supportEmail} /></Field>
+          <Field label="Admin notify email"><Input name="admin_notify_email" type="email" defaultValue={settings.adminNotifyEmail} /></Field>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-4">
+          <Field label="Default status">
+            <select name="default_appointment_status" defaultValue={settings.defaultAppointmentStatus} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+              {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </Field>
+          <Field label="Start hour"><Input name="start_hour" type="number" min={0} max={23} defaultValue={settings.startHour} /></Field>
+          <Field label="End hour"><Input name="end_hour" type="number" min={1} max={24} defaultValue={settings.endHour} /></Field>
+          <Field label="Slot minutes"><Input name="slot_minutes" type="number" min={15} step={15} defaultValue={settings.slotMinutes} /></Field>
+        </div>
+
+        <Field label="Service areas">
+          <Textarea name="service_areas" defaultValue={settings.serviceAreas.join("\n")} />
+        </Field>
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+          <p className="font-semibold text-slate-950">Email automation</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              ["customer_on_create", "Customer created", settings.emailAutomation.customerOnCreate],
+              ["customer_on_approve", "Customer approved", settings.emailAutomation.customerOnApprove],
+              ["customer_on_complete", "Customer completed", settings.emailAutomation.customerOnComplete],
+              ["customer_on_cancel", "Customer cancelled", settings.emailAutomation.customerOnCancel],
+              ["admin_on_create", "Admin alert", settings.emailAutomation.adminOnCreate],
+            ].map(([name, label, checked]) => (
+              <label key={String(name)} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+                <input name={String(name)} type="checkbox" defaultChecked={Boolean(checked)} className="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+                {String(label)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="booking_enabled" type="checkbox" defaultChecked={settings.bookingEnabled} className="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+          Online appointments enabled
+        </label>
+
+        <Button type="submit" disabled={!dashboard.databaseConfigured} className="w-fit">
+          Save settings
+        </Button>
+      </form>
+    </Panel>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500">
+      {text}
+    </div>
+  );
+}

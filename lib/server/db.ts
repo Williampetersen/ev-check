@@ -1,0 +1,194 @@
+import postgres, { type Sql } from "postgres";
+
+declare global {
+  var EvCheckSql: Sql | null | undefined;
+  var EvCheckSchemaPromise: Promise<void> | null | undefined;
+}
+
+let cachedSql: Sql | null | undefined = globalThis.EvCheckSql;
+let schemaPromise: Promise<void> | null = globalThis.EvCheckSchemaPromise ?? null;
+
+export const getConnectionString = () => process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+
+export const isDatabaseConfigured = () => Boolean(getConnectionString());
+
+export const shouldRunDatabaseSetup = () =>
+  process.env.NODE_ENV !== "production" ||
+  process.env.DATABASE_AUTO_SETUP === "true" ||
+  process.env.DATABASE_RUN_MIGRATIONS === "true";
+
+const createClient = () => {
+  const connectionString = getConnectionString();
+  if (!connectionString) return null;
+
+  return postgres(connectionString, {
+    ssl: "require",
+    prepare: false,
+    max: Number(process.env.DATABASE_MAX_CONNECTIONS || 5),
+  });
+};
+
+export const getSql = () => {
+  if (cachedSql === undefined) {
+    cachedSql = createClient();
+    globalThis.EvCheckSql = cachedSql;
+  }
+  if (!cachedSql) {
+    throw new Error("DATABASE_URL is not configured.");
+  }
+  return cachedSql;
+};
+
+export async function ensureSchema(options: { force?: boolean } = {}) {
+  if (!isDatabaseConfigured() || (!options.force && !shouldRunDatabaseSetup())) {
+    return;
+  }
+
+  const sql = getSql();
+  if (!schemaPromise) {
+    schemaPromise = (async () => {
+      await sql`
+        CREATE TABLE IF NOT EXISTS customers (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT DEFAULT '',
+          address TEXT DEFAULT '',
+          postal_code TEXT DEFAULT '',
+          city TEXT DEFAULT '',
+          company TEXT DEFAULT '',
+          notes TEXT DEFAULT '',
+          portal_token TEXT UNIQUE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        ALTER TABLE customers
+          ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '',
+          ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '',
+          ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS postal_code TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS company TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS portal_token TEXT,
+          ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS appointments (
+          id TEXT PRIMARY KEY,
+          customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+          vehicle_label TEXT DEFAULT '',
+          registration_number TEXT DEFAULT '',
+          service_label TEXT DEFAULT '',
+          report_label TEXT DEFAULT '',
+          appointment_date DATE NOT NULL,
+          appointment_time TEXT NOT NULL,
+          appointment_end_time TEXT DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'pending',
+          payment_status TEXT NOT NULL DEFAULT 'unpaid',
+          invoice_status TEXT NOT NULL DEFAULT 'not_requested',
+          invoice_number TEXT DEFAULT '',
+          total INTEGER NOT NULL DEFAULT 0,
+          assigned_user TEXT DEFAULT '',
+          area_name TEXT DEFAULT '',
+          admin_notes TEXT DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        ALTER TABLE appointments
+          ADD COLUMN IF NOT EXISTS vehicle_label TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS registration_number TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS service_label TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS report_label TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS appointment_end_time TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'unpaid',
+          ADD COLUMN IF NOT EXISTS invoice_status TEXT NOT NULL DEFAULT 'not_requested',
+          ADD COLUMN IF NOT EXISTS invoice_number TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS total INTEGER NOT NULL DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS assigned_user TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS area_name TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS admin_notes TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS addons_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          ADD COLUMN IF NOT EXISTS booking_payload_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+          ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'website',
+          ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS dashboard_users (
+          id TEXT PRIMARY KEY,
+          full_name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          phone TEXT DEFAULT '',
+          role TEXT NOT NULL DEFAULT 'inspector',
+          status TEXT NOT NULL DEFAULT 'active',
+          assigned_services_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          working_area TEXT DEFAULT '',
+          password_hash TEXT DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS dashboard_settings (
+          settings_key TEXT PRIMARY KEY DEFAULT 'default',
+          company_name TEXT NOT NULL DEFAULT 'EV Check',
+          support_email TEXT NOT NULL DEFAULT 'support@ev-check.dk',
+          admin_notify_email TEXT NOT NULL DEFAULT '',
+          default_appointment_status TEXT NOT NULL DEFAULT 'pending',
+          booking_enabled BOOLEAN NOT NULL DEFAULT true,
+          start_hour INTEGER NOT NULL DEFAULT 8,
+          end_hour INTEGER NOT NULL DEFAULT 18,
+          slot_minutes INTEGER NOT NULL DEFAULT 60,
+          service_areas_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          services_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          email_automation_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS email_logs (
+          id TEXT PRIMARY KEY,
+          appointment_id TEXT,
+          customer_id TEXT,
+          recipient TEXT NOT NULL,
+          recipient_role TEXT NOT NULL,
+          template_key TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          status TEXT NOT NULL,
+          error_message TEXT DEFAULT '',
+          sent_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        INSERT INTO dashboard_settings (settings_key)
+        VALUES ('default')
+        ON CONFLICT (settings_key) DO NOTHING;
+      `;
+    })();
+    globalThis.EvCheckSchemaPromise = schemaPromise;
+  }
+
+  try {
+    await schemaPromise;
+  } catch (error) {
+    schemaPromise = null;
+    globalThis.EvCheckSchemaPromise = null;
+    throw error;
+  }
+}

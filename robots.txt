@@ -1,4 +1,6 @@
-Sitemap: https://precedent.dev/sitemap.xml
+Sitemap: https://ev-check.dk/sitemap.xml
 
 User-agent: *
 Disallow: /api
+Disallow: /admin
+Disallow: /agent

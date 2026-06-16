@@ -1,0 +1,631 @@
+﻿{
+    "id":  1,
+    "date":  "2025-11-03T12:25:10",
+    "date_gmt":  "2025-11-03T12:25:10",
+    "guid":  {
+                 "rendered":  "http://ev-check.dk/?p=1"
+             },
+    "modified":  "2025-11-03T12:25:10",
+    "modified_gmt":  "2025-11-03T12:25:10",
+    "slug":  "hello-world",
+    "status":  "publish",
+    "type":  "post",
+    "link":  "https://ev-check.dk/hello-world/",
+    "title":  {
+                  "rendered":  "Hello world!"
+              },
+    "content":  {
+                    "rendered":  "\n\u003cp class=\"wp-block-paragraph\"\u003eWelcome to WordPress. This is your first post. Edit or delete it, then start writing!\u003c/p\u003e\n",
+                    "protected":  false
+                },
+    "excerpt":  {
+                    "rendered":  "\u003cp\u003eWelcome to WordPress. This is your first post. Edit or delete it, then start writing!\u003c/p\u003e\n",
+                    "protected":  false
+                },
+    "author":  1,
+    "featured_media":  0,
+    "comment_status":  "open",
+    "ping_status":  "open",
+    "sticky":  false,
+    "template":  "",
+    "format":  "standard",
+    "meta":  {
+                 "footnotes":  ""
+             },
+    "categories":  [
+                       1
+                   ],
+    "tags":  [
+
+             ],
+    "class_list":  [
+                       "post-1",
+                       "post",
+                       "type-post",
+                       "status-publish",
+                       "format-standard",
+                       "hentry",
+                       "category-uncategorized"
+                   ],
+    "yoast_head":  "\u003c!-- This site is optimized with the Yoast SEO plugin v27.8 - https://yoast.com/product/yoast-seo-wordpress/ --\u003e\n\u003ctitle\u003eHello world! - Ev-check.dk\u003c/title\u003e\n\u003cmeta name=\"robots\" content=\"index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" /\u003e\n\u003clink rel=\"canonical\" href=\"https://ev-check.dk/hello-world/\" /\u003e\n\u003cmeta property=\"og:locale\" content=\"en_US\" /\u003e\n\u003cmeta property=\"og:type\" content=\"article\" /\u003e\n\u003cmeta property=\"og:title\" content=\"Hello world! - Ev-check.dk\" /\u003e\n\u003cmeta property=\"og:description\" content=\"Welcome to WordPress. This is your first post. Edit or delete it, then start writing!\" /\u003e\n\u003cmeta property=\"og:url\" content=\"https://ev-check.dk/hello-world/\" /\u003e\n\u003cmeta property=\"og:site_name\" content=\"Ev-check.dk\" /\u003e\n\u003cmeta property=\"article:published_time\" content=\"2025-11-03T12:25:10+00:00\" /\u003e\n\u003cmeta name=\"author\" content=\"William\" /\u003e\n\u003cmeta name=\"twitter:card\" content=\"summary_large_image\" /\u003e\n\u003cmeta name=\"twitter:label1\" content=\"Written by\" /\u003e\n\t\u003cmeta name=\"twitter:data1\" content=\"William\" /\u003e\n\u003cscript type=\"application/ld+json\" class=\"yoast-schema-graph\"\u003e{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"Article\",\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/#article\",\"isPartOf\":{\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/\"},\"author\":{\"name\":\"William\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/person\\/0c798cfd4b4a651dd8daf17bdf2ff8a8\"},\"headline\":\"Hello world!\",\"datePublished\":\"2025-11-03T12:25:10+00:00\",\"mainEntityOfPage\":{\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/\"},\"wordCount\":17,\"commentCount\":1,\"publisher\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\"},\"inLanguage\":\"en-US\",\"potentialAction\":[{\"@type\":\"CommentAction\",\"name\":\"Comment\",\"target\":[\"https:\\/\\/ev-check.dk\\/hello-world\\/#respond\"]}]},{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/\",\"url\":\"https:\\/\\/ev-check.dk\\/hello-world\\/\",\"name\":\"Hello world! - Ev-check.dk\",\"isPartOf\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#website\"},\"datePublished\":\"2025-11-03T12:25:10+00:00\",\"breadcrumb\":{\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/#breadcrumb\"},\"inLanguage\":\"en-US\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/ev-check.dk\\/hello-world\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/ev-check.dk\\/hello-world\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Home\",\"item\":\"https:\\/\\/ev-check.dk\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Hello world!\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/ev-check.dk\\/#website\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"name\":\"Ev-check.dk\",\"description\":\"Professionel batteritest og elbil-diagnose i Danmark\",\"publisher\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/ev-check.dk\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"en-US\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\",\"name\":\"Ev-check.dk\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"en-US\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"contentUrl\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"width\":668,\"height\":471,\"caption\":\"Ev-check.dk\"},\"image\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\"}},{\"@type\":\"Person\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/person\\/0c798cfd4b4a651dd8daf17bdf2ff8a8\",\"name\":\"William\",\"image\":{\"@type\":\"ImageObject\",\"inLanguage\":\"en-US\",\"@id\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"url\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"contentUrl\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"caption\":\"William\"},\"sameAs\":[\"http:\\/\\/ev-check.dk\"],\"url\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/\"}]}\u003c/script\u003e\n\u003c!-- / Yoast SEO plugin. --\u003e",
+    "yoast_head_json":  {
+                            "title":  "Hello world! - Ev-check.dk",
+                            "robots":  {
+                                           "index":  "index",
+                                           "follow":  "follow",
+                                           "max-snippet":  "max-snippet:-1",
+                                           "max-image-preview":  "max-image-preview:large",
+                                           "max-video-preview":  "max-video-preview:-1"
+                                       },
+                            "canonical":  "https://ev-check.dk/hello-world/",
+                            "og_locale":  "en_US",
+                            "og_type":  "article",
+                            "og_title":  "Hello world! - Ev-check.dk",
+                            "og_description":  "Welcome to WordPress. This is your first post. Edit or delete it, then start writing!",
+                            "og_url":  "https://ev-check.dk/hello-world/",
+                            "og_site_name":  "Ev-check.dk",
+                            "article_published_time":  "2025-11-03T12:25:10+00:00",
+                            "author":  "William",
+                            "twitter_card":  "summary_large_image",
+                            "twitter_misc":  {
+                                                 "Written by":  "William"
+                                             },
+                            "schema":  {
+                                           "@context":  "https://schema.org",
+                                           "@graph":  [
+                                                          {
+                                                              "@type":  "Article",
+                                                              "@id":  "https://ev-check.dk/hello-world/#article",
+                                                              "isPartOf":  {
+                                                                               "@id":  "https://ev-check.dk/hello-world/"
+                                                                           },
+                                                              "author":  {
+                                                                             "name":  "William",
+                                                                             "@id":  "https://ev-check.dk/#/schema/person/0c798cfd4b4a651dd8daf17bdf2ff8a8"
+                                                                         },
+                                                              "headline":  "Hello world!",
+                                                              "datePublished":  "2025-11-03T12:25:10+00:00",
+                                                              "mainEntityOfPage":  {
+                                                                                       "@id":  "https://ev-check.dk/hello-world/"
+                                                                                   },
+                                                              "wordCount":  17,
+                                                              "commentCount":  1,
+                                                              "publisher":  {
+                                                                                "@id":  "https://ev-check.dk/#organization"
+                                                                            },
+                                                              "inLanguage":  "en-US",
+                                                              "potentialAction":  [
+                                                                                      {
+                                                                                          "@type":  "CommentAction",
+                                                                                          "name":  "Comment",
+                                                                                          "target":  [
+                                                                                                         "https://ev-check.dk/hello-world/#respond"
+                                                                                                     ]
+                                                                                      }
+                                                                                  ]
+                                                          },
+                                                          {
+                                                              "@type":  "WebPage",
+                                                              "@id":  "https://ev-check.dk/hello-world/",
+                                                              "url":  "https://ev-check.dk/hello-world/",
+                                                              "name":  "Hello world! - Ev-check.dk",
+                                                              "isPartOf":  {
+                                                                               "@id":  "https://ev-check.dk/#website"
+                                                                           },
+                                                              "datePublished":  "2025-11-03T12:25:10+00:00",
+                                                              "breadcrumb":  {
+                                                                                 "@id":  "https://ev-check.dk/hello-world/#breadcrumb"
+                                                                             },
+                                                              "inLanguage":  "en-US",
+                                                              "potentialAction":  [
+                                                                                      {
+                                                                                          "@type":  "ReadAction",
+                                                                                          "target":  [
+                                                                                                         "https://ev-check.dk/hello-world/"
+                                                                                                     ]
+                                                                                      }
+                                                                                  ]
+                                                          },
+                                                          {
+                                                              "@type":  "BreadcrumbList",
+                                                              "@id":  "https://ev-check.dk/hello-world/#breadcrumb",
+                                                              "itemListElement":  [
+                                                                                      {
+                                                                                          "@type":  "ListItem",
+                                                                                          "position":  1,
+                                                                                          "name":  "Home",
+                                                                                          "item":  "https://ev-check.dk/"
+                                                                                      },
+                                                                                      {
+                                                                                          "@type":  "ListItem",
+                                                                                          "position":  2,
+                                                                                          "name":  "Hello world!"
+                                                                                      }
+                                                                                  ]
+                                                          },
+                                                          {
+                                                              "@type":  "WebSite",
+                                                              "@id":  "https://ev-check.dk/#website",
+                                                              "url":  "https://ev-check.dk/",
+                                                              "name":  "Ev-check.dk",
+                                                              "description":  "Professionel batteritest og elbil-diagnose i Danmark",
+                                                              "publisher":  {
+                                                                                "@id":  "https://ev-check.dk/#organization"
+                                                                            },
+                                                              "potentialAction":  [
+                                                                                      {
+                                                                                          "@type":  "SearchAction",
+                                                                                          "target":  {
+                                                                                                         "@type":  "EntryPoint",
+                                                                                                         "urlTemplate":  "https://ev-check.dk/?s={search_term_string}"
+                                                                                                     },
+                                                                                          "query-input":  {
+                                                                                                              "@type":  "PropertyValueSpecification",
+                                                                                                              "valueRequired":  true,
+                                                                                                              "valueName":  "search_term_string"
+                                                                                                          }
+                                                                                      }
+                                                                                  ],
+                                                              "inLanguage":  "en-US"
+                                                          },
+                                                          {
+                                                              "@type":  "Organization",
+                                                              "@id":  "https://ev-check.dk/#organization",
+                                                              "name":  "Ev-check.dk",
+                                                              "url":  "https://ev-check.dk/",
+                                                              "logo":  {
+                                                                           "@type":  "ImageObject",
+                                                                           "inLanguage":  "en-US",
+                                                                           "@id":  "https://ev-check.dk/#/schema/logo/image/",
+                                                                           "url":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                           "contentUrl":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                           "width":  668,
+                                                                           "height":  471,
+                                                                           "caption":  "Ev-check.dk"
+                                                                       },
+                                                              "image":  {
+                                                                            "@id":  "https://ev-check.dk/#/schema/logo/image/"
+                                                                        }
+                                                          },
+                                                          {
+                                                              "@type":  "Person",
+                                                              "@id":  "https://ev-check.dk/#/schema/person/0c798cfd4b4a651dd8daf17bdf2ff8a8",
+                                                              "name":  "William",
+                                                              "image":  {
+                                                                            "@type":  "ImageObject",
+                                                                            "inLanguage":  "en-US",
+                                                                            "@id":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                            "url":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                            "contentUrl":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                            "caption":  "William"
+                                                                        },
+                                                              "sameAs":  [
+                                                                             "http://ev-check.dk"
+                                                                         ],
+                                                              "url":  "https://ev-check.dk/author/william/"
+                                                          }
+                                                      ]
+                                       }
+                        },
+    "_links":  {
+                   "self":  [
+                                {
+                                    "href":  "https://ev-check.dk/wp-json/wp/v2/posts/1",
+                                    "targetHints":  {
+                                                        "allow":  [
+                                                                      "GET"
+                                                                  ]
+                                                    }
+                                }
+                            ],
+                   "collection":  [
+                                      {
+                                          "href":  "https://ev-check.dk/wp-json/wp/v2/posts"
+                                      }
+                                  ],
+                   "about":  [
+                                 {
+                                     "href":  "https://ev-check.dk/wp-json/wp/v2/types/post"
+                                 }
+                             ],
+                   "author":  [
+                                  {
+                                      "embeddable":  true,
+                                      "href":  "https://ev-check.dk/wp-json/wp/v2/users/1"
+                                  }
+                              ],
+                   "replies":  [
+                                   {
+                                       "embeddable":  true,
+                                       "href":  "https://ev-check.dk/wp-json/wp/v2/comments?post=1"
+                                   }
+                               ],
+                   "version-history":  [
+                                           {
+                                               "count":  0,
+                                               "href":  "https://ev-check.dk/wp-json/wp/v2/posts/1/revisions"
+                                           }
+                                       ],
+                   "wp:attachment":  [
+                                         {
+                                             "href":  "https://ev-check.dk/wp-json/wp/v2/media?parent=1"
+                                         }
+                                     ],
+                   "wp:term":  [
+                                   {
+                                       "taxonomy":  "category",
+                                       "embeddable":  true,
+                                       "href":  "https://ev-check.dk/wp-json/wp/v2/categories?post=1"
+                                   },
+                                   {
+                                       "taxonomy":  "post_tag",
+                                       "embeddable":  true,
+                                       "href":  "https://ev-check.dk/wp-json/wp/v2/tags?post=1"
+                                   }
+                               ],
+                   "curies":  [
+                                  {
+                                      "name":  "wp",
+                                      "href":  "https://api.w.org/{rel}",
+                                      "templated":  true
+                                  }
+                              ]
+               },
+    "_embedded":  {
+                      "author":  [
+                                     {
+                                         "id":  1,
+                                         "name":  "William",
+                                         "url":  "http://ev-check.dk",
+                                         "description":  "",
+                                         "link":  "https://ev-check.dk/author/william/",
+                                         "slug":  "william",
+                                         "avatar_urls":  {
+                                                             "24":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=24\u0026d=mm\u0026r=g",
+                                                             "48":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=48\u0026d=mm\u0026r=g",
+                                                             "96":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g"
+                                                         },
+                                         "yoast_head":  "\u003c!-- This site is optimized with the Yoast SEO plugin v27.8 - https://yoast.com/product/yoast-seo-wordpress/ --\u003e\n\u003ctitle\u003eWilliam, Author at Ev-check.dk\u003c/title\u003e\n\u003cmeta name=\"robots\" content=\"index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" /\u003e\n\u003clink rel=\"canonical\" href=\"https://ev-check.dk/author/william/\" /\u003e\n\u003cmeta property=\"og:locale\" content=\"en_US\" /\u003e\n\u003cmeta property=\"og:type\" content=\"profile\" /\u003e\n\u003cmeta property=\"og:title\" content=\"William, Author at Ev-check.dk\" /\u003e\n\u003cmeta property=\"og:url\" content=\"https://ev-check.dk/author/william/\" /\u003e\n\u003cmeta property=\"og:site_name\" content=\"Ev-check.dk\" /\u003e\n\u003cmeta property=\"og:image\" content=\"https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=500\u0026d=mm\u0026r=g\" /\u003e\n\u003cmeta name=\"twitter:card\" content=\"summary_large_image\" /\u003e\n\u003cscript type=\"application/ld+json\" class=\"yoast-schema-graph\"\u003e{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"ProfilePage\",\"@id\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/\",\"url\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/\",\"name\":\"William, Author at Ev-check.dk\",\"isPartOf\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#website\"},\"breadcrumb\":{\"@id\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/#breadcrumb\"},\"inLanguage\":\"en-US\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/ev-check.dk\\/author\\/william\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Home\",\"item\":\"https:\\/\\/ev-check.dk\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Archives for William\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/ev-check.dk\\/#website\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"name\":\"Ev-check.dk\",\"description\":\"Professionel batteritest og elbil-diagnose i Danmark\",\"publisher\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/ev-check.dk\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"en-US\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\",\"name\":\"Ev-check.dk\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"en-US\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"contentUrl\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"width\":668,\"height\":471,\"caption\":\"Ev-check.dk\"},\"image\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\"}},{\"@type\":\"Person\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/person\\/0c798cfd4b4a651dd8daf17bdf2ff8a8\",\"name\":\"William\",\"image\":{\"@type\":\"ImageObject\",\"inLanguage\":\"en-US\",\"@id\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"url\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"contentUrl\":\"https:\\/\\/secure.gravatar.com\\/avatar\\/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g\",\"caption\":\"William\"},\"sameAs\":[\"http:\\/\\/ev-check.dk\"],\"mainEntityOfPage\":{\"@id\":\"https:\\/\\/ev-check.dk\\/author\\/william\\/\"}}]}\u003c/script\u003e\n\u003c!-- / Yoast SEO plugin. --\u003e",
+                                         "yoast_head_json":  {
+                                                                 "title":  "William, Author at Ev-check.dk",
+                                                                 "robots":  {
+                                                                                "index":  "index",
+                                                                                "follow":  "follow",
+                                                                                "max-snippet":  "max-snippet:-1",
+                                                                                "max-image-preview":  "max-image-preview:large",
+                                                                                "max-video-preview":  "max-video-preview:-1"
+                                                                            },
+                                                                 "canonical":  "https://ev-check.dk/author/william/",
+                                                                 "og_locale":  "en_US",
+                                                                 "og_type":  "profile",
+                                                                 "og_title":  "William, Author at Ev-check.dk",
+                                                                 "og_url":  "https://ev-check.dk/author/william/",
+                                                                 "og_site_name":  "Ev-check.dk",
+                                                                 "og_image":  [
+                                                                                  {
+                                                                                      "url":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=500\u0026d=mm\u0026r=g",
+                                                                                      "type":  "",
+                                                                                      "width":  "",
+                                                                                      "height":  ""
+                                                                                  }
+                                                                              ],
+                                                                 "twitter_card":  "summary_large_image",
+                                                                 "schema":  {
+                                                                                "@context":  "https://schema.org",
+                                                                                "@graph":  [
+                                                                                               {
+                                                                                                   "@type":  "ProfilePage",
+                                                                                                   "@id":  "https://ev-check.dk/author/william/",
+                                                                                                   "url":  "https://ev-check.dk/author/william/",
+                                                                                                   "name":  "William, Author at Ev-check.dk",
+                                                                                                   "isPartOf":  {
+                                                                                                                    "@id":  "https://ev-check.dk/#website"
+                                                                                                                },
+                                                                                                   "breadcrumb":  {
+                                                                                                                      "@id":  "https://ev-check.dk/author/william/#breadcrumb"
+                                                                                                                  },
+                                                                                                   "inLanguage":  "en-US",
+                                                                                                   "potentialAction":  [
+                                                                                                                           {
+                                                                                                                               "@type":  "ReadAction",
+                                                                                                                               "target":  [
+                                                                                                                                              "https://ev-check.dk/author/william/"
+                                                                                                                                          ]
+                                                                                                                           }
+                                                                                                                       ]
+                                                                                               },
+                                                                                               {
+                                                                                                   "@type":  "BreadcrumbList",
+                                                                                                   "@id":  "https://ev-check.dk/author/william/#breadcrumb",
+                                                                                                   "itemListElement":  [
+                                                                                                                           {
+                                                                                                                               "@type":  "ListItem",
+                                                                                                                               "position":  1,
+                                                                                                                               "name":  "Home",
+                                                                                                                               "item":  "https://ev-check.dk/"
+                                                                                                                           },
+                                                                                                                           {
+                                                                                                                               "@type":  "ListItem",
+                                                                                                                               "position":  2,
+                                                                                                                               "name":  "Archives for William"
+                                                                                                                           }
+                                                                                                                       ]
+                                                                                               },
+                                                                                               {
+                                                                                                   "@type":  "WebSite",
+                                                                                                   "@id":  "https://ev-check.dk/#website",
+                                                                                                   "url":  "https://ev-check.dk/",
+                                                                                                   "name":  "Ev-check.dk",
+                                                                                                   "description":  "Professionel batteritest og elbil-diagnose i Danmark",
+                                                                                                   "publisher":  {
+                                                                                                                     "@id":  "https://ev-check.dk/#organization"
+                                                                                                                 },
+                                                                                                   "potentialAction":  [
+                                                                                                                           {
+                                                                                                                               "@type":  "SearchAction",
+                                                                                                                               "target":  {
+                                                                                                                                              "@type":  "EntryPoint",
+                                                                                                                                              "urlTemplate":  "https://ev-check.dk/?s={search_term_string}"
+                                                                                                                                          },
+                                                                                                                               "query-input":  {
+                                                                                                                                                   "@type":  "PropertyValueSpecification",
+                                                                                                                                                   "valueRequired":  true,
+                                                                                                                                                   "valueName":  "search_term_string"
+                                                                                                                                               }
+                                                                                                                           }
+                                                                                                                       ],
+                                                                                                   "inLanguage":  "en-US"
+                                                                                               },
+                                                                                               {
+                                                                                                   "@type":  "Organization",
+                                                                                                   "@id":  "https://ev-check.dk/#organization",
+                                                                                                   "name":  "Ev-check.dk",
+                                                                                                   "url":  "https://ev-check.dk/",
+                                                                                                   "logo":  {
+                                                                                                                "@type":  "ImageObject",
+                                                                                                                "inLanguage":  "en-US",
+                                                                                                                "@id":  "https://ev-check.dk/#/schema/logo/image/",
+                                                                                                                "url":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                                                                "contentUrl":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                                                                "width":  668,
+                                                                                                                "height":  471,
+                                                                                                                "caption":  "Ev-check.dk"
+                                                                                                            },
+                                                                                                   "image":  {
+                                                                                                                 "@id":  "https://ev-check.dk/#/schema/logo/image/"
+                                                                                                             }
+                                                                                               },
+                                                                                               {
+                                                                                                   "@type":  "Person",
+                                                                                                   "@id":  "https://ev-check.dk/#/schema/person/0c798cfd4b4a651dd8daf17bdf2ff8a8",
+                                                                                                   "name":  "William",
+                                                                                                   "image":  {
+                                                                                                                 "@type":  "ImageObject",
+                                                                                                                 "inLanguage":  "en-US",
+                                                                                                                 "@id":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                                                                 "url":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                                                                 "contentUrl":  "https://secure.gravatar.com/avatar/dd7914ee23c7b1612fc7b785026d2a2f3b1a2f058655e4eeca8e8dfe089cc3e1?s=96\u0026d=mm\u0026r=g",
+                                                                                                                 "caption":  "William"
+                                                                                                             },
+                                                                                                   "sameAs":  [
+                                                                                                                  "http://ev-check.dk"
+                                                                                                              ],
+                                                                                                   "mainEntityOfPage":  {
+                                                                                                                            "@id":  "https://ev-check.dk/author/william/"
+                                                                                                                        }
+                                                                                               }
+                                                                                           ]
+                                                                            }
+                                                             },
+                                         "_links":  {
+                                                        "self":  [
+                                                                     {
+                                                                         "href":  "https://ev-check.dk/wp-json/wp/v2/users/1",
+                                                                         "targetHints":  {
+                                                                                             "allow":  [
+                                                                                                           "GET"
+                                                                                                       ]
+                                                                                         }
+                                                                     }
+                                                                 ],
+                                                        "collection":  [
+                                                                           {
+                                                                               "href":  "https://ev-check.dk/wp-json/wp/v2/users"
+                                                                           }
+                                                                       ]
+                                                    }
+                                     }
+                                 ],
+                      "replies":  [
+                                      [
+                                          {
+                                              "id":  1,
+                                              "parent":  0,
+                                              "author":  0,
+                                              "author_name":  "A WordPress Commenter",
+                                              "author_url":  "https://wordpress.org/",
+                                              "date":  "2025-11-03T12:25:10",
+                                              "content":  {
+                                                              "rendered":  "\u003cp\u003eHi, this is a comment.\u003cbr /\u003e\nTo get started with moderating, editing, and deleting comments, please visit the Comments screen in the dashboard.\u003cbr /\u003e\nCommenter avatars come from \u003ca href=\"https://gravatar.com/\"\u003eGravatar\u003c/a\u003e.\u003c/p\u003e\n"
+                                                          },
+                                              "link":  "https://ev-check.dk/hello-world/#comment-1",
+                                              "type":  "comment",
+                                              "author_avatar_urls":  {
+                                                                         "24":  "https://secure.gravatar.com/avatar/8e1606e6fba450a9362af43874c1b2dfad34c782e33d0a51e1b46c18a2a567dd?s=24\u0026d=mm\u0026r=g",
+                                                                         "48":  "https://secure.gravatar.com/avatar/8e1606e6fba450a9362af43874c1b2dfad34c782e33d0a51e1b46c18a2a567dd?s=48\u0026d=mm\u0026r=g",
+                                                                         "96":  "https://secure.gravatar.com/avatar/8e1606e6fba450a9362af43874c1b2dfad34c782e33d0a51e1b46c18a2a567dd?s=96\u0026d=mm\u0026r=g"
+                                                                     },
+                                              "_links":  {
+                                                             "self":  [
+                                                                          {
+                                                                              "href":  "https://ev-check.dk/wp-json/wp/v2/comments/1",
+                                                                              "targetHints":  {
+                                                                                                  "allow":  [
+                                                                                                                "GET"
+                                                                                                            ]
+                                                                                              }
+                                                                          }
+                                                                      ],
+                                                             "collection":  [
+                                                                                {
+                                                                                    "href":  "https://ev-check.dk/wp-json/wp/v2/comments"
+                                                                                }
+                                                                            ],
+                                                             "up":  [
+                                                                        {
+                                                                            "embeddable":  true,
+                                                                            "post_type":  "post",
+                                                                            "href":  "https://ev-check.dk/wp-json/wp/v2/posts/1"
+                                                                        }
+                                                                    ]
+                                                         }
+                                          }
+                                      ]
+                                  ],
+                      "wp:term":  [
+                                      [
+                                          {
+                                              "id":  1,
+                                              "link":  "https://ev-check.dk/category/uncategorized/",
+                                              "name":  "Uncategorized",
+                                              "slug":  "uncategorized",
+                                              "taxonomy":  "category",
+                                              "yoast_head":  "\u003c!-- This site is optimized with the Yoast SEO plugin v27.8 - https://yoast.com/product/yoast-seo-wordpress/ --\u003e\n\u003ctitle\u003eUncategorized Archives - Ev-check.dk\u003c/title\u003e\n\u003cmeta name=\"robots\" content=\"index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" /\u003e\n\u003clink rel=\"canonical\" href=\"https://ev-check.dk/category/uncategorized/\" /\u003e\n\u003cmeta property=\"og:locale\" content=\"en_US\" /\u003e\n\u003cmeta property=\"og:type\" content=\"article\" /\u003e\n\u003cmeta property=\"og:title\" content=\"Uncategorized Archives - Ev-check.dk\" /\u003e\n\u003cmeta property=\"og:url\" content=\"https://ev-check.dk/category/uncategorized/\" /\u003e\n\u003cmeta property=\"og:site_name\" content=\"Ev-check.dk\" /\u003e\n\u003cmeta name=\"twitter:card\" content=\"summary_large_image\" /\u003e\n\u003cscript type=\"application/ld+json\" class=\"yoast-schema-graph\"\u003e{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"CollectionPage\",\"@id\":\"https:\\/\\/ev-check.dk\\/category\\/uncategorized\\/\",\"url\":\"https:\\/\\/ev-check.dk\\/category\\/uncategorized\\/\",\"name\":\"Uncategorized Archives - Ev-check.dk\",\"isPartOf\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#website\"},\"breadcrumb\":{\"@id\":\"https:\\/\\/ev-check.dk\\/category\\/uncategorized\\/#breadcrumb\"},\"inLanguage\":\"en-US\"},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/ev-check.dk\\/category\\/uncategorized\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Home\",\"item\":\"https:\\/\\/ev-check.dk\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Uncategorized\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/ev-check.dk\\/#website\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"name\":\"Ev-check.dk\",\"description\":\"Professionel batteritest og elbil-diagnose i Danmark\",\"publisher\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/ev-check.dk\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"en-US\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/ev-check.dk\\/#organization\",\"name\":\"Ev-check.dk\",\"url\":\"https:\\/\\/ev-check.dk\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"en-US\",\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"contentUrl\":\"http:\\/\\/ev-check.dk\\/wp-content\\/uploads\\/2025\\/11\\/EV.png\",\"width\":668,\"height\":471,\"caption\":\"Ev-check.dk\"},\"image\":{\"@id\":\"https:\\/\\/ev-check.dk\\/#\\/schema\\/logo\\/image\\/\"}}]}\u003c/script\u003e\n\u003c!-- / Yoast SEO plugin. --\u003e",
+                                              "yoast_head_json":  {
+                                                                      "title":  "Uncategorized Archives - Ev-check.dk",
+                                                                      "robots":  {
+                                                                                     "index":  "index",
+                                                                                     "follow":  "follow",
+                                                                                     "max-snippet":  "max-snippet:-1",
+                                                                                     "max-image-preview":  "max-image-preview:large",
+                                                                                     "max-video-preview":  "max-video-preview:-1"
+                                                                                 },
+                                                                      "canonical":  "https://ev-check.dk/category/uncategorized/",
+                                                                      "og_locale":  "en_US",
+                                                                      "og_type":  "article",
+                                                                      "og_title":  "Uncategorized Archives - Ev-check.dk",
+                                                                      "og_url":  "https://ev-check.dk/category/uncategorized/",
+                                                                      "og_site_name":  "Ev-check.dk",
+                                                                      "twitter_card":  "summary_large_image",
+                                                                      "schema":  {
+                                                                                     "@context":  "https://schema.org",
+                                                                                     "@graph":  [
+                                                                                                    {
+                                                                                                        "@type":  "CollectionPage",
+                                                                                                        "@id":  "https://ev-check.dk/category/uncategorized/",
+                                                                                                        "url":  "https://ev-check.dk/category/uncategorized/",
+                                                                                                        "name":  "Uncategorized Archives - Ev-check.dk",
+                                                                                                        "isPartOf":  {
+                                                                                                                         "@id":  "https://ev-check.dk/#website"
+                                                                                                                     },
+                                                                                                        "breadcrumb":  {
+                                                                                                                           "@id":  "https://ev-check.dk/category/uncategorized/#breadcrumb"
+                                                                                                                       },
+                                                                                                        "inLanguage":  "en-US"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "@type":  "BreadcrumbList",
+                                                                                                        "@id":  "https://ev-check.dk/category/uncategorized/#breadcrumb",
+                                                                                                        "itemListElement":  [
+                                                                                                                                {
+                                                                                                                                    "@type":  "ListItem",
+                                                                                                                                    "position":  1,
+                                                                                                                                    "name":  "Home",
+                                                                                                                                    "item":  "https://ev-check.dk/"
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "@type":  "ListItem",
+                                                                                                                                    "position":  2,
+                                                                                                                                    "name":  "Uncategorized"
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "@type":  "WebSite",
+                                                                                                        "@id":  "https://ev-check.dk/#website",
+                                                                                                        "url":  "https://ev-check.dk/",
+                                                                                                        "name":  "Ev-check.dk",
+                                                                                                        "description":  "Professionel batteritest og elbil-diagnose i Danmark",
+                                                                                                        "publisher":  {
+                                                                                                                          "@id":  "https://ev-check.dk/#organization"
+                                                                                                                      },
+                                                                                                        "potentialAction":  [
+                                                                                                                                {
+                                                                                                                                    "@type":  "SearchAction",
+                                                                                                                                    "target":  {
+                                                                                                                                                   "@type":  "EntryPoint",
+                                                                                                                                                   "urlTemplate":  "https://ev-check.dk/?s={search_term_string}"
+                                                                                                                                               },
+                                                                                                                                    "query-input":  {
+                                                                                                                                                        "@type":  "PropertyValueSpecification",
+                                                                                                                                                        "valueRequired":  true,
+                                                                                                                                                        "valueName":  "search_term_string"
+                                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                        "inLanguage":  "en-US"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "@type":  "Organization",
+                                                                                                        "@id":  "https://ev-check.dk/#organization",
+                                                                                                        "name":  "Ev-check.dk",
+                                                                                                        "url":  "https://ev-check.dk/",
+                                                                                                        "logo":  {
+                                                                                                                     "@type":  "ImageObject",
+                                                                                                                     "inLanguage":  "en-US",
+                                                                                                                     "@id":  "https://ev-check.dk/#/schema/logo/image/",
+                                                                                                                     "url":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                                                                     "contentUrl":  "http://ev-check.dk/wp-content/uploads/2025/11/EV.png",
+                                                                                                                     "width":  668,
+                                                                                                                     "height":  471,
+                                                                                                                     "caption":  "Ev-check.dk"
+                                                                                                                 },
+                                                                                                        "image":  {
+                                                                                                                      "@id":  "https://ev-check.dk/#/schema/logo/image/"
+                                                                                                                  }
+                                                                                                    }
+                                                                                                ]
+                                                                                 }
+                                                                  },
+                                              "_links":  {
+                                                             "self":  [
+                                                                          {
+                                                                              "href":  "https://ev-check.dk/wp-json/wp/v2/categories/1",
+                                                                              "targetHints":  {
+                                                                                                  "allow":  [
+                                                                                                                "GET"
+                                                                                                            ]
+                                                                                              }
+                                                                          }
+                                                                      ],
+                                                             "collection":  [
+                                                                                {
+                                                                                    "href":  "https://ev-check.dk/wp-json/wp/v2/categories"
+                                                                                }
+                                                                            ],
+                                                             "about":  [
+                                                                           {
+                                                                               "href":  "https://ev-check.dk/wp-json/wp/v2/taxonomies/category"
+                                                                           }
+                                                                       ],
+                                                             "wp:post_type":  [
+                                                                                  {
+                                                                                      "href":  "https://ev-check.dk/wp-json/wp/v2/posts?categories=1"
+                                                                                  }
+                                                                              ],
+                                                             "curies":  [
+                                                                            {
+                                                                                "name":  "wp",
+                                                                                "href":  "https://api.w.org/{rel}",
+                                                                                "templated":  true
+                                                                            }
+                                                                        ]
+                                                         }
+                                          }
+                                      ],
+                                      [
+
+                                      ]
+                                  ]
+                  }
+}
