@@ -3,7 +3,7 @@ import cx from "classnames";
 import { sfPro, inter } from "./fonts";
 import Footer from "@/components/layout/footer";
 import { Suspense } from "react";
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "@/components/layout/navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 
@@ -31,7 +31,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
-          <VercelAnalytics />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
