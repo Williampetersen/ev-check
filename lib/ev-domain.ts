@@ -133,12 +133,10 @@ export const defaultSettings: DashboardSettings = {
   bookingEnabled: true,
   startHour: 9,
   endHour: 18,
-  slotMinutes: 30,
+  slotMinutes: 15,
   serviceAreas: ["København", "Nordsjælland", "Roskilde", "Køge", "Hele Sjælland"],
   services: [
-    { id: "battery-health", label: "Batteri- og systemdiagnose", price: 950, durationMinutes: 60 },
-    { id: "pre-purchase", label: "Brugtbil tjek før køb", price: 1495, durationMinutes: 90 },
-    { id: "fleet-report", label: "Flåde- og forhandlerkontrol", price: 1895, durationMinutes: 120 },
+    { id: "battery-health", label: "Batteritest af elbil", price: 1300, durationMinutes: 15 },
   ],
   emailAutomation: {
     customerOnCreate: true,

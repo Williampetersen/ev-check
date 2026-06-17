@@ -4,7 +4,7 @@ import { ContactSection, JsonLd, SitePage, siteUrl } from "@/components/site/pub
 export const metadata: Metadata = {
   title: "Kontakt EV-Check.dk | Book batteritest af elbil",
   description:
-    "Kontakt EV-Check.dk for batteritest, elbil-diagnose, PDF-rapport og rådgivning. Telefon +45 36 21 23 70 og info@ev-check.dk.",
+    "Kontakt EV-Check.dk for batteritest, elbil-diagnose, PDF-rapport og rådgivning. Telefon +45 71 90 05 30 og info@ev-check.dk.",
   alternates: { canonical: `${siteUrl}/kontakt` },
 };
 

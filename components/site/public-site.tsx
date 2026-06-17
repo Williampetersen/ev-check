@@ -90,7 +90,7 @@ export const faqs = [
   {
     question: "Hvad koster en batteritest?",
     answer:
-      "Standard batteri- og systemdiagnose koster fra 950 kr. Prisen kan afhænge af bilmodel, placering og opgavens omfang.",
+      "Batteritest af elbil koster 1300 kr. og bookes som en fast 15 minutters service.",
   },
 ];
 
@@ -169,7 +169,7 @@ export function SiteFooter() {
         <div>
           <p className="font-semibold">Kontakt</p>
           <div className="mt-3 grid gap-2 text-sm text-slate-300">
-            <a href="tel:+4536212370" className="hover:text-teal-300">+45 36 21 23 70</a>
+            <a href="tel:+4571900530" className="hover:text-teal-300">+45 71 90 05 30</a>
             <a href="mailto:info@ev-check.dk" className="hover:text-teal-300">info@ev-check.dk</a>
             <span>København, Danmark</span>
           </div>
@@ -225,7 +225,7 @@ export function HeroSection() {
             </ButtonLink>
           </div>
           <div className="mt-8 grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
-            <HeroFact value="950 kr." label="fra-pris for test" />
+            <HeroFact value="1300 kr." label="fast pris for test" />
             <HeroFact value="15-40 min." label="typisk testtid" />
             <HeroFact value="Sjælland" label="vi kører ud" />
           </div>
@@ -258,9 +258,9 @@ export function PriceCard() {
   return (
     <aside className="rounded-3xl border border-white/70 bg-white/95 p-5 text-slate-950 shadow-2xl shadow-teal-950/20">
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Mest valgt</p>
-      <h2 className="mt-3 text-2xl font-bold">Batteri- og systemdiagnose</h2>
+      <h2 className="mt-3 text-2xl font-bold">Batteritest af elbil</h2>
       <div className="mt-4 flex items-end gap-2">
-        <p className="text-4xl font-bold">950 kr.</p>
+        <p className="text-4xl font-bold">1300 kr.</p>
         <p className="pb-1 text-sm text-slate-500">inkl. rapport</p>
       </div>
       <div className="mt-5 grid gap-3">
@@ -451,7 +451,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             description="Fortæl kort om din elbil og hvad du ønsker hjælp til. Vi vender tilbage med næste ledige tid og praktisk information."
           />
           <div className="mt-6 grid gap-3 text-sm text-slate-700">
-            <ContactLine icon={Phone} text="+45 36 21 23 70" href="tel:+4536212370" />
+            <ContactLine icon={Phone} text="+45 71 90 05 30" href="tel:+4571900530" />
             <ContactLine icon={Mail} text="info@ev-check.dk" href="mailto:info@ev-check.dk" />
             <ContactLine icon={MapPin} text="København, Danmark - vi dækker hele Sjælland" />
             <ContactLine icon={Clock} text="Vi bestræber os på at svare samme dag på hverdage" />

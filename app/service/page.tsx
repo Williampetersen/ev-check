@@ -18,7 +18,7 @@ export default function ServicePage() {
           name: "Batteritest og systemdiagnose for elbiler",
           provider: { "@type": "LocalBusiness", name: "EV-Check.dk", url: siteUrl },
           areaServed: "Sjælland",
-          offers: { "@type": "Offer", price: "950", priceCurrency: "DKK" },
+          offers: { "@type": "Offer", price: "1300", priceCurrency: "DKK" },
         }}
       />
       <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">

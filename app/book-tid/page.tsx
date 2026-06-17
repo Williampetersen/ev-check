@@ -4,7 +4,7 @@ import { JsonLd, SitePage, siteUrl } from "@/components/site/public-site";
 import { getBookingConfig } from "@/lib/server/booking-system";
 
 export const metadata: Metadata = {
-  title: "Book tid | Batteritest af elbil fra 950 kr. | EV-Check.dk",
+  title: "Book tid | Batteritest af elbil 1300 kr. | EV-Check.dk",
   description:
     "Book batteritest af din elbil. EV-Check.dk kommer ud til dig paa Sjaelland og leverer professionel PDF-rapport samme dag.",
   alternates: { canonical: `${siteUrl}/book-tid` },

@@ -27,7 +27,22 @@ Core variables:
 - `SMTP_USER`
 - `SMTP_PASSWORD`
 - `MAIL_FROM`
+- `MAIL_FROM_NAME`
 - `BOOKING_ADMIN_EMAIL`
+- `APP_URL`
+
+For one.com mail, use:
+
+```env
+SMTP_HOST=send.one.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=info@ev-check.dk
+MAIL_FROM="EV-Check.dk <info@ev-check.dk>"
+MAIL_FROM_NAME=EV-Check.dk
+BOOKING_ADMIN_EMAIL=info@ev-check.dk
+APP_URL=https://ev-check.dk
+```
 
 ## Routes
 

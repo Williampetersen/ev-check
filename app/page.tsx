@@ -57,7 +57,7 @@ export default function Home() {
             name: "EV-Check.dk",
             url: siteUrl,
             image: `${siteUrl}/wp/ev-check-dk.png`,
-            telephone: "+45 36 21 23 70",
+            telephone: "+45 71 90 05 30",
             email: "info@ev-check.dk",
             address: {
               "@type": "PostalAddress",
@@ -65,7 +65,7 @@ export default function Home() {
               addressCountry: "DK",
             },
             areaServed: ["København", "Sjælland", "Danmark"],
-            priceRange: "DKK 950+",
+            priceRange: "DKK 1300",
             description: "Professionel batteritest og elbil-diagnose med PDF-rapport.",
           },
           {
@@ -74,7 +74,7 @@ export default function Home() {
             name: "Batteritest og systemdiagnose for elbiler",
             provider: { "@type": "LocalBusiness", name: "EV-Check.dk" },
             areaServed: "Sjælland",
-            offers: { "@type": "Offer", price: "950", priceCurrency: "DKK" },
+            offers: { "@type": "Offer", price: "1300", priceCurrency: "DKK" },
             description:
               "Test af SoH, SoC, cellebalance, temperatur, BMS-status og fejlkoder for elbiler.",
           },

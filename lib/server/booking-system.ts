@@ -7,7 +7,7 @@ import {
   type DashboardSettings,
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
-import { sendCustomerAppointmentEmail } from "@/lib/server/mail";
+import { sendAdminBookingEmail, sendCustomerAppointmentEmail } from "@/lib/server/mail";
 
 export type BookingService = {
   id: string;
@@ -152,16 +152,14 @@ function formatDuration(minutes: number) {
   return rest ? `${hours} t. ${rest} min.` : `${hours} t.`;
 }
 
-function servicesForSettings(settings: DashboardSettings) {
+function servicesForSettings(_settings: DashboardSettings) {
   return bookingServices.map((service) => {
-    const configured = settings.services.find((item) => item.id === service.id);
-    const durationMinutes = numberValue(configured?.durationMinutes, service.durationMinutes);
     return {
       ...service,
-      title: sanitize(configured?.label) || service.title,
-      price: numberValue(configured?.price, service.price),
-      durationMinutes,
-      duration: formatDuration(durationMinutes),
+      title: service.title,
+      price: service.price,
+      durationMinutes: service.durationMinutes,
+      duration: formatDuration(service.durationMinutes),
     };
   });
 }
@@ -169,12 +167,12 @@ function servicesForSettings(settings: DashboardSettings) {
 export const bookingServices: BookingService[] = [
   {
     id: "battery-health",
-    title: "Batteri- og systemdiagnose",
-    description: "Professionel test af SoH, SoC, cellebalance, temperaturer og BMS-status.",
-    duration: "45-60 min.",
-    durationMinutes: 60,
-    badge: "Mest valgt",
-    price: 950,
+    title: "Batteritest af elbil",
+    description: "Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.",
+    duration: "15 min.",
+    durationMinutes: 15,
+    badge: "Fast service",
+    price: 1300,
     imageUrl: "/wp/ev-car-danmark-1.png",
     features: [
       "Test af batteriets sundhed (SoH)",
@@ -185,75 +183,18 @@ export const bookingServices: BookingService[] = [
       "PDF-rapport samme dag",
     ],
   },
-  {
-    id: "pre-purchase",
-    title: "Brugtbil tjek før køb",
-    description: "Udvidet kontrol til dig, der vil købe en brugt elbil med ro i maven.",
-    duration: "75-90 min.",
-    durationMinutes: 90,
-    badge: "Tryg handel",
-    price: 1495,
-    imageUrl: "/wp/ev-bil-denmark-1.jpg",
-    features: [
-      "Alt fra standard batteritest",
-      "Købsvenlig gennemgang",
-      "Vurdering af risikopunkter",
-      "Rapport til forhandling",
-      "Rådgivning efter testen",
-    ],
-  },
-  {
-    id: "fleet-report",
-    title: "Flåde- og forhandlerkontrol",
-    description: "Kontrol til forhandlere og virksomheder, der skal dokumentere flere elbiler.",
-    duration: "90-120 min.",
-    durationMinutes: 120,
-    badge: "Erhverv",
-    price: 1895,
-    imageUrl: "/wp/ev-car-danmark-3.png",
-    features: [
-      "Dokumenteret batteristatus",
-      "Rapport til intern brug eller salg",
-      "Mulighed for flere biler",
-      "Prioriteret planlægning",
-    ],
-  },
+
 ];
 
-export const bookingAddons: BookingAddon[] = [
-  {
-    id: "certificate-review",
-    label: "Udvidet rapportgennemgang",
-    description: "Vi gennemgår rapporten med dig telefonisk og forklarer de vigtigste tal.",
-    price: 295,
-    durationMinutes: 15,
-    imageUrl: "/wp/teslacertificate.jpg",
-  },
-  {
-    id: "purchase-advice",
-    label: "Købsrådgivning",
-    description: "Ekstra rådgivning om brugtbil, pris, batteririsiko og næste skridt.",
-    price: 495,
-    durationMinutes: 20,
-    imageUrl: "/wp/ev-bil-denmark-2.jpg",
-  },
-  {
-    id: "urgent",
-    label: "Hurtig tid",
-    description: "Vi prioriterer bookingen og forsøger at finde først mulige ledige tidspunkt.",
-    price: 350,
-    durationMinutes: 0,
-    imageUrl: "/wp/ev-check2026-1-3.jpg",
-  },
-];
+export const bookingAddons: BookingAddon[] = [];
 
 export async function getBookingConfig(): Promise<BookingConfig> {
   const settings = await getBookingSettings();
   const minDate = addDays(todayKey(), 1);
   return {
     settings,
-    services: servicesForSettings(settings),
-    addons: bookingAddons,
+    services: servicesForSettings(settings).slice(0, 1),
+    addons: [],
     minDate,
     maxDate: addDays(minDate, 60),
     databaseConfigured: isDatabaseConfigured(),
@@ -375,7 +316,7 @@ export async function createBooking(input: BookingCreateInput) {
   const validationError = validateBooking(input, config.services);
   if (validationError) throw new Error(validationError);
 
-  const addonIds = input.addonIds.filter(Boolean).slice(0, 8);
+  const addonIds: string[] = [];
   const pricing = calculateBooking({ serviceId: input.serviceId, addonIds }, config.services, config.addons);
   const slots = await getAvailableSlots({
     date: input.appointmentDate,
@@ -501,12 +442,26 @@ export async function createBooking(input: BookingCreateInput) {
   };
 
   try {
-    await sendCustomerAppointmentEmail({
-      customer,
-      appointment,
-      settings: config.settings,
-      portalUrl: `${process.env.APP_URL || "https://ev-check.dk"}/kunde/${created.portalToken}`,
-    });
+    if (config.settings.emailAutomation.customerOnCreate) {
+      await sendCustomerAppointmentEmail({
+        customer,
+        appointment,
+        settings: config.settings,
+        portalUrl: `${process.env.APP_URL || "https://ev-check.dk"}/kunde/${created.portalToken}`,
+      });
+    }
+  } catch {
+    // Booking is saved; email status is tracked separately when SMTP is configured.
+  }
+
+  try {
+    if (config.settings.emailAutomation.adminOnCreate) {
+      await sendAdminBookingEmail({
+        customer,
+        appointment,
+        settings: config.settings,
+      });
+    }
   } catch {
     // Booking is saved; email status is tracked separately when SMTP is configured.
   }

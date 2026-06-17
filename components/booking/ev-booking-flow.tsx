@@ -19,7 +19,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { BookingAddon, BookingConfig, BookingService } from "@/lib/server/booking-system";
+import type { BookingConfig, BookingService } from "@/lib/server/booking-system";
 import { formatPrice } from "@/lib/ev-domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,7 +103,6 @@ function nextDates(minDate: string, count: number) {
 
 export function EvBookingFlow({ config }: BookingFlowProps) {
   const [serviceId, setServiceId] = useState(config.services[0]?.id || "");
-  const [addonIds, setAddonIds] = useState<string[]>([]);
   const [appointmentDate, setAppointmentDate] = useState(config.minDate);
   const [appointmentTime, setAppointmentTime] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
@@ -121,19 +120,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     () => config.services.find((item) => item.id === serviceId) || config.services[0],
     [config.services, serviceId],
   );
-  const selectedAddons = useMemo(
-    () => config.addons.filter((item) => addonIds.includes(item.id)),
-    [addonIds, config.addons],
-  );
   const total = useMemo(
-    () => Number(selectedService?.price || 0) + selectedAddons.reduce((sum, item) => sum + item.price, 0),
-    [selectedAddons, selectedService?.price],
+    () => Number(selectedService?.price || 0),
+    [selectedService?.price],
   );
   const durationMinutes = useMemo(
-    () =>
-      Number(selectedService?.durationMinutes || 0) +
-      selectedAddons.reduce((sum, item) => sum + item.durationMinutes, 0),
-    [selectedAddons, selectedService?.durationMinutes],
+    () => Number(selectedService?.durationMinutes || 0),
+    [selectedService?.durationMinutes],
   );
   const dates = useMemo(() => nextDates(config.minDate, 21), [config.minDate]);
 
@@ -143,8 +136,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       date: appointmentDate,
       serviceId,
     });
-    if (addonIds.length) params.set("addonIds", addonIds.join(","));
-
     setSlotsLoading(true);
     setSlotsError("");
     fetch(`/api/booking/availability?${params.toString()}`, {
@@ -169,17 +160,20 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       });
 
     return () => controller.abort();
-  }, [addonIds, appointmentDate, serviceId]);
-
-  const toggleAddon = (addon: BookingAddon) => {
-    setAddonIds((current) =>
-      current.includes(addon.id) ? current.filter((id) => id !== addon.id) : [...current, addon.id],
-    );
-  };
+  }, [appointmentDate, serviceId]);
 
   const stepOneDone = Boolean(serviceId);
-  const stepTwoDone = Boolean(appointmentDate && appointmentTime);
-  const stepThreeDone = Boolean(vehicle.make && vehicle.model && customer.name && customer.email && customer.phone);
+  const stepTwoDone = Boolean(
+    vehicle.make &&
+      vehicle.model &&
+      customer.name &&
+      customer.email &&
+      customer.phone &&
+      customer.address &&
+      customer.postalCode &&
+      customer.city,
+  );
+  const stepThreeDone = Boolean(appointmentDate && appointmentTime);
 
   const submitBooking = async () => {
     setSubmitError("");
@@ -190,7 +184,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           serviceId,
-          addonIds,
+          addonIds: [],
           appointmentDate,
           appointmentTime,
           customer,
@@ -224,7 +218,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                 Book batteritest af din elbil.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                Vælg testpakke, tidspunkt og udfyld dine oplysninger. Vi kommer ud til dig og leverer en professionel rapport.
+                Vaelg batteritesten, udfyld kunde- og biloplysninger, og book en ledig tid. Du faar en bekraeftelse paa e-mail.
               </p>
             </div>
             <div className="grid gap-2 text-sm text-slate-200 sm:grid-cols-3 lg:grid-cols-1">
@@ -262,93 +256,12 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
             <BookingStep
               step={2}
-              title="Tilvalg og tidspunkt"
-              summary={appointmentTime ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}` : "Vælg tid"}
+              title="Kunde og biloplysninger"
+              summary={customer.name || "Udfyld oplysninger"}
               isOpen={openStep === 2}
               isComplete={stepTwoDone}
               locked={!stepOneDone}
               onEdit={() => setOpenStep(2)}
-            >
-              <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                <div>
-                  <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">Ekstra hjælp</p>
-                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                    {config.addons.map((addon) => (
-                      <AddonCard
-                        key={addon.id}
-                        addon={addon}
-                        selected={addonIds.includes(addon.id)}
-                        onToggle={() => toggleAddon(addon)}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">Dato og tid</p>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {dates.map((date) => (
-                      <button
-                        key={date}
-                        type="button"
-                        onClick={() => setAppointmentDate(date)}
-                        className={cn(
-                          "rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition",
-                          appointmentDate === date
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm shadow-teal-500/30"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-teal-300",
-                        )}
-                      >
-                        {dateLabel(date)}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
-                    {slotsLoading ? (
-                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Henter ledige tider
-                      </div>
-                    ) : slotsError ? (
-                      <p className="text-sm font-semibold text-rose-700">{slotsError}</p>
-                    ) : slots.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {slots.map((slot) => (
-                          <button
-                            key={slot}
-                            type="button"
-                            onClick={() => setAppointmentTime(slot)}
-                            className={cn(
-                              "h-10 rounded-xl border text-sm font-semibold transition",
-                              appointmentTime === slot
-                                ? "border-slate-950 bg-slate-950 text-white"
-                                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-300 hover:bg-teal-50",
-                            )}
-                          >
-                            {slot}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm font-semibold text-slate-500">Ingen ledige tider denne dag.</p>
-                    )}
-                  </div>
-                  <Button type="button" className="mt-4" disabled={!appointmentTime} onClick={() => setOpenStep(3)}>
-                    Fortsæt til oplysninger
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </BookingStep>
-
-            <BookingStep
-              step={3}
-              title="Bil og kontaktoplysninger"
-              summary={customer.name || "Udfyld oplysninger"}
-              isOpen={openStep === 3}
-              isComplete={stepThreeDone}
-              locked={!stepTwoDone}
-              onEdit={() => setOpenStep(3)}
             >
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="rounded-2xl border border-slate-100 bg-white p-4">
@@ -357,7 +270,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                     Elbil
                   </p>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Bilmærke">
+                    <Field label="Bilmaerke">
                       <select
                         value={vehicle.make}
                         onChange={(event) => setVehicle((current) => ({ ...current, make: event.target.value }))}
@@ -371,13 +284,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                     <Field label="Model">
                       <Input value={vehicle.model} onChange={(event) => setVehicle((current) => ({ ...current, model: event.target.value }))} placeholder="Model 3, ID.4, Ioniq 5..." />
                     </Field>
-                    <Field label="Årgang">
+                    <Field label="Aargang">
                       <Input value={vehicle.year} onChange={(event) => setVehicle((current) => ({ ...current, year: event.target.value }))} placeholder="2021" />
                     </Field>
                     <Field label="Nummerplade">
                       <Input value={vehicle.registrationNumber} onChange={(event) => setVehicle((current) => ({ ...current, registrationNumber: event.target.value.toUpperCase() }))} placeholder="AB12345" />
                     </Field>
-                    <Field label="Oplevet rækkevidde" className="sm:col-span-2">
+                    <Field label="Oplevet raekkevidde" className="sm:col-span-2">
                       <Input value={vehicle.currentRange} onChange={(event) => setVehicle((current) => ({ ...current, currentRange: event.target.value }))} placeholder="Fx 320 km ved fuld opladning" />
                     </Field>
                   </div>
@@ -411,7 +324,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                       <Input value={customer.company} onChange={(event) => setCustomer((current) => ({ ...current, company: event.target.value }))} />
                     </Field>
                     <Field label="Besked" className="sm:col-span-2">
-                      <Textarea value={customer.notes} onChange={(event) => setCustomer((current) => ({ ...current, notes: event.target.value }))} placeholder="Skriv gerne om bilen skal testes hjemme, på arbejde eller før køb." />
+                      <Textarea value={customer.notes} onChange={(event) => setCustomer((current) => ({ ...current, notes: event.target.value }))} placeholder="Skriv gerne om bilen skal testes hjemme, paa arbejde eller foer koeb." />
                     </Field>
                   </div>
                   <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
@@ -421,13 +334,79 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                       onChange={(event) => setCustomer((current) => ({ ...current, acceptsTerms: event.target.checked }))}
                       className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                     />
-                    Jeg accepterer, at EV-Check må kontakte mig om bookingen og behandle mine oplysninger i forbindelse med testen.
+                    Jeg accepterer, at EV-Check maa kontakte mig om bookingen og behandle mine oplysninger i forbindelse med testen.
                   </label>
-                  <Button type="button" className="mt-4" disabled={!stepThreeDone} onClick={() => setOpenStep(4)}>
-                    Gennemgå booking
+                  <Button type="button" className="mt-4" disabled={!stepTwoDone} onClick={() => setOpenStep(3)}>
+                    Fortsaet til dato og tid
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+            </BookingStep>
+
+            <BookingStep
+              step={3}
+              title="Dato og tid"
+              summary={appointmentTime ? dateLabel(appointmentDate) + " kl. " + appointmentTime : "Vaelg tid"}
+              isOpen={openStep === 3}
+              isComplete={stepThreeDone}
+              locked={!stepTwoDone}
+              onEdit={() => setOpenStep(3)}
+            >
+              <div>
+                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">Dato og tid</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {dates.map((date) => (
+                    <button
+                      key={date}
+                      type="button"
+                      onClick={() => setAppointmentDate(date)}
+                      className={cn(
+                        "rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition",
+                        appointmentDate === date
+                          ? "border-teal-600 bg-teal-600 text-white shadow-sm shadow-teal-500/30"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-teal-300",
+                      )}
+                    >
+                      {dateLabel(date)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+                  {slotsLoading ? (
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Henter ledige tider
+                    </div>
+                  ) : slotsError ? (
+                    <p className="text-sm font-semibold text-rose-700">{slotsError}</p>
+                  ) : slots.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {slots.map((slot) => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => setAppointmentTime(slot)}
+                          className={cn(
+                            "h-10 rounded-xl border text-sm font-semibold transition",
+                            appointmentTime === slot
+                              ? "border-slate-950 bg-slate-950 text-white"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-300 hover:bg-teal-50",
+                          )}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-500">Ingen ledige tider denne dag.</p>
+                  )}
+                </div>
+                <Button type="button" className="mt-4" disabled={!stepThreeDone} onClick={() => setOpenStep(4)}>
+                  Gennemgaa booking
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             </BookingStep>
 
@@ -444,7 +423,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                   <p className="mb-4 font-bold text-slate-950">Gennemgang</p>
                   <div className="grid gap-3 text-sm">
                     <ConfirmRow label="Testpakke" value={selectedService?.title || ""} />
-                    <ConfirmRow label="Tilvalg" value={selectedAddons.length ? selectedAddons.map((item) => item.label).join(", ") : "Ingen tilvalg"} />
                     <ConfirmRow label="Dato og tid" value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`} />
                     <ConfirmRow label="Bil" value={[vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(" ")} />
                     <ConfirmRow label="Adresse" value={[customer.address, customer.postalCode, customer.city].filter(Boolean).join(", ")} />
@@ -459,8 +437,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                   <ul className="mt-4 grid gap-2 text-sm leading-6 text-slate-700">
                     <li>Vi gemmer bookingen i systemet.</li>
                     <li>Du får adgang til din kundeportal.</li>
-                    <li>EV-Check kontakter dig med praktisk bekræftelse.</li>
-                    <li>Efter testen modtager du din PDF-rapport.</li>
+                    <li>Kunden faar en e-mailbekraeftelse, naar mail er konfigureret.</li>
+                    <li>Admin faar en besked om den nye booking.</li>
                   </ul>
                   {submitError ? <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{submitError}</p> : null}
                   <Button type="button" disabled={isSubmitting || !customer.acceptsTerms} onClick={submitBooking} className="mt-5 w-full">
@@ -474,7 +452,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
           <BookingSummary
             service={selectedService}
-            addons={selectedAddons}
             total={total}
             durationMinutes={durationMinutes}
             appointmentDate={appointmentDate}
@@ -508,7 +485,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             </div>
             <BookingSummary
               service={selectedService}
-              addons={selectedAddons}
               total={total}
               durationMinutes={durationMinutes}
               appointmentDate={appointmentDate}
@@ -639,46 +615,8 @@ function PackageCard({
   );
 }
 
-function AddonCard({
-  addon,
-  selected,
-  onToggle,
-}: {
-  addon: BookingAddon;
-  selected: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={cn(
-        "overflow-hidden rounded-2xl border bg-white text-left transition hover:border-teal-300",
-        selected ? "border-teal-500 ring-4 ring-teal-500/10" : "border-slate-100",
-      )}
-    >
-      <div className="relative h-24">
-        <Image src={addon.imageUrl} alt={addon.label} fill sizes="(max-width:768px) 33vw, 20vw" className="object-cover" />
-        {selected ? (
-          <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
-            <Check className="h-4 w-4" />
-          </span>
-        ) : null}
-      </div>
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-bold text-slate-950">{addon.label}</p>
-          <p className="shrink-0 text-sm font-bold text-teal-700">{formatPrice(addon.price)}</p>
-        </div>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{addon.description}</p>
-      </div>
-    </button>
-  );
-}
-
 function BookingSummary({
   service,
-  addons,
   total,
   durationMinutes,
   appointmentDate,
@@ -687,7 +625,6 @@ function BookingSummary({
   className,
 }: {
   service?: BookingService;
-  addons: BookingAddon[];
   total: number;
   durationMinutes: number;
   appointmentDate: string;
@@ -700,9 +637,6 @@ function BookingSummary({
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">Oversigt</p>
       <div className="mt-4 space-y-3">
         <SummaryRow label={service?.title || "Testpakke"} value={formatPrice(service?.price || 0)} />
-        {addons.map((addon) => (
-          <SummaryRow key={addon.id} label={addon.label} value={formatPrice(addon.price)} />
-        ))}
         <div className="border-t border-slate-100 pt-3">
           <SummaryRow label="Samlet tid" value={`${durationMinutes || 0} min.`} />
           <SummaryRow label="Dato" value={appointmentTime ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}` : "Vælg tid"} />
@@ -776,7 +710,7 @@ function BookingConfirmation({
             <Mail className="h-4 w-4" />
             {customerEmail}
           </a>
-          <a href="tel:+4536212370" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-teal-300">
+          <a href="tel:+4571900530" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-teal-300">
             <Phone className="h-4 w-4" />
             Ring til os
           </a>
