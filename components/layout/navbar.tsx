@@ -13,7 +13,7 @@ export default function NavBar() {
       <div
         className={`fixed top-0 flex w-full justify-center ${
           scrolled
-            ? "border-b border-gray-200 bg-white/50 backdrop-blur-xl"
+            ? "border-b border-white/50 bg-white/60 shadow-sm shadow-sky-950/5 backdrop-blur-2xl"
             : "bg-white/0"
         } z-30 transition-all`}
       >
@@ -30,7 +30,7 @@ export default function NavBar() {
           </Link>
           <Link
             href="/admin/login"
-            className="inline-flex items-center gap-2 rounded-full border border-black bg-black px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-black"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-950/80 bg-slate-950/85 px-4 py-1.5 text-sm font-semibold text-white shadow-sm shadow-slate-950/20 backdrop-blur transition-colors hover:bg-white/80 hover:text-black"
           >
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
