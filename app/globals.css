@@ -48,6 +48,6 @@ textarea {
   }
 
   .glass-dark {
-    @apply border border-white/15 bg-slate-950/45 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl;
+    @apply border border-white/[0.15] bg-slate-950/[0.45] shadow-2xl shadow-slate-950/20 backdrop-blur-2xl;
   }
 }
