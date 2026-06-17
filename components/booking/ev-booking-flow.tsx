@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BatteryCharging,
-  CalendarDays,
+  CalendarCheck,
   Check,
   CheckCircle2,
   Clock,
@@ -17,7 +17,7 @@ import {
   Phone,
   ShieldCheck,
   User,
-  X,
+  X as CloseIcon,
 } from "lucide-react";
 import type { BookingConfig, BookingService } from "@/lib/server/booking-system";
 import { formatPrice } from "@/lib/ev-domain";
@@ -120,14 +120,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     () => config.services.find((item) => item.id === serviceId) || config.services[0],
     [config.services, serviceId],
   );
-  const total = useMemo(
-    () => Number(selectedService?.price || 0),
-    [selectedService?.price],
-  );
-  const durationMinutes = useMemo(
-    () => Number(selectedService?.durationMinutes || 0),
-    [selectedService?.durationMinutes],
-  );
+  const total = useMemo(() => Number(selectedService?.price || 0), [selectedService?.price]);
+  const durationMinutes = useMemo(() => Number(selectedService?.durationMinutes || 0), [selectedService?.durationMinutes]);
   const dates = useMemo(() => nextDates(config.minDate, 21), [config.minDate]);
 
   useEffect(() => {
@@ -208,23 +202,26 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   }
 
   return (
-    <section className="relative bg-[#f4fbfa] px-4 py-8 sm:px-6 lg:px-8">
+    <section className="relative bg-sky-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-slate-300/40">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-300">Online booking</p>
-          <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+        <div className="mb-6 overflow-hidden rounded-lg bg-indigo-950 text-white shadow-xl shadow-sky-900/10">
+          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:p-8">
             <div>
-              <h1 className="max-w-3xl text-4xl font-bold tracking-normal sm:text-5xl">
-                Book batteritest af din elbil.
+              <p className="inline-flex items-center gap-2 rounded-lg border border-sky-200/20 bg-sky-200/10 px-3 py-1 text-sm font-semibold text-sky-100">
+                <CalendarCheck className="h-4 w-4" />
+                Online booking
+              </p>
+              <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-normal sm:text-5xl">
+                Book batteritest af din elbil
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                Vaelg batteritesten, udfyld kunde- og biloplysninger, og book en ledig tid. Du faar en bekraeftelse paa e-mail.
+              <p className="mt-4 max-w-2xl text-base leading-7 text-sky-50">
+                Én service, fast pris og en klar bekræftelse til både kunde og admin.
               </p>
             </div>
-            <div className="grid gap-2 text-sm text-slate-200 sm:grid-cols-3 lg:grid-cols-1">
-              <HeroMini icon={ShieldCheck} text="Ikke-invasiv test" />
+            <div className="grid gap-2 text-sm text-sky-50">
+              <HeroMini icon={BatteryCharging} text="Batteriets sundhed (SoH)" />
               <HeroMini icon={FileText} text="PDF-rapport inkluderet" />
-              <HeroMini icon={MapPin} text="Vi dækker hele Sjælland" />
+              <HeroMini icon={MapPin} text="Vi dækker Sjælland" />
             </div>
           </div>
         </div>
@@ -233,13 +230,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           <div className="space-y-4">
             <BookingStep
               step={1}
-              title="Vælg testpakke"
+              title="Vælg service"
               summary={selectedService?.title}
               isOpen={openStep === 1}
               isComplete={stepOneDone}
               onEdit={() => setOpenStep(1)}
             >
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4">
                 {config.services.map((service) => (
                   <PackageCard
                     key={service.id}
@@ -256,25 +253,21 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
             <BookingStep
               step={2}
-              title="Kunde og biloplysninger"
+              title="Kunde og bil"
               summary={customer.name || "Udfyld oplysninger"}
               isOpen={openStep === 2}
               isComplete={stepTwoDone}
               locked={!stepOneDone}
               onEdit={() => setOpenStep(2)}
             >
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                  <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
-                    <BatteryCharging className="h-5 w-5 text-teal-700" />
-                    Elbil
-                  </p>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <FormPanel icon={BatteryCharging} title="Elbil">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Bilmaerke">
+                    <Field label="Bilmærke">
                       <select
                         value={vehicle.make}
                         onChange={(event) => setVehicle((current) => ({ ...current, make: event.target.value }))}
-                        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10"
+                        className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10"
                       >
                         {vehicleMakes.map((make) => (
                           <option key={make}>{make}</option>
@@ -282,25 +275,21 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                       </select>
                     </Field>
                     <Field label="Model">
-                      <Input value={vehicle.model} onChange={(event) => setVehicle((current) => ({ ...current, model: event.target.value }))} placeholder="Model 3, ID.4, Ioniq 5..." />
+                      <Input value={vehicle.model} onChange={(event) => setVehicle((current) => ({ ...current, model: event.target.value }))} placeholder="Model 3, ID.4, Ioniq 5" />
                     </Field>
-                    <Field label="Aargang">
+                    <Field label="Årgang">
                       <Input value={vehicle.year} onChange={(event) => setVehicle((current) => ({ ...current, year: event.target.value }))} placeholder="2021" />
                     </Field>
                     <Field label="Nummerplade">
                       <Input value={vehicle.registrationNumber} onChange={(event) => setVehicle((current) => ({ ...current, registrationNumber: event.target.value.toUpperCase() }))} placeholder="AB12345" />
                     </Field>
-                    <Field label="Oplevet raekkevidde" className="sm:col-span-2">
+                    <Field label="Oplevet rækkevidde" className="sm:col-span-2">
                       <Input value={vehicle.currentRange} onChange={(event) => setVehicle((current) => ({ ...current, currentRange: event.target.value }))} placeholder="Fx 320 km ved fuld opladning" />
                     </Field>
                   </div>
-                </div>
+                </FormPanel>
 
-                <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                  <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
-                    <User className="h-5 w-5 text-teal-700" />
-                    Kontakt og adresse
-                  </p>
+                <FormPanel icon={User} title="Kontakt og adresse">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Fulde navn">
                       <Input value={customer.name} onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))} />
@@ -320,11 +309,11 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                     <Field label="By">
                       <Input value={customer.city} onChange={(event) => setCustomer((current) => ({ ...current, city: event.target.value }))} />
                     </Field>
-                    <Field label="Firma (valgfrit)">
-                      <Input value={customer.company} onChange={(event) => setCustomer((current) => ({ ...current, company: event.target.value }))} />
+                    <Field label="Firma">
+                      <Input value={customer.company} onChange={(event) => setCustomer((current) => ({ ...current, company: event.target.value }))} placeholder="Valgfrit" />
                     </Field>
                     <Field label="Besked" className="sm:col-span-2">
-                      <Textarea value={customer.notes} onChange={(event) => setCustomer((current) => ({ ...current, notes: event.target.value }))} placeholder="Skriv gerne om bilen skal testes hjemme, paa arbejde eller foer koeb." />
+                      <Textarea value={customer.notes} onChange={(event) => setCustomer((current) => ({ ...current, notes: event.target.value }))} placeholder="Hjemme, på arbejde eller før køb?" />
                     </Field>
                   </div>
                   <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
@@ -332,29 +321,29 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                       type="checkbox"
                       checked={customer.acceptsTerms}
                       onChange={(event) => setCustomer((current) => ({ ...current, acceptsTerms: event.target.checked }))}
-                      className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                     />
-                    Jeg accepterer, at EV-Check maa kontakte mig om bookingen og behandle mine oplysninger i forbindelse med testen.
+                    EV-Check må kontakte mig om bookingen og testen.
                   </label>
-                  <Button type="button" className="mt-4" disabled={!stepTwoDone} onClick={() => setOpenStep(3)}>
-                    Fortsaet til dato og tid
+                  <Button type="button" className="mt-4 w-full sm:w-auto" disabled={!stepTwoDone} onClick={() => setOpenStep(3)}>
+                    Fortsæt
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                </div>
+                </FormPanel>
               </div>
             </BookingStep>
 
             <BookingStep
               step={3}
               title="Dato og tid"
-              summary={appointmentTime ? dateLabel(appointmentDate) + " kl. " + appointmentTime : "Vaelg tid"}
+              summary={appointmentTime ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}` : "Vælg tid"}
               isOpen={openStep === 3}
               isComplete={stepThreeDone}
               locked={!stepTwoDone}
               onEdit={() => setOpenStep(3)}
             >
               <div>
-                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">Dato og tid</p>
+                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-sky-700">Vælg dato</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {dates.map((date) => (
                     <button
@@ -362,10 +351,10 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                       type="button"
                       onClick={() => setAppointmentDate(date)}
                       className={cn(
-                        "rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition",
+                        "rounded-lg border px-3 py-3 text-left text-sm font-semibold transition",
                         appointmentDate === date
-                          ? "border-teal-600 bg-teal-600 text-white shadow-sm shadow-teal-500/30"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-teal-300",
+                          ? "border-sky-600 bg-sky-600 text-white shadow-sm shadow-sky-500/30"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50",
                       )}
                     >
                       {dateLabel(date)}
@@ -373,7 +362,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="mt-4 rounded-lg border border-sky-100 bg-white p-4">
                   {slotsLoading ? (
                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -389,10 +378,10 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                           type="button"
                           onClick={() => setAppointmentTime(slot)}
                           className={cn(
-                            "h-10 rounded-xl border text-sm font-semibold transition",
+                            "h-10 rounded-lg border text-sm font-semibold transition",
                             appointmentTime === slot
-                              ? "border-slate-950 bg-slate-950 text-white"
-                              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-300 hover:bg-teal-50",
+                              ? "border-indigo-950 bg-indigo-950 text-white"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50",
                           )}
                         >
                           {slot}
@@ -403,8 +392,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                     <p className="text-sm font-semibold text-slate-500">Ingen ledige tider denne dag.</p>
                   )}
                 </div>
-                <Button type="button" className="mt-4" disabled={!stepThreeDone} onClick={() => setOpenStep(4)}>
-                  Gennemgaa booking
+                <Button type="button" className="mt-4 w-full sm:w-auto" disabled={!stepThreeDone} onClick={() => setOpenStep(4)}>
+                  Gennemgå booking
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -412,35 +401,34 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
             <BookingStep
               step={4}
-              title="Bekræft booking"
+              title="Bekræft"
               summary={formatPrice(total)}
               isOpen={openStep === 4}
               isComplete={false}
               locked={!stepThreeDone}
             >
-              <div className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
-                <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                  <p className="mb-4 font-bold text-slate-950">Gennemgang</p>
+              <div className="grid gap-5 lg:grid-cols-[1fr_0.82fr]">
+                <div className="rounded-lg border border-sky-100 bg-white p-4">
+                  <p className="mb-4 font-bold text-slate-950">Booking</p>
                   <div className="grid gap-3 text-sm">
-                    <ConfirmRow label="Testpakke" value={selectedService?.title || ""} />
-                    <ConfirmRow label="Dato og tid" value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`} />
+                    <ConfirmRow label="Service" value={selectedService?.title || ""} />
+                    <ConfirmRow label="Tid" value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`} />
                     <ConfirmRow label="Bil" value={[vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(" ")} />
                     <ConfirmRow label="Adresse" value={[customer.address, customer.postalCode, customer.city].filter(Boolean).join(", ")} />
                     <ConfirmRow label="Total" value={formatPrice(total)} highlight />
                   </div>
                 </div>
-                <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4">
+                <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
                   <p className="flex items-center gap-2 font-bold text-slate-950">
-                    <ShieldCheck className="h-5 w-5 text-teal-700" />
-                    Når du bekræfter
+                    <ShieldCheck className="h-5 w-5 text-sky-700" />
+                    Efter bekræftelse
                   </p>
                   <ul className="mt-4 grid gap-2 text-sm leading-6 text-slate-700">
-                    <li>Vi gemmer bookingen i systemet.</li>
-                    <li>Du får adgang til din kundeportal.</li>
-                    <li>Kunden faar en e-mailbekraeftelse, naar mail er konfigureret.</li>
-                    <li>Admin faar en besked om den nye booking.</li>
+                    <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />Bookingen gemmes i systemet.</li>
+                    <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />Kunden får e-mailbekræftelse.</li>
+                    <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />Admin får besked med alle detaljer.</li>
                   </ul>
-                  {submitError ? <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{submitError}</p> : null}
+                  {submitError ? <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{submitError}</p> : null}
                   <Button type="button" disabled={isSubmitting || !customer.acceptsTerms} onClick={submitBooking} className="mt-5 w-full">
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                     Bekræft booking
@@ -462,25 +450,25 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
         </div>
       </div>
 
-      <div className={cn("fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-16px_40px_rgba(15,23,42,0.12)] backdrop-blur xl:hidden", isSummaryOpen && "hidden")}>
+      <div className={cn("fixed inset-x-0 bottom-0 z-50 border-t border-sky-100 bg-white/95 px-4 py-3 shadow-[0_-16px_40px_rgba(15,23,42,0.12)] backdrop-blur xl:hidden", isSummaryOpen && "hidden")}>
         <div className="mx-auto flex max-w-xl items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xl font-bold leading-none text-teal-700">{formatPrice(total)}</p>
-            <p className="mt-1 truncate text-xs font-semibold text-slate-500">{selectedService?.title || "Batteritest"} - trin {openStep} af 4</p>
+            <p className="text-xl font-bold leading-none text-sky-700">{formatPrice(total)}</p>
+            <p className="mt-1 truncate text-xs font-semibold text-slate-500">{selectedService?.title || "Batteritest"} · trin {openStep} af 4</p>
           </div>
           <Button type="button" onClick={() => setIsSummaryOpen(true)}>
-            Se oversigt
+            Oversigt
           </Button>
         </div>
       </div>
 
       {isSummaryOpen ? (
         <div className="fixed inset-0 z-[60] bg-slate-950/40 p-4 backdrop-blur-sm xl:hidden">
-          <div className="mx-auto mt-8 max-w-md rounded-3xl bg-white p-4">
+          <div className="mx-auto mt-8 max-w-md rounded-lg bg-white p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="font-bold text-slate-950">Bookingoversigt</p>
-              <button type="button" onClick={() => setIsSummaryOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
-                <X className="h-4 w-4" />
+              <button type="button" onClick={() => setIsSummaryOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                <CloseIcon className="h-4 w-4" />
               </button>
             </div>
             <BookingSummary
@@ -500,8 +488,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
 function HeroMini({ icon: Icon, text }: { icon: React.ComponentType<{ className?: string }>; text: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-3 py-2">
-      <Icon className="h-4 w-4 text-teal-300" />
+    <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2">
+      <Icon className="h-4 w-4 text-sky-200" />
       <span>{text}</span>
     </div>
   );
@@ -529,10 +517,10 @@ function BookingStep({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-3xl border transition",
+        "overflow-hidden rounded-lg border transition",
         isOpen
-          ? "border-teal-300 bg-white shadow-xl shadow-teal-900/10"
-          : "border-white/70 bg-white/80 shadow-sm shadow-slate-200/60",
+          ? "border-sky-300 bg-white shadow-xl shadow-sky-900/10"
+          : "border-white bg-white/90 shadow-sm shadow-sky-900/5",
         locked && "opacity-60",
       )}
     >
@@ -545,20 +533,20 @@ function BookingStep({
         <span className="flex min-w-0 items-center gap-3">
           <span
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-              isOpen ? "bg-teal-600 text-white" : isComplete ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
+              isOpen ? "bg-sky-600 text-white" : isComplete ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500",
             )}
           >
             {isComplete && !isOpen ? <Check className="h-4 w-4" /> : step}
           </span>
-          <span>
+          <span className="min-w-0">
             <span className="block font-bold text-slate-950">{title}</span>
             {summary && !isOpen ? <span className="mt-1 block truncate text-sm text-slate-500">{summary}</span> : null}
           </span>
         </span>
-        {isComplete && !isOpen ? <span className="text-sm font-semibold text-teal-700">Rediger</span> : null}
+        {isComplete && !isOpen ? <span className="text-sm font-semibold text-sky-700">Rediger</span> : null}
       </button>
-      {isOpen ? <div className="border-t border-slate-100 p-5">{children}</div> : null}
+      {isOpen ? <div className="border-t border-sky-100 p-5">{children}</div> : null}
     </section>
   );
 }
@@ -577,41 +565,64 @@ function PackageCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group overflow-hidden rounded-3xl border bg-white text-left transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70",
-        active ? "border-teal-500 ring-4 ring-teal-500/10" : "border-slate-100",
+        "grid overflow-hidden rounded-lg border bg-white text-left transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-900/10 md:grid-cols-[16rem_minmax(0,1fr)]",
+        active ? "border-sky-500 ring-4 ring-sky-500/10" : "border-sky-100",
       )}
     >
-      <div className="relative h-44">
-        <Image src={service.imageUrl} alt={service.title} fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover" />
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-teal-700 shadow-sm">
+      <div className="relative h-52 md:h-full">
+        <Image src={service.imageUrl} alt={service.title} fill sizes="(max-width:768px) 100vw, 260px" className="object-cover" />
+        <span className="absolute left-3 top-3 rounded-lg bg-white/95 px-3 py-1 text-xs font-bold text-sky-700 shadow-sm">
           {service.badge}
         </span>
         {active ? (
-          <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-teal-600 text-white">
+          <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white">
             <Check className="h-4 w-4" />
           </span>
         ) : null}
       </div>
-      <div className="p-4">
-        <h3 className="text-lg font-bold text-slate-950">{service.title}</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">{service.description}</p>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-500">
-            <Clock className="h-4 w-4" />
-            {service.duration}
-          </span>
-          <span className="text-lg font-bold text-teal-700">{formatPrice(service.price)}</span>
+      <div className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-bold text-slate-950">{service.title}</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{service.description}</p>
+          </div>
+          <div className="rounded-lg bg-sky-50 px-3 py-2 text-right">
+            <p className="text-xl font-bold text-sky-700">{formatPrice(service.price)}</p>
+            <p className="text-xs font-semibold text-slate-500">{service.duration}</p>
+          </div>
         </div>
-        <ul className="mt-4 grid gap-1.5">
+        <ul className="mt-5 grid gap-2 sm:grid-cols-2">
           {service.features.slice(0, 4).map((feature) => (
-            <li key={feature} className="flex items-center gap-2 text-xs font-medium text-slate-600">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            <li key={feature} className="flex items-center gap-2 text-sm font-medium text-slate-600">
+              <CheckCircle2 className="h-4 w-4 text-sky-600" />
               {feature}
             </li>
           ))}
         </ul>
       </div>
     </button>
+  );
+}
+
+function FormPanel({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-sky-100 bg-white p-4">
+      <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+          <Icon className="h-4 w-4" />
+        </span>
+        {title}
+      </p>
+      {children}
+    </div>
   );
 }
 
@@ -633,21 +644,24 @@ function BookingSummary({
   className?: string;
 }) {
   return (
-    <aside className={cn("rounded-3xl border border-white/70 bg-white/90 p-4 shadow-xl shadow-slate-200/70 backdrop-blur xl:sticky xl:top-20", className)}>
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">Oversigt</p>
+    <aside className={cn("rounded-lg border border-white bg-white/95 p-4 shadow-xl shadow-sky-900/10 backdrop-blur xl:sticky xl:top-20", className)}>
+      <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
+        <FileText className="h-4 w-4" />
+        Oversigt
+      </p>
       <div className="mt-4 space-y-3">
-        <SummaryRow label={service?.title || "Testpakke"} value={formatPrice(service?.price || 0)} />
-        <div className="border-t border-slate-100 pt-3">
+        <SummaryRow label={service?.title || "Service"} value={formatPrice(service?.price || 0)} />
+        <div className="border-t border-sky-100 pt-3">
           <SummaryRow label="Samlet tid" value={`${durationMinutes || 0} min.`} />
           <SummaryRow label="Dato" value={appointmentTime ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}` : "Vælg tid"} />
         </div>
-        <div className="border-t border-slate-100 pt-3">
+        <div className="border-t border-sky-100 pt-3">
           <SummaryRow label="Total" value={formatPrice(total)} big />
         </div>
       </div>
       {!databaseConfigured ? (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs font-semibold leading-5 text-amber-800">
-          Demo-visning: Tilføj `DATABASE_URL`, før bookinger kan gemmes rigtigt.
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs font-semibold leading-5 text-amber-800">
+          Demo-visning: Tilføj DATABASE_URL, før bookinger kan gemmes rigtigt.
         </div>
       ) : null}
     </aside>
@@ -658,16 +672,16 @@ function SummaryRow({ label, value, big = false }: { label: string; value: strin
   return (
     <div className="flex items-start justify-between gap-4 text-sm">
       <span className="text-slate-500">{label}</span>
-      <strong className={cn("text-right text-slate-950", big && "text-xl text-teal-700")}>{value}</strong>
+      <strong className={cn("text-right text-slate-950", big && "text-xl text-sky-700")}>{value}</strong>
     </div>
   );
 }
 
 function ConfirmRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl bg-slate-50 px-3 py-2">
+    <div className="flex items-start justify-between gap-4 rounded-lg bg-slate-50 px-3 py-2">
       <span className="text-slate-500">{label}</span>
-      <strong className={cn("max-w-[60%] text-right text-slate-950", highlight && "text-lg text-teal-700")}>{value || "-"}</strong>
+      <strong className={cn("max-w-[60%] text-right text-slate-950", highlight && "text-lg text-sky-700")}>{value || "-"}</strong>
     </div>
   );
 }
@@ -689,28 +703,28 @@ function BookingConfirmation({
   customerEmail: string;
 }) {
   return (
-    <section className="bg-[#f4fbfa] px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl rounded-3xl border border-white/70 bg-white p-8 text-center shadow-xl shadow-slate-200/70">
+    <section className="bg-sky-50 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl rounded-lg border border-white bg-white p-6 text-center shadow-xl shadow-sky-900/10 sm:p-8">
         <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
         <h1 className="mt-6 text-4xl font-bold text-slate-950">Din booking er modtaget</h1>
         <p className="mt-4 text-lg leading-8 text-slate-600">
-          Vi har registreret din forespørgsel og kontakter dig med bekræftelse. Du kan følge bookingen i kundeportalen.
+          Vi har sendt bekræftelse og samlet bookingen i kundeportalen.
         </p>
         <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
           <ConfirmRow label="Booking" value={confirmation.bookingId} />
-          <ConfirmRow label="Pakke" value={confirmation.serviceLabel} />
+          <ConfirmRow label="Service" value={confirmation.serviceLabel} />
           <ConfirmRow label="Tid" value={confirmation.appointmentLabel} />
           <ConfirmRow label="Total" value={formatPrice(confirmation.total)} highlight />
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link href={confirmation.portalUrl} className="inline-flex h-10 items-center justify-center rounded-xl bg-teal-600 px-4 text-sm font-semibold text-white hover:bg-teal-700">
+          <Link href={confirmation.portalUrl} className="inline-flex h-10 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700">
             Åbn kundeportal
           </Link>
-          <a href={`mailto:${customerEmail}`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-teal-300">
+          <a href={`mailto:${customerEmail}`} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-sky-300">
             <Mail className="h-4 w-4" />
             {customerEmail}
           </a>
-          <a href="tel:+4571900530" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-teal-300">
+          <a href="tel:+4571900530" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-sky-300">
             <Phone className="h-4 w-4" />
             Ring til os
           </a>

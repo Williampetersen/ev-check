@@ -30,8 +30,7 @@ export const metadata: Metadata = {
   alternates: { canonical: siteUrl },
   openGraph: {
     title: "EV-Check.dk | Batteritest af elbiler",
-    description:
-      "Professionel batteritest og elbil-diagnose med rapport samme dag. Vi kører ud til dig på Sjælland.",
+    description: "Professionel batteritest og elbil-diagnose med rapport samme dag. Vi kører ud til dig på Sjælland.",
     url: siteUrl,
     siteName: "EV-Check.dk",
     locale: "da_DK",
@@ -75,8 +74,7 @@ export default function Home() {
             provider: { "@type": "LocalBusiness", name: "EV-Check.dk" },
             areaServed: "Sjælland",
             offers: { "@type": "Offer", price: "1300", priceCurrency: "DKK" },
-            description:
-              "Test af SoH, SoC, cellebalance, temperatur, BMS-status og fejlkoder for elbiler.",
+            description: "Test af SoH, SoC, cellebalance, temperatur, BMS-status og fejlkoder for elbiler.",
           },
           {
             "@context": "https://schema.org",
