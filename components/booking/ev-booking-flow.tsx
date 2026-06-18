@@ -1,27 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
+  ArrowLeft,
   ArrowRight,
-  AlertCircle,
   BatteryCharging,
-  CalendarCheck,
-  ChevronLeft,
-  ChevronRight,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
-  FileText,
   Loader2,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
-  User,
-  X as CloseIcon,
 } from "lucide-react";
 import type {
   BookingConfig,
@@ -73,18 +69,24 @@ const initialCustomer: CustomerForm = {
   acceptsTerms: false,
 };
 
-const initialVehicle: VehicleForm = {
-  make: "",
-};
+const initialVehicle: VehicleForm = { make: "" };
+
 const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
-const bookingStepLabels = ["Tid", "Oplysninger", "Bekræft"];
+
+const steps = [
+  { id: 1 as const, label: "Bil & service" },
+  { id: 2 as const, label: "Tidspunkt" },
+  { id: 3 as const, label: "Dine oplysninger" },
+  { id: 4 as const, label: "Bekræft" },
+];
+
+type Step = 1 | 2 | 3 | 4;
 
 type CalendarDay = {
   key: string;
   day: number;
   inMonth: boolean;
   disabled: boolean;
-  isWeekend: boolean;
 };
 
 function dateFromKey(date: string) {
@@ -156,14 +158,12 @@ function calendarDaysForMonth(
     const day = new Date(start);
     day.setDate(start.getDate() + index);
     const key = dateKey(day);
-    const weekday = day.getDay();
-    const isSunday = weekday === 0;
+    const isSunday = day.getDay() === 0;
     return {
       key,
       day: day.getDate(),
       inMonth: day.getMonth() === first.getMonth(),
       disabled: key < minDate || key > maxDate || isSunday,
-      isWeekend: weekday === 0 || weekday === 6,
     };
   });
 }
@@ -193,7 +193,9 @@ function isValidEmail(value: string) {
 }
 
 export function EvBookingFlow({ config }: BookingFlowProps) {
+  const [step, setStep] = useState<Step>(1);
   const [serviceId, setServiceId] = useState(config.services[0]?.id || "");
+  const [vehicle, setVehicle] = useState<VehicleForm>(initialVehicle);
   const [appointmentDate, setAppointmentDate] = useState(config.minDate);
   const [appointmentTime, setAppointmentTime] = useState("");
   const [visibleMonth, setVisibleMonth] = useState(monthKey(config.minDate));
@@ -201,10 +203,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState("");
   const [customer, setCustomer] = useState<CustomerForm>(initialCustomer);
-  const [vehicle, setVehicle] = useState<VehicleForm>(initialVehicle);
-  const [openStep, setOpenStep] = useState<1 | 2 | 3 | 4>(1);
-  const [detailsError, setDetailsError] = useState("");
-  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -230,10 +228,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({
-      date: appointmentDate,
-      serviceId,
-    });
+    const params = new URLSearchParams({ date: appointmentDate, serviceId });
     setSlotsLoading(true);
     setSlotsError("");
     fetch(`/api/booking/availability?${params.toString()}`, {
@@ -271,20 +266,11 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     return () => controller.abort();
   }, [appointmentDate, serviceId]);
 
-  useEffect(() => {
-    if (typeof window === "undefined" || window.innerWidth >= 640) return;
-    window.setTimeout(() => {
-      document
-        .querySelector(`[data-booking-step="${openStep}"]`)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-  }, [openStep]);
-
-  const stepOneDone = Boolean(serviceId);
+  const step1Valid = Boolean(serviceId) && hasValue(vehicle.make);
+  const step2Valid = Boolean(appointmentDate && appointmentTime);
   const missingDetails = useMemo(
     () =>
       [
-        !hasValue(vehicle.make) && "Bilens navn",
         !hasValue(customer.name) && "Fulde navn",
         !hasValue(customer.phone) && "Telefonnummer",
         !isValidEmail(customer.email) && "Gyldig e-mail",
@@ -293,64 +279,36 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
         !hasValue(customer.city) && "By",
         !customer.acceptsTerms && "Kontaktaccept",
       ].filter(Boolean) as string[],
-    [
-      customer.acceptsTerms,
-      customer.address,
-      customer.city,
-      customer.email,
-      customer.name,
-      customer.phone,
-      customer.postalCode,
-      vehicle.make,
-    ],
+    [customer],
   );
-  const stepTwoDone = missingDetails.length === 0;
-  const stepThreeDone = Boolean(appointmentDate && appointmentTime);
+  const step3Valid = missingDetails.length === 0;
   const canSubmit =
-    stepOneDone &&
-    stepTwoDone &&
-    stepThreeDone &&
+    step1Valid &&
+    step2Valid &&
+    step3Valid &&
     !slotsLoading &&
     config.databaseConfigured;
-  const visibleStep = Math.min(openStep, 3) as 1 | 2 | 3;
-  const progressPercent = Math.round((visibleStep / 3) * 100);
 
-  const continueToDate = () => {
-    if (!stepTwoDone) {
-      setDetailsError("Udfyld de manglende felter, før du vælger tid.");
-      return;
-    }
-    setDetailsError("");
-    setOpenStep(2);
+  const stepValid: Record<Step, boolean> = {
+    1: step1Valid,
+    2: step2Valid,
+    3: step3Valid,
+    4: canSubmit,
   };
 
-  const continueToReview = () => {
-    if (!stepThreeDone) return;
-    setSubmitError("");
-    setOpenStep(3);
+  const goToStep = (target: Step) => {
+    if (target <= step) {
+      setStep(target);
+      return;
+    }
+    for (let index = step; index < target; index += 1) {
+      if (!stepValid[index as Step]) return;
+    }
+    setStep(target);
   };
 
   const submitBooking = async () => {
-    if (!stepOneDone) {
-      setOpenStep(1);
-      return;
-    }
-    if (!stepTwoDone) {
-      setDetailsError("Udfyld de manglende felter, før du bekræfter.");
-      setOpenStep(2);
-      return;
-    }
-    if (!stepThreeDone) {
-      setOpenStep(1);
-      return;
-    }
-    if (!config.databaseConfigured) {
-      setSubmitError(
-        "Bookingsystemet mangler databaseopsætning, så bookingen kan ikke gemmes endnu.",
-      );
-      return;
-    }
-
+    if (!canSubmit) return;
     setSubmitError("");
     setIsSubmitting(true);
     try {
@@ -362,21 +320,14 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           addonIds: [],
           appointmentDate,
           appointmentTime,
-          customer: {
-            ...customer,
-            email: cleanValue(customer.email),
-          },
-          vehicle: {
-            ...vehicle,
-          },
+          customer: { ...customer, email: cleanValue(customer.email) },
+          vehicle: { ...vehicle },
         }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok)
         throw new Error(payload.error || "Bookingen kunne ikke oprettes.");
       setConfirmation(payload);
-      setOpenStep(4);
-      setIsSummaryOpen(false);
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -398,231 +349,366 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   }
 
   return (
-    <section className="relative overflow-hidden bg-transparent px-3 pb-24 pt-3 sm:px-6 sm:py-8 lg:px-8">
+    <section className="bg-white px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <MobileBookingHeader
-          appointmentDate={appointmentDate}
-          appointmentTime={appointmentTime}
-          durationMinutes={durationMinutes}
-          openStep={visibleStep}
-          progressPercent={progressPercent}
-          serviceTitle={selectedService?.title || "Batteritest"}
-          total={total}
-        />
+        <div className="mb-8 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+            Book tid
+          </p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            Book din batteritest
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Fire enkle trin, og du har en bekræftet tid.
+          </p>
+        </div>
 
-        <div className="glass-shell overflow-hidden rounded-lg border border-slate-200/80 shadow-xl shadow-slate-900/8">
-          <div className="grid border-b border-slate-200/80 lg:grid-cols-[14rem_minmax(0,1fr)_15rem]">
-            <SchedulerServicePanel
-              appointmentDate={appointmentDate}
-              appointmentTime={appointmentTime}
-              durationMinutes={durationMinutes}
+        <Stepper activeStep={step} stepValid={stepValid} onStepClick={goToStep} />
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <div className="order-2 lg:order-1">
+            <SummaryCard
               service={selectedService}
-              total={total}
-            />
-            <SchedulerCalendarPanel
-              appointmentDate={appointmentDate}
-              calendarDays={calendarDays}
-              maxDate={config.maxDate}
-              minDate={config.minDate}
-              visibleMonth={visibleMonth}
-              onDateChange={(date) => {
-                setAppointmentDate(date);
-                setAppointmentTime("");
-                setOpenStep(1);
-              }}
-              onMonthChange={setVisibleMonth}
-            />
-            <SchedulerTimePanel
+              vehicle={vehicle}
               appointmentDate={appointmentDate}
               appointmentTime={appointmentTime}
-              slots={slots}
-              slotsError={slotsError}
-              slotsLoading={slotsLoading}
-              onContinue={() => setOpenStep(2)}
-              onTimeChange={(time) => {
-                setAppointmentTime(time);
-                setOpenStep(2);
-              }}
+              total={total}
+              durationMinutes={durationMinutes}
+              className="mb-6 lg:hidden"
             />
+
+            {step === 1 ? (
+              <VehicleServiceStep
+                services={config.services}
+                serviceId={serviceId}
+                vehicle={vehicle}
+                onServiceChange={setServiceId}
+                onVehicleChange={setVehicle}
+                onContinue={() => goToStep(2)}
+                canContinue={step1Valid}
+              />
+            ) : null}
+
+            {step === 2 ? (
+              <TimeStep
+                appointmentDate={appointmentDate}
+                appointmentTime={appointmentTime}
+                calendarDays={calendarDays}
+                maxDate={config.maxDate}
+                minDate={config.minDate}
+                visibleMonth={visibleMonth}
+                slots={slots}
+                slotsError={slotsError}
+                slotsLoading={slotsLoading}
+                onDateChange={(date) => {
+                  setAppointmentDate(date);
+                  setAppointmentTime("");
+                }}
+                onMonthChange={setVisibleMonth}
+                onTimeChange={setAppointmentTime}
+                onBack={() => goToStep(1)}
+                onContinue={() => goToStep(3)}
+                canContinue={step2Valid}
+              />
+            ) : null}
+
+            {step === 3 ? (
+              <DetailsStep
+                customer={customer}
+                missingDetails={missingDetails}
+                onCustomerChange={setCustomer}
+                onBack={() => goToStep(2)}
+                onContinue={() => goToStep(4)}
+                canContinue={step3Valid}
+              />
+            ) : null}
+
+            {step === 4 ? (
+              <ReviewStep
+                appointmentDate={appointmentDate}
+                appointmentTime={appointmentTime}
+                customer={customer}
+                vehicle={vehicle}
+                service={selectedService}
+                total={total}
+                databaseConfigured={config.databaseConfigured}
+                isSubmitting={isSubmitting}
+                submitError={submitError}
+                canSubmit={canSubmit}
+                onBack={() => goToStep(3)}
+                onSubmit={submitBooking}
+              />
+            ) : null}
           </div>
 
-          <StepRail
-            activeStep={visibleStep}
+          <SummaryCard
+            service={selectedService}
+            vehicle={vehicle}
+            appointmentDate={appointmentDate}
             appointmentTime={appointmentTime}
-            detailsComplete={stepTwoDone}
-            onStepChange={(step) => {
-              if (step === 1) setOpenStep(1);
-              if (step === 2 && stepThreeDone) setOpenStep(2);
-              if (step === 3 && stepThreeDone && stepTwoDone) setOpenStep(3);
-            }}
+            total={total}
+            durationMinutes={durationMinutes}
+            className="order-1 hidden lg:order-2 lg:block lg:self-start"
+            sticky
           />
-
-          {openStep >= 2 ? (
-            <BookingDetailsPanel
-              customer={customer}
-              detailsError={detailsError}
-              missingDetails={missingDetails}
-              stepTwoDone={stepTwoDone}
-              vehicle={vehicle}
-              onContinue={continueToReview}
-              onCustomerChange={setCustomer}
-              onVehicleChange={setVehicle}
-            />
-          ) : null}
-
-          {openStep >= 3 ? (
-            <BookingReviewPanel
-              appointmentDate={appointmentDate}
-              appointmentTime={appointmentTime}
-              canSubmit={canSubmit}
-              customer={customer}
-              databaseConfigured={config.databaseConfigured}
-              isSubmitting={isSubmitting}
-              service={selectedService}
-              submitError={submitError}
-              total={total}
-              vehicle={vehicle}
-              onSubmit={submitBooking}
-            />
-          ) : null}
         </div>
       </div>
-
-      <div
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-50 border-t border-white/60 bg-white/75 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2.5 shadow-[0_-16px_40px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:px-4 sm:py-3 xl:hidden",
-          isSummaryOpen && "hidden",
-        )}
-      >
-        <div className="mx-auto flex max-w-xl items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-xl font-bold leading-none text-teal-700">
-              {formatPrice(total)}
-            </p>
-            <p className="mt-1 truncate text-xs font-semibold text-slate-500">
-              {selectedService?.title || "Batteritest"} · trin {visibleStep} af 3
-            </p>
-          </div>
-          <Button type="button" onClick={() => setIsSummaryOpen(true)}>
-            Oversigt
-          </Button>
-        </div>
-      </div>
-
-      {isSummaryOpen ? (
-        <div className="fixed inset-0 z-[60] bg-slate-950/40 p-4 backdrop-blur-sm xl:hidden">
-          <div className="glass-shell mx-auto mt-8 max-w-md rounded-lg p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="font-bold text-slate-950">Bookingoversigt</p>
-              <button
-                type="button"
-                onClick={() => setIsSummaryOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100"
-              >
-                <CloseIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <BookingSummary
-              service={selectedService}
-              total={total}
-              durationMinutes={durationMinutes}
-              appointmentDate={appointmentDate}
-              appointmentTime={appointmentTime}
-              databaseConfigured={config.databaseConfigured}
-            />
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
 
-function HeroMini({
-  icon: Icon,
-  text,
+function Stepper({
+  activeStep,
+  stepValid,
+  onStepClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  text: string;
+  activeStep: Step;
+  stepValid: Record<Step, boolean>;
+  onStepClick: (step: Step) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-white/75 bg-white/45 px-3 py-2 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
-      <Icon className="h-4 w-4 text-sky-600" />
-      <span>{text}</span>
+    <div>
+      <div className="flex items-center">
+        {steps.map((item, index) => {
+          const isActive = item.id === activeStep;
+          const isDone = item.id < activeStep;
+          return (
+            <div key={item.id} className="flex flex-1 items-center last:flex-none">
+              <button
+                type="button"
+                onClick={() => onStepClick(item.id)}
+                className="group flex flex-col items-center gap-2"
+              >
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition",
+                    isActive
+                      ? "border-teal-700 bg-teal-700 text-white"
+                      : isDone
+                      ? "border-teal-700 bg-white text-teal-700"
+                      : "border-slate-200 bg-white text-slate-400",
+                  )}
+                >
+                  {isDone ? <Check className="h-4 w-4" /> : item.id}
+                </span>
+                <span
+                  className={cn(
+                    "hidden text-xs font-semibold sm:block",
+                    isActive
+                      ? "text-slate-900"
+                      : isDone
+                      ? "text-teal-700"
+                      : "text-slate-400",
+                  )}
+                >
+                  {item.label}
+                </span>
+              </button>
+              {index < steps.length - 1 ? (
+                <span
+                  className={cn(
+                    "mx-2 h-0.5 flex-1 rounded-full",
+                    item.id < activeStep ? "bg-teal-700" : "bg-slate-200",
+                  )}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-center text-sm font-semibold text-slate-900 sm:hidden">
+        Trin {activeStep} af 4 — {steps[activeStep - 1].label}
+      </p>
     </div>
   );
 }
 
-function SchedulerServicePanel({
+function Card({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StepHeading({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mb-5">
+      <h2 className="text-lg font-bold text-slate-900 sm:text-xl">{title}</h2>
+      {description ? (
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function StepNav({
+  onBack,
+  onContinue,
+  canContinue,
+  continueLabel = "Fortsæt",
+}: {
+  onBack?: () => void;
+  onContinue: () => void;
+  canContinue: boolean;
+  continueLabel?: string;
+}) {
+  return (
+    <div className="mt-6 flex items-center justify-between gap-3">
+      {onBack ? (
+        <Button type="button" variant="outline" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+          Tilbage
+        </Button>
+      ) : (
+        <span />
+      )}
+      <Button type="button" disabled={!canContinue} onClick={onContinue}>
+        {continueLabel}
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function VehicleServiceStep({
+  services,
+  serviceId,
+  vehicle,
+  onServiceChange,
+  onVehicleChange,
+  onContinue,
+  canContinue,
+}: {
+  services: BookingService[];
+  serviceId: string;
+  vehicle: VehicleForm;
+  onServiceChange: (id: string) => void;
+  onVehicleChange: Dispatch<SetStateAction<VehicleForm>>;
+  onContinue: () => void;
+  canContinue: boolean;
+}) {
+  return (
+    <Card>
+      <StepHeading
+        title="Vælg service"
+        description="Vælg den service, du ønsker, og fortæl os om din bil."
+      />
+      <div className="grid gap-3">
+        {services.map((service) => {
+          const selected = service.id === serviceId;
+          return (
+            <button
+              key={service.id}
+              type="button"
+              onClick={() => onServiceChange(service.id)}
+              className={cn(
+                "flex items-start justify-between gap-4 rounded-xl border-2 p-4 text-left transition",
+                selected
+                  ? "border-teal-700 bg-teal-50/60"
+                  : "border-slate-200 hover:border-teal-300",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                    selected
+                      ? "border-teal-700 bg-teal-700 text-white"
+                      : "border-slate-300",
+                  )}
+                >
+                  {selected ? <Check className="h-3 w-3" /> : null}
+                </span>
+                <div>
+                  <p className="font-bold text-slate-900">{service.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {service.description}
+                  </p>
+                  <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                    <Clock className="h-3.5 w-3.5" />
+                    {service.duration}
+                  </p>
+                </div>
+              </div>
+              <p className="shrink-0 font-bold text-teal-700">
+                {formatPrice(service.price)}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6">
+        <Field label="Bilens navn" required>
+          <Input
+            value={vehicle.make}
+            onChange={(event) =>
+              onVehicleChange((current) => ({
+                ...current,
+                make: event.target.value,
+              }))
+            }
+            placeholder="Fx Tesla Model 3"
+            required
+          />
+        </Field>
+      </div>
+
+      <StepNav onContinue={onContinue} canContinue={canContinue} />
+    </Card>
+  );
+}
+
+function TimeStep({
   appointmentDate,
   appointmentTime,
-  durationMinutes,
-  service,
-  total,
-}: {
-  appointmentDate: string;
-  appointmentTime: string;
-  durationMinutes: number;
-  service?: BookingService;
-  total: number;
-}) {
-  return (
-    <aside className="border-b border-slate-200/80 bg-slate-50/60 p-4 lg:border-b-0 lg:border-r">
-      <p className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-teal-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl">
-        <CalendarCheck className="h-3.5 w-3.5" />
-        Booking
-      </p>
-      <h1 className="mt-4 text-xl font-bold tracking-normal text-slate-950 sm:text-2xl">
-        {service?.title || "Batteritest"}
-      </h1>
-      <div className="mt-4 grid gap-2.5 text-sm font-semibold text-slate-600">
-        <BookingMeta icon={Clock} text={`${durationMinutes || 0} min.`} />
-        <BookingMeta icon={MapPin} text="Hos dig på Sjælland" />
-        <BookingMeta icon={FileText} text={formatPrice(total)} />
-      </div>
-      <div className="mt-5 rounded-lg border border-slate-200/80 bg-white/80 p-3 text-sm text-slate-600 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
-        {appointmentTime ? (
-          <span className="font-semibold text-slate-950">
-            {dateLabel(appointmentDate)} kl. {appointmentTime}
-          </span>
-        ) : (
-          <span>Vælg en dato og tid.</span>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-function BookingMeta({
-  icon: Icon,
-  text,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-teal-700" />
-      <span>{text}</span>
-    </div>
-  );
-}
-
-function SchedulerCalendarPanel({
-  appointmentDate,
   calendarDays,
   maxDate,
   minDate,
   visibleMonth,
+  slots,
+  slotsError,
+  slotsLoading,
   onDateChange,
   onMonthChange,
+  onTimeChange,
+  onBack,
+  onContinue,
+  canContinue,
 }: {
   appointmentDate: string;
+  appointmentTime: string;
   calendarDays: CalendarDay[];
   maxDate: string;
   minDate: string;
   visibleMonth: string;
+  slots: string[];
+  slotsError: string;
+  slotsLoading: boolean;
   onDateChange: (date: string) => void;
   onMonthChange: (date: string) => void;
+  onTimeChange: (time: string) => void;
+  onBack: () => void;
+  onContinue: () => void;
+  canContinue: boolean;
 }) {
   const minMonth = monthKey(minDate);
   const maxMonth = monthKey(maxDate);
@@ -630,84 +716,6 @@ function SchedulerCalendarPanel({
   const nextMonth = addMonths(visibleMonth, 1);
   const canGoPrevious = previousMonth >= minMonth;
   const canGoNext = nextMonth <= maxMonth;
-
-  return (
-    <section className="border-b border-slate-200/80 bg-white/55 p-4 lg:border-b-0 lg:border-r">
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          aria-label="Forrige måned"
-          disabled={!canGoPrevious}
-          onClick={() => canGoPrevious && onMonthChange(previousMonth)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <h2 className="text-base font-bold capitalize text-slate-950">
-          {monthLabel(visibleMonth)}
-        </h2>
-        <button
-          type="button"
-          aria-label="Næste måned"
-          disabled={!canGoNext}
-          onClick={() => canGoNext && onMonthChange(nextMonth)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">
-        {weekdayLabels.map((day) => (
-          <span key={day}>{day}</span>
-        ))}
-      </div>
-
-      <div className="mt-2 grid grid-cols-7 gap-1">
-        {calendarDays.map((day) => {
-          const selected = day.key === appointmentDate;
-          return (
-            <button
-              key={day.key}
-              type="button"
-              disabled={day.disabled}
-              onClick={() => onDateChange(day.key)}
-              className={cn(
-                "flex aspect-square min-h-9 items-center justify-center rounded-lg border text-sm font-bold transition",
-                selected
-                  ? "border-[#F6C65B] bg-[#F6C65B] text-slate-950 shadow-sm shadow-amber-400/30"
-                  : "border-transparent bg-white/45 text-slate-700 hover:border-teal-200 hover:bg-white/80",
-                !day.inMonth && "text-slate-300",
-                day.disabled &&
-                  "cursor-not-allowed bg-white/20 text-slate-300 hover:border-transparent hover:bg-white/20",
-              )}
-            >
-              {day.day}
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function SchedulerTimePanel({
-  appointmentDate,
-  appointmentTime,
-  slots,
-  slotsError,
-  slotsLoading,
-  onContinue,
-  onTimeChange,
-}: {
-  appointmentDate: string;
-  appointmentTime: string;
-  slots: string[];
-  slotsError: string;
-  slotsLoading: boolean;
-  onContinue: () => void;
-  onTimeChange: (time: string) => void;
-}) {
   const groupedSlots = slots.reduce<Record<string, string[]>>(
     (groups, slot) => {
       const period = timePeriod(slot);
@@ -719,273 +727,258 @@ function SchedulerTimePanel({
   const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
 
   return (
-    <section className="bg-[#EAF6F4]/60 p-4">
-      <p className="text-sm font-bold text-slate-950">
-        {fullDateLabel(appointmentDate)}
-      </p>
-      <div className="mt-3 min-h-[16rem]">
-        {slotsLoading ? (
-          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-teal-200/80 bg-[#EAF6F4]/60 text-sm font-semibold text-slate-600 backdrop-blur">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Henter tider
+    <Card>
+      <StepHeading
+        title="Vælg dato og tid"
+        description="Vi kommer ud til dig på den valgte adresse."
+      />
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              aria-label="Forrige måned"
+              disabled={!canGoPrevious}
+              onClick={() => canGoPrevious && onMonthChange(previousMonth)}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <p className="text-sm font-bold capitalize text-slate-900">
+              {monthLabel(visibleMonth)}
+            </p>
+            <button
+              type="button"
+              aria-label="Næste måned"
+              disabled={!canGoNext}
+              onClick={() => canGoNext && onMonthChange(nextMonth)}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
-        ) : slotsError ? (
-          <p className="rounded-lg bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-700">
-            {slotsError}
+
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            {weekdayLabels.map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {calendarDays.map((day) => {
+              const selected = day.key === appointmentDate;
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  disabled={day.disabled}
+                  onClick={() => onDateChange(day.key)}
+                  className={cn(
+                    "flex aspect-square items-center justify-center rounded-lg text-sm font-semibold transition",
+                    selected
+                      ? "bg-teal-700 text-white"
+                      : "text-slate-700 hover:bg-teal-50",
+                    !day.inMonth && "text-slate-300",
+                    day.disabled &&
+                      "cursor-not-allowed text-slate-300 hover:bg-transparent",
+                  )}
+                >
+                  {day.day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold capitalize text-slate-900">
+            {fullDateLabel(appointmentDate)}
           </p>
-        ) : slots.length > 0 ? (
-          <div className="grid max-h-[17rem] gap-2 overflow-y-auto pr-1">
-            {groupOrder
-              .filter((period) => groupedSlots[period]?.length)
-              .map((period) => (
-                <div key={period}>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                    {period}
-                  </p>
-                  <div className="grid gap-1.5">
-                    {groupedSlots[period].map((slot) => {
-                      const selected = appointmentTime === slot;
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => onTimeChange(slot)}
-                          className={cn(
-                            "flex h-10 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-teal-950/5 backdrop-blur-xl transition",
-                            selected
-                              ? "border-[#064E4B] bg-[#064E4B] text-white"
-                              : "border-white/75 bg-white/55 text-slate-700 hover:border-teal-300 hover:bg-white/85 hover:text-teal-700",
-                          )}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-          </div>
-        ) : (
-          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-white/70 bg-white/40 px-4 text-center text-sm font-semibold leading-6 text-slate-500 backdrop-blur">
-            Ingen tider denne dag.
-          </div>
-        )}
-      </div>
-      <Button
-        type="button"
-        disabled={!appointmentTime}
-        onClick={onContinue}
-        className="mt-3 w-full"
-      >
-        Fortsæt
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-    </section>
-  );
-}
-
-function StepRail({
-  activeStep,
-  appointmentTime,
-  detailsComplete,
-  onStepChange,
-}: {
-  activeStep: 1 | 2 | 3;
-  appointmentTime: string;
-  detailsComplete: boolean;
-  onStepChange: (step: 1 | 2 | 3) => void;
-}) {
-  const steps = [
-    { id: 1 as const, label: "Tid", complete: Boolean(appointmentTime) },
-    { id: 2 as const, label: "Oplysninger", complete: detailsComplete },
-    { id: 3 as const, label: "Bekræft", complete: false },
-  ];
-
-  return (
-    <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 bg-white/50 p-3">
-      {steps.map((step) => {
-        const active = activeStep === step.id;
-        const enabled =
-          step.id === 1 ||
-          (step.id === 2 && Boolean(appointmentTime)) ||
-          (step.id === 3 && Boolean(appointmentTime) && detailsComplete);
-        return (
-          <button
-            key={step.id}
-            type="button"
-            disabled={!enabled}
-            onClick={() => onStepChange(step.id)}
-            className={cn(
-              "flex h-10 items-center justify-center gap-2 rounded-lg text-xs font-bold transition sm:text-sm",
-              active
-                ? "bg-[#064E4B] text-white shadow-sm shadow-teal-900/20"
-                : step.complete
-                ? "bg-emerald-500/15 text-emerald-700"
-                : "bg-white/45 text-slate-500",
-              !enabled && "cursor-not-allowed opacity-45",
+          <div className="mt-3 min-h-[14rem]">
+            {slotsLoading ? (
+              <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm font-semibold text-slate-500">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Henter tider
+              </div>
+            ) : slotsError ? (
+              <p className="rounded-xl bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-700">
+                {slotsError}
+              </p>
+            ) : slots.length > 0 ? (
+              <div className="grid max-h-[16rem] gap-3 overflow-y-auto pr-1">
+                {groupOrder
+                  .filter((period) => groupedSlots[period]?.length)
+                  .map((period) => (
+                    <div key={period}>
+                      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                        {period}
+                      </p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {groupedSlots[period].map((slot) => {
+                          const selected = appointmentTime === slot;
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              onClick={() => onTimeChange(slot)}
+                              className={cn(
+                                "flex h-9 items-center justify-center rounded-lg border text-sm font-semibold transition",
+                                selected
+                                  ? "border-teal-700 bg-teal-700 text-white"
+                                  : "border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700",
+                              )}
+                            >
+                              {slot}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 px-4 text-center text-sm font-semibold text-slate-500">
+                Ingen tider denne dag.
+              </div>
             )}
-          >
-            {step.complete && !active ? <Check className="h-4 w-4" /> : null}
-            {step.label}
-          </button>
-        );
-      })}
-    </div>
+          </div>
+        </div>
+      </div>
+
+      <StepNav onBack={onBack} onContinue={onContinue} canContinue={canContinue} />
+    </Card>
   );
 }
 
-function BookingDetailsPanel({
+function DetailsStep({
   customer,
-  detailsError,
   missingDetails,
-  stepTwoDone,
-  vehicle,
-  onContinue,
   onCustomerChange,
-  onVehicleChange,
+  onBack,
+  onContinue,
+  canContinue,
 }: {
   customer: CustomerForm;
-  detailsError: string;
   missingDetails: string[];
-  stepTwoDone: boolean;
-  vehicle: VehicleForm;
-  onContinue: () => void;
   onCustomerChange: Dispatch<SetStateAction<CustomerForm>>;
-  onVehicleChange: Dispatch<SetStateAction<VehicleForm>>;
+  onBack: () => void;
+  onContinue: () => void;
+  canContinue: boolean;
 }) {
   return (
-    <section data-booking-step={2} className="border-b border-slate-200/80 bg-slate-50/45 p-4">
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <FormPanel icon={User} title="Kontakt">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Fulde navn" required>
-              <Input
-                autoComplete="name"
-                value={customer.name}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="Telefon" required>
-              <Input
-                autoComplete="tel"
-                inputMode="tel"
-                value={customer.phone}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    phone: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="E-mail" required className="sm:col-span-2">
-              <Input
-                autoComplete="email"
-                type="email"
-                value={customer.email}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="Adresse" required>
-              <Input
-                autoComplete="street-address"
-                value={customer.address}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    address: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="Postnummer" required>
-              <Input
-                autoComplete="postal-code"
-                inputMode="numeric"
-                maxLength={8}
-                value={customer.postalCode}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    postalCode: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="By" required>
-              <Input
-                autoComplete="address-level2"
-                value={customer.city}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    city: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="Firma">
-              <Input
-                autoComplete="organization"
-                value={customer.company}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    company: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-          </div>
-        </FormPanel>
-
-        <FormPanel icon={BatteryCharging} title="Bil">
-          <div className="grid gap-3">
-            <Field label="Bilens navn" required>
-              <Input
-                value={vehicle.make}
-                onChange={(event) =>
-                  onVehicleChange((current) => ({
-                    ...current,
-                    make: event.target.value,
-                  }))
-                }
-                placeholder="Fx Tesla Model 3"
-                required
-              />
-            </Field>
-            <Field label="Besked">
-              <Textarea
-                value={customer.notes}
-                onChange={(event) =>
-                  onCustomerChange((current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-          </div>
-        </FormPanel>
+    <Card>
+      <StepHeading
+        title="Dine oplysninger"
+        description="Så vi kan bekræfte og finde dig på adressen."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Fulde navn" required>
+          <Input
+            autoComplete="name"
+            value={customer.name}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                name: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Telefon" required>
+          <Input
+            autoComplete="tel"
+            inputMode="tel"
+            value={customer.phone}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                phone: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="E-mail" required className="sm:col-span-2">
+          <Input
+            autoComplete="email"
+            type="email"
+            value={customer.email}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                email: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Adresse" required>
+          <Input
+            autoComplete="street-address"
+            value={customer.address}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                address: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Postnummer" required>
+          <Input
+            autoComplete="postal-code"
+            inputMode="numeric"
+            maxLength={8}
+            value={customer.postalCode}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                postalCode: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="By" required>
+          <Input
+            autoComplete="address-level2"
+            value={customer.city}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                city: event.target.value,
+              }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Firma">
+          <Input
+            autoComplete="organization"
+            value={customer.company}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                company: event.target.value,
+              }))
+            }
+          />
+        </Field>
+        <Field label="Besked" className="sm:col-span-2">
+          <Textarea
+            value={customer.notes}
+            onChange={(event) =>
+              onCustomerChange((current) => ({
+                ...current,
+                notes: event.target.value,
+              }))
+            }
+          />
+        </Field>
       </div>
 
-      <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
+      <label className="mt-5 flex items-start gap-2 text-sm text-slate-600">
         <input
           type="checkbox"
           checked={customer.acceptsTerms}
@@ -1003,698 +996,184 @@ function BookingDetailsPanel({
         </span>
       </label>
 
-      {missingDetails.length > 0 || detailsError ? (
-        <MissingDetailsNotice error={detailsError} items={missingDetails} />
+      {missingDetails.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+          <p className="flex items-center gap-2 font-bold">
+            <AlertTriangle className="h-4 w-4" />
+            Mangler før du kan fortsætte
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {missingDetails.map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-semibold"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
       ) : (
-        <p className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
+        <p className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
           <CheckCircle2 className="h-4 w-4" />
           Oplysningerne er klar.
         </p>
       )}
 
-      <Button
-        type="button"
-        className="mt-4 w-full sm:w-auto"
-        disabled={!stepTwoDone}
-        onClick={onContinue}
-      >
-        Gennemgå
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-    </section>
+      <StepNav
+        onBack={onBack}
+        onContinue={onContinue}
+        canContinue={canContinue}
+        continueLabel="Gennemgå"
+      />
+    </Card>
   );
 }
 
-function BookingReviewPanel({
+function ReviewStep({
   appointmentDate,
   appointmentTime,
-  canSubmit,
   customer,
+  vehicle,
+  service,
+  total,
   databaseConfigured,
   isSubmitting,
-  service,
   submitError,
-  total,
-  vehicle,
+  canSubmit,
+  onBack,
   onSubmit,
 }: {
   appointmentDate: string;
   appointmentTime: string;
-  canSubmit: boolean;
   customer: CustomerForm;
+  vehicle: VehicleForm;
+  service?: BookingService;
+  total: number;
   databaseConfigured: boolean;
   isSubmitting: boolean;
-  service?: BookingService;
   submitError: string;
-  total: number;
-  vehicle: VehicleForm;
+  canSubmit: boolean;
+  onBack: () => void;
   onSubmit: () => void;
 }) {
   return (
-    <section data-booking-step={3} className="p-4 sm:p-5">
-      <div className="grid gap-4 lg:grid-cols-[1fr_0.78fr]">
-        <div className="glass-card rounded-lg p-4">
-          <p className="mb-4 font-bold text-slate-950">Booking</p>
-          <div className="grid gap-3 text-sm">
-            <ConfirmRow label="Service" value={service?.title || ""} />
-            <ConfirmRow
-              label="Tid"
-              value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`}
-            />
-            <ConfirmRow
-              label="Bil"
-              value={vehicle.make}
-            />
-            <ConfirmRow
-              label="Adresse"
-              value={[customer.address, customer.postalCode, customer.city]
-                .filter(Boolean)
-                .join(", ")}
-            />
-            <ConfirmRow label="Total" value={formatPrice(total)} highlight />
-          </div>
-        </div>
-        <div className="glass-panel rounded-lg p-4">
-          <p className="flex items-center gap-2 font-bold text-slate-950">
-            <ShieldCheck className="h-5 w-5 text-teal-700" />
-            Klar til bekræftelse
-          </p>
-          {submitError ? (
-            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-              {submitError}
-            </p>
-          ) : null}
-          {!databaseConfigured ? (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-6 text-amber-800">
-              Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
-            </p>
-          ) : null}
-          <Button
-            type="button"
-            disabled={isSubmitting || !canSubmit}
-            onClick={onSubmit}
-            className="mt-5 w-full"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4" />
-            )}
-            Bekræft booking
-          </Button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function MobileBookingHeader({
-  appointmentDate,
-  appointmentTime,
-  durationMinutes,
-  openStep,
-  progressPercent,
-  serviceTitle,
-  total,
-}: {
-  appointmentDate: string;
-  appointmentTime: string;
-  durationMinutes: number;
-  openStep: 1 | 2 | 3;
-  progressPercent: number;
-  serviceTitle: string;
-  total: number;
-}) {
-  return (
-    <div className="glass-shell sticky top-14 z-30 mb-3 rounded-lg p-3 sm:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
-            Trin {openStep} af 3
-          </p>
-          <h1 className="mt-1 truncate text-lg font-bold leading-tight text-slate-950">
-            {bookingStepLabels[openStep - 1]}
-          </h1>
-        </div>
-        <div className="shrink-0 rounded-lg border border-white/75 bg-white/60 px-3 py-2 text-right text-slate-950 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
-          <p className="text-base font-bold leading-none">
-            {formatPrice(total)}
-          </p>
-          <p className="mt-1 text-[11px] font-semibold text-teal-700">
-            {durationMinutes || 0} min.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/60">
-        <div
-          className="h-full rounded-full bg-[#064E4B] transition-all"
-          style={{ width: `${progressPercent}%` }}
+    <Card>
+      <StepHeading
+        title="Bekræft din booking"
+        description="Gennemse oplysningerne, og bekræft din tid."
+      />
+      <div className="grid gap-2">
+        <ReviewRow label="Service" value={service?.title || ""} />
+        <ReviewRow
+          label="Tid"
+          value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`}
         />
+        <ReviewRow label="Bil" value={vehicle.make} />
+        <ReviewRow label="Navn" value={customer.name} />
+        <ReviewRow label="Telefon" value={customer.phone} />
+        <ReviewRow label="E-mail" value={customer.email} />
+        <ReviewRow
+          label="Adresse"
+          value={[customer.address, customer.postalCode, customer.city]
+            .filter(Boolean)
+            .join(", ")}
+        />
+        <ReviewRow label="Total" value={formatPrice(total)} highlight />
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-1">
-        {bookingStepLabels.map((label, index) => {
-          const step = index + 1;
-          const active = step === openStep;
-          const complete = step < openStep;
-          return (
-            <div
-              key={label}
-              className={cn(
-                "rounded-lg px-2 py-1.5 text-center text-[11px] font-bold",
-                active
-                  ? "bg-[#064E4B] text-white"
-                  : complete
-                  ? "bg-emerald-500/15 text-emerald-700"
-                  : "bg-white/45 text-slate-500",
-              )}
-            >
-              {label}
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="mt-3 truncate text-xs font-semibold text-slate-500">
-        {serviceTitle}
-        {appointmentTime
-          ? ` · ${dateLabel(appointmentDate)} kl. ${appointmentTime}`
-          : ""}
-      </p>
-    </div>
-  );
-}
-
-function DateTimeSelector({
-  appointmentDate,
-  appointmentTime,
-  calendarDays,
-  durationMinutes,
-  maxDate,
-  minDate,
-  serviceTitle,
-  slots,
-  slotsError,
-  slotsLoading,
-  visibleMonth,
-  onDateChange,
-  onMonthChange,
-  onTimeChange,
-}: {
-  appointmentDate: string;
-  appointmentTime: string;
-  calendarDays: CalendarDay[];
-  durationMinutes: number;
-  maxDate: string;
-  minDate: string;
-  serviceTitle: string;
-  slots: string[];
-  slotsError: string;
-  slotsLoading: boolean;
-  visibleMonth: string;
-  onDateChange: (date: string) => void;
-  onMonthChange: (date: string) => void;
-  onTimeChange: (time: string) => void;
-}) {
-  const minMonth = monthKey(minDate);
-  const maxMonth = monthKey(maxDate);
-  const previousMonth = addMonths(visibleMonth, -1);
-  const nextMonth = addMonths(visibleMonth, 1);
-  const canGoPrevious = previousMonth >= minMonth;
-  const canGoNext = nextMonth <= maxMonth;
-  const groupedSlots = slots.reduce<Record<string, string[]>>(
-    (groups, slot) => {
-      const period = timePeriod(slot);
-      groups[period] = [...(groups[period] || []), slot];
-      return groups;
-    },
-    {},
-  );
-  const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
-
-  return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1fr)] lg:gap-5">
-      <div className="glass-card rounded-lg p-3 sm:p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
-              Vælg dato
-            </p>
-            <p className="mt-1 text-sm text-slate-500">{serviceTitle}</p>
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-lg bg-sky-50/80 px-3 py-2 text-xs font-semibold text-sky-800 backdrop-blur sm:text-sm">
-            <Clock className="h-4 w-4" />
-            {durationMinutes || 0} min.
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            aria-label="Forrige måned"
-            disabled={!canGoPrevious}
-            onClick={() => canGoPrevious && onMonthChange(previousMonth)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/70 bg-white/60 text-slate-700 backdrop-blur transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <p className="text-base font-bold capitalize text-slate-950">
-            {monthLabel(visibleMonth)}
-          </p>
-          <button
-            type="button"
-            aria-label="Næste måned"
-            disabled={!canGoNext}
-            onClick={() => canGoNext && onMonthChange(nextMonth)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/70 bg-white/60 text-slate-700 backdrop-blur transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400 sm:text-[11px]">
-          {weekdayLabels.map((day) => (
-            <span key={day}>{day}</span>
-          ))}
-        </div>
-
-        <div className="mt-2 grid grid-cols-7 gap-1">
-          {calendarDays.map((day) => {
-            const selected = day.key === appointmentDate;
-            return (
-              <button
-                key={day.key}
-                type="button"
-                disabled={day.disabled}
-                onClick={() => onDateChange(day.key)}
-                className={cn(
-                  "relative flex h-10 min-w-0 items-center justify-center rounded-lg border text-sm font-bold transition sm:h-11",
-                  selected
-                    ? "border-sky-600 bg-sky-600 text-white shadow-sm shadow-sky-500/30"
-                    : "border-transparent bg-white/50 text-slate-700 hover:border-sky-200 hover:bg-sky-50/80",
-                  !day.inMonth && "text-slate-300",
-                  day.isWeekend && !selected && "bg-white/30 text-slate-500",
-                  day.disabled &&
-                    "cursor-not-allowed bg-white/25 text-slate-300 hover:border-transparent hover:bg-white/25",
-                )}
-              >
-                <span>{day.day}</span>
-                {selected ? (
-                  <span className="absolute bottom-1 h-1 w-4 rounded-full bg-white/80" />
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 grid gap-2 rounded-lg border border-white/60 bg-white/50 px-3 py-3 text-xs font-semibold text-slate-500 backdrop-blur sm:grid-cols-2">
-          <span className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-sky-600" />
-            Valgt dato
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-            Lukket/udenfor periode
-          </span>
-        </div>
-      </div>
-
-      <div className="glass-card rounded-lg p-3 sm:p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
-              Vælg tid
-            </p>
-            <h3 className="mt-1 text-xl font-bold leading-tight text-slate-950 sm:text-2xl">
-              {fullDateLabel(appointmentDate)}
-            </h3>
-          </div>
-          <div className="rounded-lg border border-white/75 bg-white/60 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl sm:text-sm">
-            {appointmentTime ? `Kl. ${appointmentTime}` : "Ingen tid valgt"}
-          </div>
-        </div>
-
-        <div className="mt-5 min-h-[12rem]">
-          {slotsLoading ? (
-            <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/50 text-sm font-semibold text-slate-600 backdrop-blur">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Henter ledige tider
-            </div>
-          ) : slotsError ? (
-            <p className="rounded-lg bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-700">
-              {slotsError}
-            </p>
-          ) : slots.length > 0 ? (
-            <div className="space-y-4">
-              {groupOrder
-                .filter((period) => groupedSlots[period]?.length)
-                .map((period) => (
-                  <div key={period}>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
-                      {period}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
-                      {groupedSlots[period].map((slot) => {
-                        const selected = appointmentTime === slot;
-                        return (
-                          <button
-                            key={slot}
-                            type="button"
-                            onClick={() => onTimeChange(slot)}
-                            className={cn(
-                              "flex h-12 items-center justify-between gap-2 rounded-lg border px-3 text-left text-base font-bold backdrop-blur transition sm:text-sm",
-                              selected
-                                ? "border-sky-500 bg-white/80 text-sky-700 shadow-sm shadow-sky-500/15"
-                                : "border-white/70 bg-white/50 text-slate-700 hover:border-sky-300 hover:bg-sky-50/80",
-                            )}
-                          >
-                            <span>{slot}</span>
-                            <span
-                              className={cn(
-                                "text-[11px] font-semibold",
-                                selected ? "text-sky-100" : "text-slate-400",
-                              )}
-                            >
-                              Ledig
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-white/70 bg-white/40 px-4 text-center text-sm font-semibold leading-6 text-slate-500 backdrop-blur">
-              Ingen ledige tider denne dag. Vælg en anden dato i kalenderen.
-            </div>
-          )}
-        </div>
-
-        {appointmentTime ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200/80 bg-emerald-50/70 px-3 py-3 text-sm font-semibold text-emerald-800 backdrop-blur">
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Tid valgt
-            </span>
-            <span>
-              {dateLabel(appointmentDate)} kl. {appointmentTime}
-            </span>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function BookingStep({
-  step,
-  title,
-  summary,
-  isOpen,
-  isComplete,
-  locked,
-  onEdit,
-  children,
-}: {
-  step: number;
-  title: string;
-  summary?: string;
-  isOpen: boolean;
-  isComplete?: boolean;
-  locked?: boolean;
-  onEdit?: () => void;
-  children: React.ReactNode;
-}) {
-  const statusLabel = locked ? "Låst" : isComplete ? "Klar" : "Mangler";
-
-  return (
-    <section
-      data-booking-step={step}
-      className={cn(
-        "scroll-mt-32 overflow-hidden rounded-lg backdrop-blur-xl transition",
-        isOpen ? "glass-shell ring-1 ring-sky-300/40" : "glass-card",
-        locked && "opacity-60",
-      )}
-    >
-      <button
-        type="button"
-        disabled={locked}
-        aria-expanded={isOpen}
-        onClick={() => !isOpen && onEdit?.()}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:gap-4 sm:px-5 sm:py-4"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <span
-            className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold sm:h-8 sm:w-8",
-              isOpen
-                ? "bg-sky-600 text-white"
-                : isComplete
-                ? "bg-emerald-500 text-white"
-                : "bg-slate-100 text-slate-500",
-            )}
-          >
-            {isComplete && !isOpen ? <Check className="h-4 w-4" /> : step}
-          </span>
-          <span className="min-w-0">
-            <span className="block text-base font-bold text-slate-950 sm:text-sm">
-              {title}
-            </span>
-            {summary && !isOpen ? (
-              <span className="mt-1 block truncate text-sm text-slate-500">
-                {summary}
-              </span>
-            ) : null}
-          </span>
-        </span>
-        <span
-          className={cn(
-            "shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold",
-            locked
-              ? "bg-slate-100 text-slate-400"
-              : isComplete
-              ? "bg-emerald-500/15 text-emerald-700"
-              : isOpen
-              ? "bg-sky-600 text-white"
-              : "bg-white/70 text-slate-500",
-          )}
-        >
-          {isComplete && !isOpen ? "Rediger" : statusLabel}
-        </span>
-      </button>
-      {isOpen ? (
-        <div className="border-t border-white/50 p-3 sm:p-5">{children}</div>
+      {submitError ? (
+        <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+          {submitError}
+        </p>
       ) : null}
-    </section>
-  );
-}
+      {!databaseConfigured ? (
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-6 text-amber-800">
+          Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
+        </p>
+      ) : null}
 
-function PackageCard({
-  service,
-  active,
-  onClick,
-}: {
-  service: BookingService;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "glass-card grid overflow-hidden rounded-lg text-left transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-900/10 md:grid-cols-[16rem_minmax(0,1fr)]",
-        active ? "ring-4 ring-sky-500/15" : "",
-      )}
-    >
-      <div className="relative h-36 sm:h-52 md:h-full">
-        <Image
-          src={service.imageUrl}
-          alt={service.title}
-          fill
-          sizes="(max-width:768px) 100vw, 260px"
-          className="object-cover"
-        />
-        <span className="absolute left-3 top-3 rounded-lg border border-white/60 bg-white/75 px-3 py-1 text-xs font-bold text-sky-700 shadow-sm backdrop-blur">
-          {service.badge}
-        </span>
-        {active ? (
-          <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white">
-            <Check className="h-4 w-4" />
-          </span>
-        ) : null}
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <Button type="button" variant="outline" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+          Tilbage
+        </Button>
+        <Button
+          type="button"
+          disabled={isSubmitting || !canSubmit}
+          onClick={onSubmit}
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShieldCheck className="h-4 w-4" />
+          )}
+          Bekræft booking
+        </Button>
       </div>
-      <div className="p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-bold text-slate-950 sm:text-xl">
-              {service.title}
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-sm">
-              {service.description}
-            </p>
-          </div>
-          <div className="rounded-lg border border-white/60 bg-white/50 px-3 py-2 text-left backdrop-blur sm:text-right">
-            <p className="text-lg font-bold text-sky-700 sm:text-xl">
-              {formatPrice(service.price)}
-            </p>
-            <p className="text-xs font-semibold text-slate-500">
-              {service.duration}
-            </p>
-          </div>
-        </div>
-        <ul className="mt-4 hidden gap-2 sm:grid sm:grid-cols-2">
-          {service.features.slice(0, 4).map((feature) => (
-            <li
-              key={feature}
-              className="flex items-center gap-2 text-sm font-medium text-slate-600"
-            >
-              <CheckCircle2 className="h-4 w-4 text-sky-600" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </button>
+    </Card>
   );
 }
 
-function FormPanel({
-  icon: Icon,
-  title,
-  children,
-  className,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border border-slate-200/80 bg-white/75 p-4 shadow-sm shadow-slate-900/5 backdrop-blur-xl",
-        className,
-      )}
-    >
-      <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF6F4] text-teal-700 backdrop-blur">
-          <Icon className="h-4 w-4" />
-        </span>
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function BookingSummary({
+function SummaryCard({
   service,
-  total,
-  durationMinutes,
+  vehicle,
   appointmentDate,
   appointmentTime,
-  databaseConfigured,
+  total,
+  durationMinutes,
   className,
+  sticky,
 }: {
   service?: BookingService;
-  total: number;
-  durationMinutes: number;
+  vehicle: VehicleForm;
   appointmentDate: string;
   appointmentTime: string;
-  databaseConfigured: boolean;
+  total: number;
+  durationMinutes: number;
   className?: string;
+  sticky?: boolean;
 }) {
   return (
-    <aside
-      className={cn(
-        "glass-shell rounded-lg p-4 xl:sticky xl:top-20",
-        className,
-      )}
-    >
-      <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">
-        <FileText className="h-4 w-4" />
-        Oversigt
+    <Card className={cn(sticky && "lg:sticky lg:top-20", className)}>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
+        Din booking
       </p>
-      <div className="mt-4 space-y-3">
-        <SummaryRow
-          label={service?.title || "Service"}
-          value={formatPrice(service?.price || 0)}
-        />
-        <div className="border-t border-sky-100 pt-3">
-          <SummaryRow
-            label="Samlet tid"
-            value={`${durationMinutes || 0} min.`}
-          />
-          <SummaryRow
-            label="Dato"
-            value={
-              appointmentTime
-                ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}`
-                : "Vælg tid"
-            }
-          />
-        </div>
-        <div className="border-t border-sky-100 pt-3">
-          <SummaryRow label="Total" value={formatPrice(total)} big />
-        </div>
+      <p className="mt-3 text-lg font-bold text-slate-900">
+        {service?.title || "Batteritest"}
+      </p>
+      <div className="mt-3 grid gap-2 text-sm text-slate-600">
+        <span className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-teal-700" />
+          {durationMinutes || 0} min.
+        </span>
+        <span className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-teal-700" />
+          Hos dig på Sjælland
+        </span>
+        {vehicle.make ? (
+          <span className="flex items-center gap-2">
+            <BatteryCharging className="h-4 w-4 text-teal-700" />
+            {vehicle.make}
+          </span>
+        ) : null}
       </div>
-      {!databaseConfigured ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs font-semibold leading-5 text-amber-800">
-          Demo-visning: Tilføj DATABASE_URL, før bookinger kan gemmes rigtigt.
-        </div>
-      ) : null}
-    </aside>
-  );
-}
-
-function SummaryRow({
-  label,
-  value,
-  big = false,
-}: {
-  label: string;
-  value: string;
-  big?: boolean;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <strong
-        className={cn(
-          "text-right text-slate-950",
-          big && "text-xl text-teal-700",
+      <div className="mt-4 border-t border-slate-100 pt-4 text-sm">
+        {appointmentTime ? (
+          <p className="font-semibold text-slate-900">
+            {dateLabel(appointmentDate)} kl. {appointmentTime}
+          </p>
+        ) : (
+          <p className="text-slate-500">Vælg dato og tid.</p>
         )}
-      >
-        {value}
-      </strong>
-    </div>
-  );
-}
-
-function ConfirmRow({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 rounded-lg bg-slate-50 px-3 py-2">
-      <span className="text-slate-500">{label}</span>
-      <strong
-        className={cn(
-          "max-w-[60%] text-right text-slate-950",
-          highlight && "text-lg text-teal-700",
-        )}
-      >
-        {value || "-"}
-      </strong>
-    </div>
+      </div>
+      <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
+        <span className="text-sm font-semibold text-slate-500">Total</span>
+        <span className="text-xl font-bold text-teal-700">
+          {formatPrice(total)}
+        </span>
+      </div>
+    </Card>
   );
 }
 
@@ -1725,31 +1204,26 @@ function Field({
   );
 }
 
-function MissingDetailsNotice({
-  error,
-  items,
+function ReviewRow({
+  label,
+  value,
+  highlight = false,
 }: {
-  error: string;
-  items: string[];
+  label: string;
+  value: string;
+  highlight?: boolean;
 }) {
   return (
-    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-3 text-sm text-amber-900">
-      <p className="flex items-center gap-2 font-bold">
-        <AlertCircle className="h-4 w-4" />
-        {error || "Mangler før næste trin"}
-      </p>
-      {items.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {items.map((item) => (
-            <span
-              key={item}
-              className="rounded-lg border border-amber-200 bg-white/70 px-2.5 py-1 text-xs font-semibold"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      ) : null}
+    <div className="flex items-start justify-between gap-4 rounded-lg bg-slate-50 px-3 py-2.5">
+      <span className="text-sm text-slate-500">{label}</span>
+      <strong
+        className={cn(
+          "max-w-[60%] text-right text-sm text-slate-900",
+          highlight && "text-lg text-teal-700",
+        )}
+      >
+        {value || "-"}
+      </strong>
     </div>
   );
 }
@@ -1762,20 +1236,22 @@ function BookingConfirmation({
   customerEmail: string;
 }) {
   return (
-    <section className="bg-transparent px-3 py-10 sm:px-6 sm:py-16 lg:px-8">
-      <div className="glass-shell mx-auto max-w-3xl rounded-lg p-5 text-center sm:p-8">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
-        <h1 className="mt-6 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+    <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 p-6 text-center shadow-sm sm:p-10">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+          <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+        </span>
+        <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
           Din booking er modtaget
         </h1>
-        <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+        <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
           Vi har sendt bekræftelse og samlet bookingen i kundeportalen.
         </p>
-        <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
-          <ConfirmRow label="Booking" value={confirmation.bookingId} />
-          <ConfirmRow label="Service" value={confirmation.serviceLabel} />
-          <ConfirmRow label="Tid" value={confirmation.appointmentLabel} />
-          <ConfirmRow
+        <div className="mt-6 grid gap-2 text-left">
+          <ReviewRow label="Booking" value={confirmation.bookingId} />
+          <ReviewRow label="Service" value={confirmation.serviceLabel} />
+          <ReviewRow label="Tid" value={confirmation.appointmentLabel} />
+          <ReviewRow
             label="Total"
             value={formatPrice(confirmation.total)}
             highlight
@@ -1784,20 +1260,20 @@ function BookingConfirmation({
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href={confirmation.portalUrl}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
           >
             Åbn kundeportal
           </Link>
           <a
             href={`mailto:${customerEmail}`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-sky-300"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
           >
             <Mail className="h-4 w-4" />
             {customerEmail}
           </a>
           <a
             href="tel:+4571900530"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-sky-300"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
           >
             <Phone className="h-4 w-4" />
             Ring til os
