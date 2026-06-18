@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
@@ -97,7 +98,7 @@ const vehicleMakes = [
   "Anden elbil",
 ];
 const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
-const bookingStepLabels = ["Service", "Oplysninger", "Tid", "Bekræft"];
+const bookingStepLabels = ["Tid", "Oplysninger", "Bekræft"];
 
 type CalendarDay = {
   key: string;
@@ -334,7 +335,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     stepThreeDone &&
     !slotsLoading &&
     config.databaseConfigured;
-  const progressPercent = Math.round((openStep / 4) * 100);
+  const visibleStep = Math.min(openStep, 3) as 1 | 2 | 3;
+  const progressPercent = Math.round((visibleStep / 3) * 100);
 
   const continueToDate = () => {
     if (!stepTwoDone) {
@@ -342,13 +344,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       return;
     }
     setDetailsError("");
-    setOpenStep(3);
+    setOpenStep(2);
   };
 
   const continueToReview = () => {
     if (!stepThreeDone) return;
     setSubmitError("");
-    setOpenStep(4);
+    setOpenStep(3);
   };
 
   const submitBooking = async () => {
@@ -362,7 +364,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       return;
     }
     if (!stepThreeDone) {
-      setOpenStep(3);
+      setOpenStep(1);
       return;
     }
     if (!config.databaseConfigured) {
@@ -423,467 +425,92 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
   return (
     <section className="relative overflow-hidden bg-transparent px-3 pb-24 pt-3 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-6xl">
         <MobileBookingHeader
           appointmentDate={appointmentDate}
           appointmentTime={appointmentTime}
           durationMinutes={durationMinutes}
-          openStep={openStep}
+          openStep={visibleStep}
           progressPercent={progressPercent}
           serviceTitle={selectedService?.title || "Batteritest"}
           total={total}
         />
 
-        <div className="glass-dark mb-4 hidden overflow-hidden rounded-lg text-slate-950 sm:mb-6 sm:block">
-          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:p-8">
-            <div>
-              <p className="inline-flex items-center gap-2 rounded-lg border border-white/75 bg-white/55 px-3 py-1 text-sm font-semibold text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
-                <CalendarCheck className="h-4 w-4" />
-                Online booking
-              </p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-normal sm:text-5xl">
-                Book batteritest af din elbil
-              </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                Én service, fast pris og en klar bekræftelse til både kunde og
-                admin.
-              </p>
-            </div>
-            <div className="grid gap-2 text-sm text-slate-700">
-              <HeroMini
-                icon={BatteryCharging}
-                text="Batteriets sundhed (SoH)"
-              />
-              <HeroMini icon={FileText} text="PDF-rapport inkluderet" />
-              <HeroMini icon={MapPin} text="Vi dækker Sjælland" />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="space-y-4">
-            <BookingStep
-              step={1}
-              title="Vælg service"
-              summary={selectedService?.title}
-              isOpen={openStep === 1}
-              isComplete={stepOneDone}
-              onEdit={() => setOpenStep(1)}
-            >
-              <div className="grid gap-4">
-                {config.services.map((service) => (
-                  <PackageCard
-                    key={service.id}
-                    service={service}
-                    active={service.id === serviceId}
-                    onClick={() => {
-                      setServiceId(service.id);
-                      setOpenStep(2);
-                    }}
-                  />
-                ))}
-              </div>
-            </BookingStep>
-
-            <BookingStep
-              step={2}
-              title="Kunde og bil"
-              summary={
-                stepTwoDone
-                  ? `${customer.name} · ${vehicle.make} ${vehicle.model}`
-                  : "Udfyld oplysninger"
-              }
-              isOpen={openStep === 2}
-              isComplete={stepTwoDone}
-              locked={!stepOneDone}
-              onEdit={() => setOpenStep(2)}
-            >
-              <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                <FormPanel
-                  icon={BatteryCharging}
-                  title="Elbil"
-                  className="lg:order-1"
-                >
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Bilmærke" required>
-                      <select
-                        value={vehicle.make}
-                        onChange={(event) =>
-                          setVehicle((current) => ({
-                            ...current,
-                            make: event.target.value,
-                          }))
-                        }
-                        className="h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
-                        required
-                      >
-                        {vehicleMakes.map((make) => (
-                          <option key={make}>{make}</option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Model" required>
-                      <Input
-                        value={vehicle.model}
-                        onChange={(event) =>
-                          setVehicle((current) => ({
-                            ...current,
-                            model: event.target.value,
-                          }))
-                        }
-                        placeholder="Model 3, ID.4, Ioniq 5"
-                        required
-                      />
-                    </Field>
-                    <Field label="Årgang">
-                      <Input
-                        inputMode="numeric"
-                        maxLength={4}
-                        value={vehicle.year}
-                        onChange={(event) =>
-                          setVehicle((current) => ({
-                            ...current,
-                            year: event.target.value,
-                          }))
-                        }
-                        placeholder="2021"
-                      />
-                    </Field>
-                    <Field label="Nummerplade">
-                      <Input
-                        autoCapitalize="characters"
-                        maxLength={10}
-                        value={vehicle.registrationNumber}
-                        onChange={(event) =>
-                          setVehicle((current) => ({
-                            ...current,
-                            registrationNumber:
-                              event.target.value.toUpperCase(),
-                          }))
-                        }
-                        placeholder="AB12345"
-                      />
-                    </Field>
-                    <Field label="Oplevet rækkevidde" className="sm:col-span-2">
-                      <Input
-                        value={vehicle.currentRange}
-                        onChange={(event) =>
-                          setVehicle((current) => ({
-                            ...current,
-                            currentRange: event.target.value,
-                          }))
-                        }
-                        placeholder="Fx 320 km ved fuld opladning"
-                      />
-                    </Field>
-                  </div>
-                </FormPanel>
-
-                <FormPanel
-                  icon={User}
-                  title="Kontakt og adresse"
-                  className="lg:order-2"
-                >
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Fulde navn" required>
-                      <Input
-                        autoComplete="name"
-                        value={customer.name}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            name: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="Telefonnummer" required>
-                      <Input
-                        autoComplete="tel"
-                        inputMode="tel"
-                        value={customer.phone}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            phone: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field
-                      label="E-mailadresse"
-                      required
-                      className="sm:col-span-2"
-                    >
-                      <Input
-                        autoComplete="email"
-                        type="email"
-                        value={customer.email}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            email: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="Adresse" required>
-                      <Input
-                        autoComplete="street-address"
-                        value={customer.address}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            address: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="Postnummer" required>
-                      <Input
-                        autoComplete="postal-code"
-                        inputMode="numeric"
-                        maxLength={8}
-                        value={customer.postalCode}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            postalCode: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="By" required>
-                      <Input
-                        autoComplete="address-level2"
-                        value={customer.city}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            city: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="Firma">
-                      <Input
-                        autoComplete="organization"
-                        value={customer.company}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            company: event.target.value,
-                          }))
-                        }
-                        placeholder="Valgfrit"
-                      />
-                    </Field>
-                    <Field label="Besked" className="sm:col-span-2">
-                      <Textarea
-                        value={customer.notes}
-                        onChange={(event) =>
-                          setCustomer((current) => ({
-                            ...current,
-                            notes: event.target.value,
-                          }))
-                        }
-                        placeholder="Hjemme, på arbejde eller før køb?"
-                      />
-                    </Field>
-                  </div>
-                  <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={customer.acceptsTerms}
-                      onChange={(event) =>
-                        setCustomer((current) => ({
-                          ...current,
-                          acceptsTerms: event.target.checked,
-                        }))
-                      }
-                      className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                    />
-                    <span>
-                      EV-Check må kontakte mig om bookingen og testen.
-                      <span className="font-semibold text-sky-700"> *</span>
-                    </span>
-                  </label>
-                  {missingDetails.length > 0 || detailsError ? (
-                    <MissingDetailsNotice
-                      error={detailsError}
-                      items={missingDetails}
-                    />
-                  ) : (
-                    <p className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Oplysningerne er klar til tidsvalg.
-                    </p>
-                  )}
-                  <Button
-                    type="button"
-                    className="mt-4 w-full sm:w-auto"
-                    disabled={!stepTwoDone}
-                    onClick={continueToDate}
-                  >
-                    Fortsæt
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </FormPanel>
-              </div>
-            </BookingStep>
-
-            <BookingStep
-              step={3}
-              title="Dato og tid"
-              summary={
-                appointmentTime
-                  ? `${dateLabel(appointmentDate)} kl. ${appointmentTime}`
-                  : "Vælg tid"
-              }
-              isOpen={openStep === 3}
-              isComplete={stepThreeDone}
-              locked={!stepTwoDone}
-              onEdit={() => setOpenStep(3)}
-            >
-              <div>
-                <DateTimeSelector
-                  appointmentDate={appointmentDate}
-                  appointmentTime={appointmentTime}
-                  calendarDays={calendarDays}
-                  durationMinutes={durationMinutes}
-                  maxDate={config.maxDate}
-                  minDate={config.minDate}
-                  serviceTitle={selectedService?.title || "Batteritest"}
-                  slots={slots}
-                  slotsError={slotsError}
-                  slotsLoading={slotsLoading}
-                  visibleMonth={visibleMonth}
-                  onDateChange={(date) => {
-                    setAppointmentDate(date);
-                    setAppointmentTime("");
-                  }}
-                  onMonthChange={setVisibleMonth}
-                  onTimeChange={setAppointmentTime}
-                />
-                <Button
-                  type="button"
-                  className="mt-4 w-full sm:w-auto"
-                  disabled={!stepThreeDone}
-                  onClick={continueToReview}
-                >
-                  Gennemgå booking
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </BookingStep>
-
-            <BookingStep
-              step={4}
-              title="Bekræft"
-              summary={formatPrice(total)}
-              isOpen={openStep === 4}
-              isComplete={canSubmit}
-              locked={!stepThreeDone}
-            >
-              <div className="grid gap-5 lg:grid-cols-[1fr_0.82fr]">
-                <div className="glass-card rounded-lg p-4">
-                  <p className="mb-4 font-bold text-slate-950">Booking</p>
-                  <div className="grid gap-3 text-sm">
-                    <ConfirmRow
-                      label="Service"
-                      value={selectedService?.title || ""}
-                    />
-                    <ConfirmRow
-                      label="Tid"
-                      value={`${dateLabel(
-                        appointmentDate,
-                      )} kl. ${appointmentTime}`}
-                    />
-                    <ConfirmRow
-                      label="Bil"
-                      value={[vehicle.make, vehicle.model, vehicle.year]
-                        .filter(Boolean)
-                        .join(" ")}
-                    />
-                    <ConfirmRow
-                      label="Adresse"
-                      value={[
-                        customer.address,
-                        customer.postalCode,
-                        customer.city,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                    />
-                    <ConfirmRow
-                      label="Total"
-                      value={formatPrice(total)}
-                      highlight
-                    />
-                  </div>
-                </div>
-                <div className="glass-panel rounded-lg p-4">
-                  <p className="flex items-center gap-2 font-bold text-slate-950">
-                    <ShieldCheck className="h-5 w-5 text-sky-700" />
-                    Efter bekræftelse
-                  </p>
-                  <ul className="mt-4 grid gap-2 text-sm leading-6 text-slate-700">
-                    <li className="flex gap-2">
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />
-                      Bookingen gemmes i systemet.
-                    </li>
-                    <li className="flex gap-2">
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />
-                      Kunden får e-mailbekræftelse.
-                    </li>
-                    <li className="flex gap-2">
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-sky-600" />
-                      Admin får besked med alle detaljer.
-                    </li>
-                  </ul>
-                  {submitError ? (
-                    <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                      {submitError}
-                    </p>
-                  ) : null}
-                  {!config.databaseConfigured ? (
-                    <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-6 text-amber-800">
-                      Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
-                    </p>
-                  ) : null}
-                  <Button
-                    type="button"
-                    disabled={isSubmitting || !canSubmit}
-                    onClick={submitBooking}
-                    className="mt-5 w-full"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4" />
-                    )}
-                    Bekræft booking
-                  </Button>
-                </div>
-              </div>
-            </BookingStep>
+        <div className="glass-shell overflow-hidden rounded-lg">
+          <div className="grid border-b border-white/60 lg:grid-cols-[17rem_minmax(0,1fr)_18rem]">
+            <SchedulerServicePanel
+              appointmentDate={appointmentDate}
+              appointmentTime={appointmentTime}
+              durationMinutes={durationMinutes}
+              service={selectedService}
+              total={total}
+            />
+            <SchedulerCalendarPanel
+              appointmentDate={appointmentDate}
+              calendarDays={calendarDays}
+              maxDate={config.maxDate}
+              minDate={config.minDate}
+              visibleMonth={visibleMonth}
+              onDateChange={(date) => {
+                setAppointmentDate(date);
+                setAppointmentTime("");
+                setOpenStep(1);
+              }}
+              onMonthChange={setVisibleMonth}
+            />
+            <SchedulerTimePanel
+              appointmentDate={appointmentDate}
+              appointmentTime={appointmentTime}
+              slots={slots}
+              slotsError={slotsError}
+              slotsLoading={slotsLoading}
+              onContinue={() => setOpenStep(2)}
+              onTimeChange={(time) => {
+                setAppointmentTime(time);
+                setOpenStep(2);
+              }}
+            />
           </div>
 
-          <BookingSummary
-            service={selectedService}
-            total={total}
-            durationMinutes={durationMinutes}
-            appointmentDate={appointmentDate}
+          <StepRail
+            activeStep={visibleStep}
             appointmentTime={appointmentTime}
-            databaseConfigured={config.databaseConfigured}
-            className="hidden xl:block"
+            detailsComplete={stepTwoDone}
+            onStepChange={(step) => {
+              if (step === 1) setOpenStep(1);
+              if (step === 2 && stepThreeDone) setOpenStep(2);
+              if (step === 3 && stepThreeDone && stepTwoDone) setOpenStep(3);
+            }}
           />
+
+          {openStep >= 2 ? (
+            <BookingDetailsPanel
+              customer={customer}
+              detailsError={detailsError}
+              missingDetails={missingDetails}
+              stepTwoDone={stepTwoDone}
+              vehicle={vehicle}
+              onContinue={continueToReview}
+              onCustomerChange={setCustomer}
+              onVehicleChange={setVehicle}
+            />
+          ) : null}
+
+          {openStep >= 3 ? (
+            <BookingReviewPanel
+              appointmentDate={appointmentDate}
+              appointmentTime={appointmentTime}
+              canSubmit={canSubmit}
+              customer={customer}
+              databaseConfigured={config.databaseConfigured}
+              isSubmitting={isSubmitting}
+              service={selectedService}
+              submitError={submitError}
+              total={total}
+              vehicle={vehicle}
+              onSubmit={submitBooking}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -899,7 +526,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
               {formatPrice(total)}
             </p>
             <p className="mt-1 truncate text-xs font-semibold text-slate-500">
-              {selectedService?.title || "Batteritest"} · trin {openStep} af 4
+              {selectedService?.title || "Batteritest"} · trin {visibleStep} af 3
             </p>
           </div>
           <Button type="button" onClick={() => setIsSummaryOpen(true)}>
@@ -951,6 +578,606 @@ function HeroMini({
   );
 }
 
+function SchedulerServicePanel({
+  appointmentDate,
+  appointmentTime,
+  durationMinutes,
+  service,
+  total,
+}: {
+  appointmentDate: string;
+  appointmentTime: string;
+  durationMinutes: number;
+  service?: BookingService;
+  total: number;
+}) {
+  return (
+    <aside className="border-b border-white/60 p-5 lg:border-b-0 lg:border-r">
+      <p className="inline-flex items-center gap-2 rounded-lg border border-white/75 bg-white/55 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
+        <CalendarCheck className="h-3.5 w-3.5" />
+        Booking
+      </p>
+      <h1 className="mt-5 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+        {service?.title || "Batteritest"}
+      </h1>
+      <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
+        <BookingMeta icon={Clock} text={`${durationMinutes || 0} min.`} />
+        <BookingMeta icon={MapPin} text="Hos dig på Sjælland" />
+        <BookingMeta icon={FileText} text={formatPrice(total)} />
+      </div>
+      <div className="mt-6 rounded-lg border border-white/75 bg-white/45 p-3 text-sm text-slate-600 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
+        {appointmentTime ? (
+          <span className="font-semibold text-slate-950">
+            {dateLabel(appointmentDate)} kl. {appointmentTime}
+          </span>
+        ) : (
+          <span>Vælg en dato og tid.</span>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function BookingMeta({
+  icon: Icon,
+  text,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="h-4 w-4 text-sky-700" />
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function SchedulerCalendarPanel({
+  appointmentDate,
+  calendarDays,
+  maxDate,
+  minDate,
+  visibleMonth,
+  onDateChange,
+  onMonthChange,
+}: {
+  appointmentDate: string;
+  calendarDays: CalendarDay[];
+  maxDate: string;
+  minDate: string;
+  visibleMonth: string;
+  onDateChange: (date: string) => void;
+  onMonthChange: (date: string) => void;
+}) {
+  const minMonth = monthKey(minDate);
+  const maxMonth = monthKey(maxDate);
+  const previousMonth = addMonths(visibleMonth, -1);
+  const nextMonth = addMonths(visibleMonth, 1);
+  const canGoPrevious = previousMonth >= minMonth;
+  const canGoNext = nextMonth <= maxMonth;
+
+  return (
+    <section className="border-b border-white/60 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          aria-label="Forrige måned"
+          disabled={!canGoPrevious}
+          onClick={() => canGoPrevious && onMonthChange(previousMonth)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <h2 className="text-base font-bold capitalize text-slate-950">
+          {monthLabel(visibleMonth)}
+        </h2>
+        <button
+          type="button"
+          aria-label="Næste måned"
+          disabled={!canGoNext}
+          onClick={() => canGoNext && onMonthChange(nextMonth)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-5 grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase tracking-wide text-slate-400">
+        {weekdayLabels.map((day) => (
+          <span key={day}>{day}</span>
+        ))}
+      </div>
+
+      <div className="mt-2 grid grid-cols-7 gap-1.5">
+        {calendarDays.map((day) => {
+          const selected = day.key === appointmentDate;
+          return (
+            <button
+              key={day.key}
+              type="button"
+              disabled={day.disabled}
+              onClick={() => onDateChange(day.key)}
+              className={cn(
+                "flex aspect-square min-h-10 items-center justify-center rounded-lg border text-sm font-bold transition",
+                selected
+                  ? "border-sky-600 bg-sky-600 text-white shadow-sm shadow-sky-500/30"
+                  : "border-transparent bg-white/35 text-slate-700 hover:border-sky-200 hover:bg-white/70",
+                !day.inMonth && "text-slate-300",
+                day.disabled &&
+                  "cursor-not-allowed bg-white/20 text-slate-300 hover:border-transparent hover:bg-white/20",
+              )}
+            >
+              {day.day}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SchedulerTimePanel({
+  appointmentDate,
+  appointmentTime,
+  slots,
+  slotsError,
+  slotsLoading,
+  onContinue,
+  onTimeChange,
+}: {
+  appointmentDate: string;
+  appointmentTime: string;
+  slots: string[];
+  slotsError: string;
+  slotsLoading: boolean;
+  onContinue: () => void;
+  onTimeChange: (time: string) => void;
+}) {
+  const groupedSlots = slots.reduce<Record<string, string[]>>(
+    (groups, slot) => {
+      const period = timePeriod(slot);
+      groups[period] = [...(groups[period] || []), slot];
+      return groups;
+    },
+    {},
+  );
+  const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
+
+  return (
+    <section className="p-4 sm:p-5">
+      <p className="text-sm font-bold text-slate-950">
+        {fullDateLabel(appointmentDate)}
+      </p>
+      <div className="mt-4 min-h-[19rem]">
+        {slotsLoading ? (
+          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/50 text-sm font-semibold text-slate-600 backdrop-blur">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Henter tider
+          </div>
+        ) : slotsError ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-700">
+            {slotsError}
+          </p>
+        ) : slots.length > 0 ? (
+          <div className="grid max-h-[24rem] gap-3 overflow-y-auto pr-1">
+            {groupOrder
+              .filter((period) => groupedSlots[period]?.length)
+              .map((period) => (
+                <div key={period}>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                    {period}
+                  </p>
+                  <div className="grid gap-2">
+                    {groupedSlots[period].map((slot) => {
+                      const selected = appointmentTime === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => onTimeChange(slot)}
+                          className={cn(
+                            "flex h-11 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-sky-950/5 backdrop-blur-xl transition",
+                            selected
+                              ? "border-sky-600 bg-sky-600 text-white"
+                              : "border-white/75 bg-white/55 text-slate-700 hover:border-sky-300 hover:bg-white/85 hover:text-sky-700",
+                          )}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-white/70 bg-white/40 px-4 text-center text-sm font-semibold leading-6 text-slate-500 backdrop-blur">
+            Ingen tider denne dag.
+          </div>
+        )}
+      </div>
+      <Button
+        type="button"
+        disabled={!appointmentTime}
+        onClick={onContinue}
+        className="mt-4 w-full"
+      >
+        Fortsæt
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </section>
+  );
+}
+
+function StepRail({
+  activeStep,
+  appointmentTime,
+  detailsComplete,
+  onStepChange,
+}: {
+  activeStep: 1 | 2 | 3;
+  appointmentTime: string;
+  detailsComplete: boolean;
+  onStepChange: (step: 1 | 2 | 3) => void;
+}) {
+  const steps = [
+    { id: 1 as const, label: "Tid", complete: Boolean(appointmentTime) },
+    { id: 2 as const, label: "Oplysninger", complete: detailsComplete },
+    { id: 3 as const, label: "Bekræft", complete: false },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2 border-b border-white/60 p-3">
+      {steps.map((step) => {
+        const active = activeStep === step.id;
+        const enabled =
+          step.id === 1 ||
+          (step.id === 2 && Boolean(appointmentTime)) ||
+          (step.id === 3 && Boolean(appointmentTime) && detailsComplete);
+        return (
+          <button
+            key={step.id}
+            type="button"
+            disabled={!enabled}
+            onClick={() => onStepChange(step.id)}
+            className={cn(
+              "flex h-10 items-center justify-center gap-2 rounded-lg text-xs font-bold transition sm:text-sm",
+              active
+                ? "bg-sky-600 text-white shadow-sm shadow-sky-500/20"
+                : step.complete
+                ? "bg-emerald-500/15 text-emerald-700"
+                : "bg-white/45 text-slate-500",
+              !enabled && "cursor-not-allowed opacity-45",
+            )}
+          >
+            {step.complete && !active ? <Check className="h-4 w-4" /> : null}
+            {step.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function BookingDetailsPanel({
+  customer,
+  detailsError,
+  missingDetails,
+  stepTwoDone,
+  vehicle,
+  onContinue,
+  onCustomerChange,
+  onVehicleChange,
+}: {
+  customer: CustomerForm;
+  detailsError: string;
+  missingDetails: string[];
+  stepTwoDone: boolean;
+  vehicle: VehicleForm;
+  onContinue: () => void;
+  onCustomerChange: Dispatch<SetStateAction<CustomerForm>>;
+  onVehicleChange: Dispatch<SetStateAction<VehicleForm>>;
+}) {
+  return (
+    <section data-booking-step={2} className="border-b border-white/60 p-4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <FormPanel icon={User} title="Kontakt">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Fulde navn" required>
+              <Input
+                autoComplete="name"
+                value={customer.name}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Telefon" required>
+              <Input
+                autoComplete="tel"
+                inputMode="tel"
+                value={customer.phone}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    phone: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="E-mail" required className="sm:col-span-2">
+              <Input
+                autoComplete="email"
+                type="email"
+                value={customer.email}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Adresse" required>
+              <Input
+                autoComplete="street-address"
+                value={customer.address}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    address: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Postnummer" required>
+              <Input
+                autoComplete="postal-code"
+                inputMode="numeric"
+                maxLength={8}
+                value={customer.postalCode}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    postalCode: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="By" required>
+              <Input
+                autoComplete="address-level2"
+                value={customer.city}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    city: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Firma">
+              <Input
+                autoComplete="organization"
+                value={customer.company}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    company: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+          </div>
+        </FormPanel>
+
+        <FormPanel icon={BatteryCharging} title="Elbil">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Mærke" required>
+              <select
+                value={vehicle.make}
+                onChange={(event) =>
+                  onVehicleChange((current) => ({
+                    ...current,
+                    make: event.target.value,
+                  }))
+                }
+                className="h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
+                required
+              >
+                {vehicleMakes.map((make) => (
+                  <option key={make}>{make}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Model" required>
+              <Input
+                value={vehicle.model}
+                onChange={(event) =>
+                  onVehicleChange((current) => ({
+                    ...current,
+                    model: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Årgang">
+              <Input
+                inputMode="numeric"
+                maxLength={4}
+                value={vehicle.year}
+                onChange={(event) =>
+                  onVehicleChange((current) => ({
+                    ...current,
+                    year: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field label="Nummerplade">
+              <Input
+                autoCapitalize="characters"
+                maxLength={10}
+                value={vehicle.registrationNumber}
+                onChange={(event) =>
+                  onVehicleChange((current) => ({
+                    ...current,
+                    registrationNumber: event.target.value.toUpperCase(),
+                  }))
+                }
+              />
+            </Field>
+            <Field label="Besked" className="sm:col-span-2">
+              <Textarea
+                value={customer.notes}
+                onChange={(event) =>
+                  onCustomerChange((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+          </div>
+        </FormPanel>
+      </div>
+
+      <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          checked={customer.acceptsTerms}
+          onChange={(event) =>
+            onCustomerChange((current) => ({
+              ...current,
+              acceptsTerms: event.target.checked,
+            }))
+          }
+          className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+        />
+        <span>
+          EV-Check må kontakte mig om bookingen.
+          <span className="font-semibold text-sky-700"> *</span>
+        </span>
+      </label>
+
+      {missingDetails.length > 0 || detailsError ? (
+        <MissingDetailsNotice error={detailsError} items={missingDetails} />
+      ) : (
+        <p className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
+          <CheckCircle2 className="h-4 w-4" />
+          Oplysningerne er klar.
+        </p>
+      )}
+
+      <Button
+        type="button"
+        className="mt-4 w-full sm:w-auto"
+        disabled={!stepTwoDone}
+        onClick={onContinue}
+      >
+        Gennemgå
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </section>
+  );
+}
+
+function BookingReviewPanel({
+  appointmentDate,
+  appointmentTime,
+  canSubmit,
+  customer,
+  databaseConfigured,
+  isSubmitting,
+  service,
+  submitError,
+  total,
+  vehicle,
+  onSubmit,
+}: {
+  appointmentDate: string;
+  appointmentTime: string;
+  canSubmit: boolean;
+  customer: CustomerForm;
+  databaseConfigured: boolean;
+  isSubmitting: boolean;
+  service?: BookingService;
+  submitError: string;
+  total: number;
+  vehicle: VehicleForm;
+  onSubmit: () => void;
+}) {
+  return (
+    <section data-booking-step={3} className="p-4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.78fr]">
+        <div className="glass-card rounded-lg p-4">
+          <p className="mb-4 font-bold text-slate-950">Booking</p>
+          <div className="grid gap-3 text-sm">
+            <ConfirmRow label="Service" value={service?.title || ""} />
+            <ConfirmRow
+              label="Tid"
+              value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`}
+            />
+            <ConfirmRow
+              label="Bil"
+              value={[vehicle.make, vehicle.model, vehicle.year]
+                .filter(Boolean)
+                .join(" ")}
+            />
+            <ConfirmRow
+              label="Adresse"
+              value={[customer.address, customer.postalCode, customer.city]
+                .filter(Boolean)
+                .join(", ")}
+            />
+            <ConfirmRow label="Total" value={formatPrice(total)} highlight />
+          </div>
+        </div>
+        <div className="glass-panel rounded-lg p-4">
+          <p className="flex items-center gap-2 font-bold text-slate-950">
+            <ShieldCheck className="h-5 w-5 text-sky-700" />
+            Klar til bekræftelse
+          </p>
+          {submitError ? (
+            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+              {submitError}
+            </p>
+          ) : null}
+          {!databaseConfigured ? (
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-6 text-amber-800">
+              Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            disabled={isSubmitting || !canSubmit}
+            onClick={onSubmit}
+            className="mt-5 w-full"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            Bekræft booking
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function MobileBookingHeader({
   appointmentDate,
   appointmentTime,
@@ -963,7 +1190,7 @@ function MobileBookingHeader({
   appointmentDate: string;
   appointmentTime: string;
   durationMinutes: number;
-  openStep: 1 | 2 | 3 | 4;
+  openStep: 1 | 2 | 3;
   progressPercent: number;
   serviceTitle: string;
   total: number;
@@ -973,7 +1200,7 @@ function MobileBookingHeader({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
-            Trin {openStep} af 4
+            Trin {openStep} af 3
           </p>
           <h1 className="mt-1 truncate text-lg font-bold leading-tight text-slate-950">
             {bookingStepLabels[openStep - 1]}
@@ -996,7 +1223,7 @@ function MobileBookingHeader({
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-4 gap-1">
+      <div className="mt-3 grid grid-cols-3 gap-1">
         {bookingStepLabels.map((label, index) => {
           const step = index + 1;
           const active = step === openStep;
