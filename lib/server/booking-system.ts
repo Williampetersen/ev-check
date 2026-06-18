@@ -7,6 +7,7 @@ import {
   type DashboardSettings,
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
+import { saveInvoiceForAppointment } from "@/lib/server/invoices";
 import { sendAdminBookingEmail, sendCustomerAppointmentEmail } from "@/lib/server/mail";
 
 export type BookingService = {
@@ -483,6 +484,18 @@ export async function createBooking(input: BookingCreateInput) {
     adminNotes: customer.notes,
     createdAt: todayKey(),
   };
+
+  try {
+    const invoice = await saveInvoiceForAppointment({
+      appointment,
+      customer,
+      settings: config.settings,
+    });
+    appointment.invoiceStatus = "ready";
+    appointment.invoiceNumber = invoice.invoiceNumber;
+  } catch {
+    // Booking is saved; invoice can be generated again from the admin dashboard.
+  }
 
   try {
     if (config.settings.emailAutomation.customerOnCreate) {

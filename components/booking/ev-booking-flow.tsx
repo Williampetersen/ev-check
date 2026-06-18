@@ -496,7 +496,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       >
         <div className="mx-auto flex max-w-xl items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xl font-bold leading-none text-sky-700">
+            <p className="text-xl font-bold leading-none text-teal-700">
               {formatPrice(total)}
             </p>
             <p className="mt-1 truncate text-xs font-semibold text-slate-500">
@@ -567,7 +567,7 @@ function SchedulerServicePanel({
 }) {
   return (
     <aside className="border-b border-slate-200/80 bg-slate-50/60 p-4 lg:border-b-0 lg:border-r">
-      <p className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
+      <p className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-teal-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl">
         <CalendarCheck className="h-3.5 w-3.5" />
         Booking
       </p>
@@ -601,7 +601,7 @@ function BookingMeta({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-sky-700" />
+      <Icon className="h-4 w-4 text-teal-700" />
       <span>{text}</span>
     </div>
   );
@@ -639,7 +639,7 @@ function SchedulerCalendarPanel({
           aria-label="Forrige måned"
           disabled={!canGoPrevious}
           onClick={() => canGoPrevious && onMonthChange(previousMonth)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -651,7 +651,7 @@ function SchedulerCalendarPanel({
           aria-label="Næste måned"
           disabled={!canGoNext}
           onClick={() => canGoNext && onMonthChange(nextMonth)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -675,8 +675,8 @@ function SchedulerCalendarPanel({
               className={cn(
                 "flex aspect-square min-h-9 items-center justify-center rounded-lg border text-sm font-bold transition",
                 selected
-                  ? "border-sky-600 bg-sky-600 text-white shadow-sm shadow-sky-500/30"
-                  : "border-transparent bg-white/45 text-slate-700 hover:border-sky-200 hover:bg-white/80",
+                  ? "border-[#F6C65B] bg-[#F6C65B] text-slate-950 shadow-sm shadow-amber-400/30"
+                  : "border-transparent bg-white/45 text-slate-700 hover:border-teal-200 hover:bg-white/80",
                 !day.inMonth && "text-slate-300",
                 day.disabled &&
                   "cursor-not-allowed bg-white/20 text-slate-300 hover:border-transparent hover:bg-white/20",
@@ -719,13 +719,13 @@ function SchedulerTimePanel({
   const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
 
   return (
-    <section className="bg-sky-50/35 p-4">
+    <section className="bg-[#EAF6F4]/60 p-4">
       <p className="text-sm font-bold text-slate-950">
         {fullDateLabel(appointmentDate)}
       </p>
       <div className="mt-3 min-h-[16rem]">
         {slotsLoading ? (
-          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/50 text-sm font-semibold text-slate-600 backdrop-blur">
+          <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-teal-200/80 bg-[#EAF6F4]/60 text-sm font-semibold text-slate-600 backdrop-blur">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Henter tider
           </div>
@@ -751,10 +751,10 @@ function SchedulerTimePanel({
                           type="button"
                           onClick={() => onTimeChange(slot)}
                           className={cn(
-                            "flex h-10 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-sky-950/5 backdrop-blur-xl transition",
+                            "flex h-10 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-teal-950/5 backdrop-blur-xl transition",
                             selected
-                              ? "border-sky-600 bg-sky-600 text-white"
-                              : "border-white/75 bg-white/55 text-slate-700 hover:border-sky-300 hover:bg-white/85 hover:text-sky-700",
+                              ? "border-[#064E4B] bg-[#064E4B] text-white"
+                              : "border-white/75 bg-white/55 text-slate-700 hover:border-teal-300 hover:bg-white/85 hover:text-teal-700",
                           )}
                         >
                           {slot}
@@ -818,7 +818,7 @@ function StepRail({
             className={cn(
               "flex h-10 items-center justify-center gap-2 rounded-lg text-xs font-bold transition sm:text-sm",
               active
-                ? "bg-sky-600 text-white shadow-sm shadow-sky-500/20"
+                ? "bg-[#064E4B] text-white shadow-sm shadow-teal-900/20"
                 : step.complete
                 ? "bg-emerald-500/15 text-emerald-700"
                 : "bg-white/45 text-slate-500",
@@ -995,11 +995,11 @@ function BookingDetailsPanel({
               acceptsTerms: event.target.checked,
             }))
           }
-          className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+          className="mt-1 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
         />
         <span>
           EV-Check må kontakte mig om bookingen.
-          <span className="font-semibold text-sky-700"> *</span>
+          <span className="font-semibold text-teal-700"> *</span>
         </span>
       </label>
 
@@ -1076,7 +1076,7 @@ function BookingReviewPanel({
         </div>
         <div className="glass-panel rounded-lg p-4">
           <p className="flex items-center gap-2 font-bold text-slate-950">
-            <ShieldCheck className="h-5 w-5 text-sky-700" />
+            <ShieldCheck className="h-5 w-5 text-teal-700" />
             Klar til bekræftelse
           </p>
           {submitError ? (
@@ -1129,7 +1129,7 @@ function MobileBookingHeader({
     <div className="glass-shell sticky top-14 z-30 mb-3 rounded-lg p-3 sm:hidden">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
             Trin {openStep} af 3
           </p>
           <h1 className="mt-1 truncate text-lg font-bold leading-tight text-slate-950">
@@ -1140,7 +1140,7 @@ function MobileBookingHeader({
           <p className="text-base font-bold leading-none">
             {formatPrice(total)}
           </p>
-          <p className="mt-1 text-[11px] font-semibold text-sky-700">
+          <p className="mt-1 text-[11px] font-semibold text-teal-700">
             {durationMinutes || 0} min.
           </p>
         </div>
@@ -1148,7 +1148,7 @@ function MobileBookingHeader({
 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/60">
         <div
-          className="h-full rounded-full bg-sky-600 transition-all"
+          className="h-full rounded-full bg-[#064E4B] transition-all"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -1164,7 +1164,7 @@ function MobileBookingHeader({
               className={cn(
                 "rounded-lg px-2 py-1.5 text-center text-[11px] font-bold",
                 active
-                  ? "bg-sky-600 text-white"
+                  ? "bg-[#064E4B] text-white"
                   : complete
                   ? "bg-emerald-500/15 text-emerald-700"
                   : "bg-white/45 text-slate-500",
@@ -1580,7 +1580,7 @@ function FormPanel({
       )}
     >
       <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50/80 text-sky-700 backdrop-blur">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF6F4] text-teal-700 backdrop-blur">
           <Icon className="h-4 w-4" />
         </span>
         {title}
@@ -1614,7 +1614,7 @@ function BookingSummary({
         className,
       )}
     >
-      <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
+      <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-teal-700">
         <FileText className="h-4 w-4" />
         Oversigt
       </p>
@@ -1665,7 +1665,7 @@ function SummaryRow({
       <strong
         className={cn(
           "text-right text-slate-950",
-          big && "text-xl text-sky-700",
+          big && "text-xl text-teal-700",
         )}
       >
         {value}
@@ -1689,7 +1689,7 @@ function ConfirmRow({
       <strong
         className={cn(
           "max-w-[60%] text-right text-slate-950",
-          highlight && "text-lg text-sky-700",
+          highlight && "text-lg text-teal-700",
         )}
       >
         {value || "-"}
@@ -1718,7 +1718,7 @@ function Field({
     >
       <span>
         {label}
-        {required ? <span className="text-sky-700"> *</span> : null}
+        {required ? <span className="text-teal-700"> *</span> : null}
       </span>
       {children}
     </label>

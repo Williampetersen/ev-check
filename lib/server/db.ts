@@ -176,6 +176,50 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
       `;
 
       await sql`
+        CREATE TABLE IF NOT EXISTS invoices (
+          id TEXT PRIMARY KEY,
+          "bookingId" TEXT,
+          "appointmentId" TEXT UNIQUE,
+          "invoiceNumber" TEXT NOT NULL UNIQUE,
+          amount INTEGER NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'DKK',
+          "pdfUrl" TEXT,
+          "pdfPath" TEXT,
+          "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        ALTER TABLE invoices
+          ADD COLUMN IF NOT EXISTS "bookingId" TEXT,
+          ADD COLUMN IF NOT EXISTS "appointmentId" TEXT,
+          ADD COLUMN IF NOT EXISTS "invoiceNumber" TEXT NOT NULL DEFAULT '',
+          ADD COLUMN IF NOT EXISTS amount INTEGER NOT NULL DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'DKK',
+          ADD COLUMN IF NOT EXISTS "pdfUrl" TEXT,
+          ADD COLUMN IF NOT EXISTS "pdfPath" TEXT,
+          ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      `;
+
+      await sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS invoices_appointment_id_key
+        ON invoices ("appointmentId")
+        WHERE "appointmentId" IS NOT NULL;
+      `;
+
+      await sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS invoices_invoice_number_key
+        ON invoices ("invoiceNumber")
+        WHERE "invoiceNumber" <> '';
+      `;
+
+      await sql`
+        ALTER TABLE appointments
+          ADD COLUMN IF NOT EXISTS booking_number TEXT,
+          ADD COLUMN IF NOT EXISTS service_id TEXT;
+      `;
+
+      await sql`
         INSERT INTO dashboard_settings (settings_key)
         VALUES ('default')
         ON CONFLICT (settings_key) DO NOTHING;

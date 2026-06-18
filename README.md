@@ -1,54 +1,130 @@
-# EV Check
+# EV-Check Booking System
 
-EV Check is a Next.js operations dashboard for EV appointments, customers, service users, email settings, payments, invoices, and customer portals.
+Modern Next.js service-booking website for EV battery tests, with customer booking, admin dashboard, email automation, PostgreSQL persistence, Prisma schema, and PDF invoice/receipt generation.
 
-## Development
+## Stack
+
+- Next.js 14, React, TypeScript
+- Tailwind CSS
+- PostgreSQL
+- Prisma ORM schema and migrations
+- Existing runtime SQL via `postgres`
+- Zod API validation
+- Nodemailer SMTP emails
+- PDFKit invoice/receipt PDFs
+
+## Setup
 
 ```bash
-npx pnpm@9.3.0 install
-npx pnpm@9.3.0 dev
+npm install
+cp .env.example .env.local
 ```
 
-## Required Environment
+Fill in at least:
 
-Copy `.env.example` and fill in the values you need. The dashboard can render demo data without a database, but persistence requires `DATABASE_URL` or `POSTGRES_URL`.
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
+ADMIN_EMAIL="admin@example.com"
+ADMIN_PASSWORD="change-me"
+ADMIN_SESSION_SECRET="long-random-secret"
+CUSTOMER_SESSION_SECRET="long-random-secret"
+AGENT_SESSION_SECRET="long-random-secret"
+APP_URL="http://localhost:3000"
+```
 
-Core variables:
-
-- `DATABASE_URL` or `POSTGRES_URL`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `ADMIN_SESSION_SECRET`
-- `CUSTOMER_SESSION_SECRET`
-- `AGENT_SESSION_SECRET`
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_SECURE`
-- `SMTP_USER`
-- `SMTP_PASSWORD`
-- `MAIL_FROM`
-- `MAIL_FROM_NAME`
-- `BOOKING_ADMIN_EMAIL`
-- `APP_URL`
-
-For one.com mail, use:
+For SMTP confirmations:
 
 ```env
 SMTP_HOST=send.one.com
 SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=info@ev-check.dk
+SMTP_PASSWORD=...
 MAIL_FROM="EV-Check.dk <info@ev-check.dk>"
-MAIL_FROM_NAME=EV-Check.dk
 BOOKING_ADMIN_EMAIL=info@ev-check.dk
-APP_URL=https://ev-check.dk
 ```
 
-## Routes
+## Database
 
-- `/admin/login`
-- `/admin`
-- `/min-konto`
-- `/kunde/[token]`
-- `/agent/login`
-- `/agent`
+Generate Prisma client:
+
+```bash
+npm run db:generate
+```
+
+Apply Prisma migrations:
+
+```bash
+npm run db:migrate
+```
+
+Seed sample services and weekday availability:
+
+```bash
+npm run db:seed
+```
+
+The app also keeps a compatible runtime schema initializer in `lib/server/db.ts`. In production, prefer Prisma migrations and set:
+
+```env
+DATABASE_AUTO_SETUP=false
+DATABASE_RUN_MIGRATIONS=false
+```
+
+## Development
+
+```bash
+npm run dev
+```
+
+Main routes:
+
+- `/` homepage
+- `/service` services
+- `/book-tid` booking flow
+- `/booking` booking alias
+- `/admin/login` admin login
+- `/admin` admin dashboard
+- `/min-konto` customer login
+- `/kunde/[token]` customer portal
+
+## Booking Flow
+
+Customers can:
+
+1. Choose a service/date/time
+2. Enter contact information and car name
+3. Review the booking
+4. Confirm booking
+
+The server validates the payload with Zod, prevents double-booking, creates/updates the customer, saves the appointment, generates a PDF receipt, records invoice data, sends the customer confirmation email, sends the admin notification email, and logs email delivery status.
+
+## Admin
+
+The admin dashboard supports:
+
+- Booking overview and filters
+- Status changes: pending, approved, completed, cancelled
+- Customer records and portal links
+- Email logs and SMTP test email
+- Invoice PDF generation/download
+- Resend customer confirmation email
+- Settings for booking hours, slot interval, service areas, and email automation
+
+## Invoice PDFs
+
+PDF receipts are generated with PDFKit and stored at:
+
+```text
+public/generated/invoices
+```
+
+Generated PDFs are ignored by Git. Admins can generate/view them from `/admin?view=invoices`.
+
+## Quality Checks
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```

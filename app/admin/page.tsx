@@ -142,7 +142,10 @@ export default async function AdminPage({
           {view === "users" ? <UsersView dashboard={dashboard} /> : null}
           {view === "emails" ? <EmailsView dashboard={dashboard} /> : null}
           {view === "invoices" ? (
-            <InvoicesView appointments={visibleAppointments} />
+            <InvoicesView
+              appointments={visibleAppointments}
+              databaseConfigured={dashboard.databaseConfigured}
+            />
           ) : null}
           {view === "payments" ? (
             <PaymentsView appointments={visibleAppointments} />
@@ -724,25 +727,33 @@ function EmailsView({ dashboard }: { dashboard: AdminDashboardData }) {
   );
 }
 
-function InvoicesView({ appointments }: { appointments: Appointment[] }) {
+function InvoicesView({
+  appointments,
+  databaseConfigured,
+}: {
+  appointments: Appointment[];
+  databaseConfigured: boolean;
+}) {
   const invoiceAppointments = appointments.filter(
-    (item) => item.invoiceStatus !== "not_requested" || item.invoiceNumber,
+    (item) => item.status !== "cancelled",
   );
   return (
     <Panel
       title="Invoices"
-      description="Invoice-ready checks and payment follow-up."
+      description="Generate receipt PDFs, inspect invoice status, and resend customer confirmations."
       icon={FileText}
     >
       {invoiceAppointments.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="text-xs uppercase tracking-wide text-slate-500">
               <tr className="border-b border-white/60">
                 <th className="px-3 py-3">Invoice</th>
                 <th className="px-3 py-3">Customer</th>
+                <th className="px-3 py-3">Booking</th>
                 <th className="px-3 py-3">Status</th>
                 <th className="px-3 py-3 text-right">Total</th>
+                <th className="px-3 py-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/60">
@@ -753,10 +764,42 @@ function InvoicesView({ appointments }: { appointments: Appointment[] }) {
                   </td>
                   <td className="px-3 py-3">{appointment.customerName}</td>
                   <td className="px-3 py-3">
+                    {formatShortDate(appointment.appointmentDate)} at{" "}
+                    {appointment.appointmentTime}
+                  </td>
+                  <td className="px-3 py-3">
                     {invoiceLabels[appointment.invoiceStatus]}
                   </td>
                   <td className="px-3 py-3 text-right font-semibold">
                     {formatPrice(appointment.total)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex justify-end gap-2">
+                      <a
+                        className={cn(
+                          "inline-flex h-9 items-center justify-center rounded-lg border border-teal-200 bg-white/70 px-3 text-xs font-bold text-teal-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50",
+                          !databaseConfigured && "pointer-events-none opacity-45",
+                        )}
+                        href={`/api/admin/invoices/${appointment.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View PDF
+                      </a>
+                      <form
+                        action={`/api/admin/bookings/${appointment.id}/resend-confirmation`}
+                        method="POST"
+                      >
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="h-9 text-xs"
+                          disabled={!databaseConfigured}
+                        >
+                          Resend
+                        </Button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -269,6 +269,8 @@ export async function sendCustomerAppointmentEmail(input: {
         intro:
           "Tak for din booking. Vi har modtaget dine oplysninger og reserveret den valgte tid til batteritest af din elbil.",
         rows: [
+          ["Booking", input.appointment.id],
+          ["Faktura", input.appointment.invoiceNumber],
           ["Service", input.appointment.serviceLabel],
           ["Bil", input.appointment.vehicleLabel],
           ["Dato", input.appointment.appointmentDate],
@@ -325,7 +327,7 @@ export async function sendAdminBookingEmail(input: {
     ["Telefon", input.customer.phone],
     ["Adresse", [input.customer.address, input.customer.postalCode, input.customer.city].filter(Boolean).join(", ")],
     ["Bil", input.appointment.vehicleLabel],
-    ["Nummerplade", input.appointment.registrationNumber],
+    ["Faktura", input.appointment.invoiceNumber],
     ["Service", input.appointment.serviceLabel],
     ["Dato", input.appointment.appointmentDate],
     ["Tid", `${input.appointment.appointmentTime}-${input.appointment.appointmentEndTime}`],
@@ -360,7 +362,7 @@ export async function sendAdminBookingEmail(input: {
         rows,
         settings: input.settings,
         action: { label: "Aabn admin dashboard", url: `${siteUrl()}/admin?view=bookings` },
-        notice: "Husk at kontrollere adresse, bilmodel og tidspunkt foer endelig planlaegning.",
+        notice: "Husk at kontrollere adresse, bil og tidspunkt foer endelig planlaegning.",
         preheader: `Ny booking fra ${input.customer.name}`,
       }),
     });

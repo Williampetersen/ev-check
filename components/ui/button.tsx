@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 
 const variants = {
   primary:
-    "border border-sky-300/70 bg-sky-600/90 text-white shadow-lg shadow-sky-600/20 backdrop-blur-xl hover:bg-sky-700",
+    "border border-teal-700/70 bg-[#064E4B] text-white shadow-lg shadow-teal-900/18 backdrop-blur-xl hover:bg-teal-800",
   secondary:
-    "border border-white/70 bg-white/70 text-slate-800 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:bg-white/90 hover:text-sky-700",
+    "border border-slate-200/80 bg-white/75 text-slate-800 shadow-sm shadow-teal-950/5 backdrop-blur-xl hover:bg-white/95 hover:text-[#064E4B]",
   outline:
-    "border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300 hover:bg-white/80 hover:text-sky-700",
+    "border border-slate-200/80 bg-white/60 text-slate-700 shadow-sm shadow-teal-950/5 backdrop-blur-xl hover:border-teal-300 hover:bg-white/85 hover:text-[#064E4B]",
   ghost: "text-slate-600 hover:bg-white/55 hover:text-slate-950",
   danger: "bg-rose-600 text-white hover:bg-rose-700",
 };

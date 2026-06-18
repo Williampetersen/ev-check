@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+
+  @@map("users")
+}
+
+model Service {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  description     String
+  durationMinutes Int
+  price           Int
+  currency        String         @default("DKK")
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  availability    Availability[]
+  bookings        Booking[]
+
+  @@map("services")
+}
+
+model Availability {
+  id                  String   @id @default(cuid())
+  serviceId           String
+  weekday             Int
+  startTime           String
+  endTime             String
+  slotIntervalMinutes Int      @default(15)
+  isActive            Boolean  @default(true)
+  service             Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, weekday])
+  @@map("availability")
+}
+
+model Booking {
+  id              String     @id @default(cuid())
+  bookingNumber   String     @unique
+  serviceId       String
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  customerMessage String     @default("")
+  bookingDate     DateTime
+  bookingTime     String
+  durationMinutes Int
+  totalPrice      Int
+  currency        String     @default("DKK")
+  status          String     @default("pending")
+  invoiceNumber   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  service         Service    @relation(fields: [serviceId], references: [id])
+  invoice         Invoice?
+  emailLogs       EmailLog[]
+
+  @@unique([serviceId, bookingDate, bookingTime])
+  @@index([status, bookingDate])
+  @@map("bookings")
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  bookingId     String?  @unique
+  appointmentId String?  @unique
+  invoiceNumber String   @unique
+  amount        Int
+  currency      String   @default("DKK")
+  pdfUrl        String?
+  pdfPath       String?
+  createdAt     DateTime @default(now())
+  booking       Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@map("invoices")
+}
+
+model EmailLog {
+  id            String    @id @default(cuid())
+  bookingId     String?
+  appointmentId String?
+  customerId    String?
+  recipient     String
+  recipientRole String    @default("customer")
+  templateKey   String    @default("booking_confirmation")
+  subject       String
+  status        String
+  sentAt        DateTime?
+  errorMessage  String?
+  createdAt     DateTime  @default(now())
+  booking       Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([appointmentId])
+  @@map("email_logs")
+}
