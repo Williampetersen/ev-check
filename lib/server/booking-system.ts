@@ -57,9 +57,9 @@ export type BookingCreateInput = {
   };
   vehicle: {
     make: string;
-    model: string;
-    year: string;
-    registrationNumber: string;
+    model?: string;
+    year?: string;
+    registrationNumber?: string;
     currentRange?: string;
   };
 };
@@ -335,7 +335,7 @@ function validateBooking(input: BookingCreateInput, services: BookingService[]) 
   if (!sanitize(input.customer.address) || !sanitize(input.customer.postalCode) || !sanitize(input.customer.city)) {
     return "Indtast adressen, hvor testen skal udføres.";
   }
-  if (!sanitize(input.vehicle.make) || !sanitize(input.vehicle.model)) return "Indtast bilmærke og model.";
+  if (!sanitize(input.vehicle.make)) return "Indtast bilens navn.";
   if (!validateDate(input.appointmentDate) || !validateTime(input.appointmentTime)) return "Vælg en ledig dato og tid.";
   if (!getBookingService(input.serviceId, services)) return "Vælg en gyldig testpakke.";
   return "";
@@ -373,7 +373,8 @@ export async function createBooking(input: BookingCreateInput) {
   const token = portalToken();
   const customerId = id("cus");
   const appointmentId = id("apt");
-  const vehicleLabel = [bookingInput.vehicle.make, bookingInput.vehicle.model, bookingInput.vehicle.year].filter(Boolean).join(" ");
+  const vehicleLabel = bookingInput.vehicle.make;
+  const vehicleRegistrationNumber = bookingInput.vehicle.registrationNumber || "";
   const appointmentEndTime = addMinutesToTime(bookingInput.appointmentTime, pricing.durationMinutes);
   const customerCompany = bookingInput.customer.company || "";
   const customerNotes = bookingInput.customer.notes || "";
@@ -428,7 +429,7 @@ export async function createBooking(input: BookingCreateInput) {
       )
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
-        ${bookingInput.vehicle.registrationNumber}, ${pricing.service.title},
+        ${vehicleRegistrationNumber}, ${pricing.service.title},
         'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${bookingInput.appointmentTime},
         ${appointmentEndTime}, ${config.settings.defaultAppointmentStatus}, 'unpaid',
         'not_requested', ${pricing.total}, '', ${bookingInput.customer.city},
@@ -466,7 +467,7 @@ export async function createBooking(input: BookingCreateInput) {
     customerEmail: customer.email,
     customerPhone: customer.phone,
     vehicleLabel,
-    registrationNumber: bookingInput.vehicle.registrationNumber,
+    registrationNumber: vehicleRegistrationNumber,
     serviceLabel: pricing.service.title,
     reportLabel: "Batterirapport og systemdiagnose",
     appointmentDate: bookingInput.appointmentDate,

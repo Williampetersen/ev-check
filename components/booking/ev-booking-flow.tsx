@@ -51,10 +51,6 @@ type CustomerForm = {
 
 type VehicleForm = {
   make: string;
-  model: string;
-  year: string;
-  registrationNumber: string;
-  currentRange: string;
 };
 
 type Confirmation = {
@@ -78,25 +74,8 @@ const initialCustomer: CustomerForm = {
 };
 
 const initialVehicle: VehicleForm = {
-  make: "Tesla",
-  model: "",
-  year: "",
-  registrationNumber: "",
-  currentRange: "",
+  make: "",
 };
-
-const vehicleMakes = [
-  "Tesla",
-  "BYD",
-  "Polestar",
-  "Kia",
-  "Volkswagen",
-  "Hyundai",
-  "Mercedes-Benz",
-  "BMW",
-  "Audi",
-  "Anden elbil",
-];
 const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
 const bookingStepLabels = ["Tid", "Oplysninger", "Bekræft"];
 
@@ -305,8 +284,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   const missingDetails = useMemo(
     () =>
       [
-        !hasValue(vehicle.make) && "Bilmærke",
-        !hasValue(vehicle.model) && "Model",
+        !hasValue(vehicle.make) && "Bilens navn",
         !hasValue(customer.name) && "Fulde navn",
         !hasValue(customer.phone) && "Telefonnummer",
         !isValidEmail(customer.email) && "Gyldig e-mail",
@@ -324,7 +302,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       customer.phone,
       customer.postalCode,
       vehicle.make,
-      vehicle.model,
     ],
   );
   const stepTwoDone = missingDetails.length === 0;
@@ -391,9 +368,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           },
           vehicle: {
             ...vehicle,
-            registrationNumber: cleanValue(
-              vehicle.registrationNumber,
-            ).toUpperCase(),
           },
         }),
       });
@@ -425,7 +399,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
   return (
     <section className="relative overflow-hidden bg-transparent px-3 pb-24 pt-3 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
         <MobileBookingHeader
           appointmentDate={appointmentDate}
           appointmentTime={appointmentTime}
@@ -436,8 +410,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           total={total}
         />
 
-        <div className="glass-shell overflow-hidden rounded-lg">
-          <div className="grid border-b border-white/60 lg:grid-cols-[17rem_minmax(0,1fr)_18rem]">
+        <div className="glass-shell overflow-hidden rounded-lg border border-slate-200/80 shadow-xl shadow-slate-900/8">
+          <div className="grid border-b border-slate-200/80 lg:grid-cols-[14rem_minmax(0,1fr)_15rem]">
             <SchedulerServicePanel
               appointmentDate={appointmentDate}
               appointmentTime={appointmentTime}
@@ -592,20 +566,20 @@ function SchedulerServicePanel({
   total: number;
 }) {
   return (
-    <aside className="border-b border-white/60 p-5 lg:border-b-0 lg:border-r">
-      <p className="inline-flex items-center gap-2 rounded-lg border border-white/75 bg-white/55 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
+    <aside className="border-b border-slate-200/80 bg-slate-50/60 p-4 lg:border-b-0 lg:border-r">
+      <p className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
         <CalendarCheck className="h-3.5 w-3.5" />
         Booking
       </p>
-      <h1 className="mt-5 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+      <h1 className="mt-4 text-xl font-bold tracking-normal text-slate-950 sm:text-2xl">
         {service?.title || "Batteritest"}
       </h1>
-      <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
+      <div className="mt-4 grid gap-2.5 text-sm font-semibold text-slate-600">
         <BookingMeta icon={Clock} text={`${durationMinutes || 0} min.`} />
         <BookingMeta icon={MapPin} text="Hos dig på Sjælland" />
         <BookingMeta icon={FileText} text={formatPrice(total)} />
       </div>
-      <div className="mt-6 rounded-lg border border-white/75 bg-white/45 p-3 text-sm text-slate-600 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
+      <div className="mt-5 rounded-lg border border-slate-200/80 bg-white/80 p-3 text-sm text-slate-600 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
         {appointmentTime ? (
           <span className="font-semibold text-slate-950">
             {dateLabel(appointmentDate)} kl. {appointmentTime}
@@ -658,14 +632,14 @@ function SchedulerCalendarPanel({
   const canGoNext = nextMonth <= maxMonth;
 
   return (
-    <section className="border-b border-white/60 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+    <section className="border-b border-slate-200/80 bg-white/55 p-4 lg:border-b-0 lg:border-r">
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           aria-label="Forrige måned"
           disabled={!canGoPrevious}
           onClick={() => canGoPrevious && onMonthChange(previousMonth)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -677,19 +651,19 @@ function SchedulerCalendarPanel({
           aria-label="Næste måned"
           disabled={!canGoNext}
           onClick={() => canGoNext && onMonthChange(nextMonth)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="mt-5 grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase tracking-wide text-slate-400">
+      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">
         {weekdayLabels.map((day) => (
           <span key={day}>{day}</span>
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-7 gap-1.5">
+      <div className="mt-2 grid grid-cols-7 gap-1">
         {calendarDays.map((day) => {
           const selected = day.key === appointmentDate;
           return (
@@ -699,10 +673,10 @@ function SchedulerCalendarPanel({
               disabled={day.disabled}
               onClick={() => onDateChange(day.key)}
               className={cn(
-                "flex aspect-square min-h-10 items-center justify-center rounded-lg border text-sm font-bold transition",
+                "flex aspect-square min-h-9 items-center justify-center rounded-lg border text-sm font-bold transition",
                 selected
                   ? "border-sky-600 bg-sky-600 text-white shadow-sm shadow-sky-500/30"
-                  : "border-transparent bg-white/35 text-slate-700 hover:border-sky-200 hover:bg-white/70",
+                  : "border-transparent bg-white/45 text-slate-700 hover:border-sky-200 hover:bg-white/80",
                 !day.inMonth && "text-slate-300",
                 day.disabled &&
                   "cursor-not-allowed bg-white/20 text-slate-300 hover:border-transparent hover:bg-white/20",
@@ -745,11 +719,11 @@ function SchedulerTimePanel({
   const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
 
   return (
-    <section className="p-4 sm:p-5">
+    <section className="bg-sky-50/35 p-4">
       <p className="text-sm font-bold text-slate-950">
         {fullDateLabel(appointmentDate)}
       </p>
-      <div className="mt-4 min-h-[19rem]">
+      <div className="mt-3 min-h-[16rem]">
         {slotsLoading ? (
           <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/50 text-sm font-semibold text-slate-600 backdrop-blur">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -760,7 +734,7 @@ function SchedulerTimePanel({
             {slotsError}
           </p>
         ) : slots.length > 0 ? (
-          <div className="grid max-h-[24rem] gap-3 overflow-y-auto pr-1">
+          <div className="grid max-h-[17rem] gap-2 overflow-y-auto pr-1">
             {groupOrder
               .filter((period) => groupedSlots[period]?.length)
               .map((period) => (
@@ -768,7 +742,7 @@ function SchedulerTimePanel({
                   <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
                     {period}
                   </p>
-                  <div className="grid gap-2">
+                  <div className="grid gap-1.5">
                     {groupedSlots[period].map((slot) => {
                       const selected = appointmentTime === slot;
                       return (
@@ -777,7 +751,7 @@ function SchedulerTimePanel({
                           type="button"
                           onClick={() => onTimeChange(slot)}
                           className={cn(
-                            "flex h-11 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-sky-950/5 backdrop-blur-xl transition",
+                            "flex h-10 items-center justify-center rounded-lg border px-3 text-sm font-bold shadow-sm shadow-sky-950/5 backdrop-blur-xl transition",
                             selected
                               ? "border-sky-600 bg-sky-600 text-white"
                               : "border-white/75 bg-white/55 text-slate-700 hover:border-sky-300 hover:bg-white/85 hover:text-sky-700",
@@ -801,7 +775,7 @@ function SchedulerTimePanel({
         type="button"
         disabled={!appointmentTime}
         onClick={onContinue}
-        className="mt-4 w-full"
+        className="mt-3 w-full"
       >
         Fortsæt
         <ArrowRight className="h-4 w-4" />
@@ -828,7 +802,7 @@ function StepRail({
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2 border-b border-white/60 p-3">
+    <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 bg-white/50 p-3">
       {steps.map((step) => {
         const active = activeStep === step.id;
         const enabled =
@@ -880,8 +854,8 @@ function BookingDetailsPanel({
   onVehicleChange: Dispatch<SetStateAction<VehicleForm>>;
 }) {
   return (
-    <section data-booking-step={2} className="border-b border-white/60 p-4 sm:p-5">
-      <div className="grid gap-4 lg:grid-cols-2">
+    <section data-booking-step={2} className="border-b border-slate-200/80 bg-slate-50/45 p-4">
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <FormPanel icon={User} title="Kontakt">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Fulde navn" required>
@@ -981,10 +955,10 @@ function BookingDetailsPanel({
           </div>
         </FormPanel>
 
-        <FormPanel icon={BatteryCharging} title="Elbil">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Mærke" required>
-              <select
+        <FormPanel icon={BatteryCharging} title="Bil">
+          <div className="grid gap-3">
+            <Field label="Bilens navn" required>
+              <Input
                 value={vehicle.make}
                 onChange={(event) =>
                   onVehicleChange((current) => ({
@@ -992,53 +966,11 @@ function BookingDetailsPanel({
                     make: event.target.value,
                   }))
                 }
-                className="h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
-                required
-              >
-                {vehicleMakes.map((make) => (
-                  <option key={make}>{make}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Model" required>
-              <Input
-                value={vehicle.model}
-                onChange={(event) =>
-                  onVehicleChange((current) => ({
-                    ...current,
-                    model: event.target.value,
-                  }))
-                }
+                placeholder="Fx Tesla Model 3"
                 required
               />
             </Field>
-            <Field label="Årgang">
-              <Input
-                inputMode="numeric"
-                maxLength={4}
-                value={vehicle.year}
-                onChange={(event) =>
-                  onVehicleChange((current) => ({
-                    ...current,
-                    year: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Nummerplade">
-              <Input
-                autoCapitalize="characters"
-                maxLength={10}
-                value={vehicle.registrationNumber}
-                onChange={(event) =>
-                  onVehicleChange((current) => ({
-                    ...current,
-                    registrationNumber: event.target.value.toUpperCase(),
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Besked" className="sm:col-span-2">
+            <Field label="Besked">
               <Textarea
                 value={customer.notes}
                 onChange={(event) =>
@@ -1131,9 +1063,7 @@ function BookingReviewPanel({
             />
             <ConfirmRow
               label="Bil"
-              value={[vehicle.make, vehicle.model, vehicle.year]
-                .filter(Boolean)
-                .join(" ")}
+              value={vehicle.make}
             />
             <ConfirmRow
               label="Adresse"
@@ -1643,7 +1573,12 @@ function FormPanel({
   className?: string;
 }) {
   return (
-    <div className={cn("glass-card rounded-lg p-4", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-slate-200/80 bg-white/75 p-4 shadow-sm shadow-slate-900/5 backdrop-blur-xl",
+        className,
+      )}
+    >
       <p className="mb-4 flex items-center gap-2 font-bold text-slate-950">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50/80 text-sky-700 backdrop-blur">
           <Icon className="h-4 w-4" />
