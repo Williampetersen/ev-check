@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BarChart3,
   CalendarDays,
+  CalendarRange,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "appointments", label: "Appointments", icon: CalendarDays },
+  { id: "calendar", label: "Calendar", icon: CalendarRange },
   { id: "customers", label: "Customers", icon: Users },
   { id: "users", label: "Users", icon: Wrench },
   { id: "emails", label: "Emails", icon: Mail },

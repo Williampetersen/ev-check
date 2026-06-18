@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
+  CalendarRange,
   CreditCard,
   FileText,
   Mail,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminSidebar, type AdminView } from "@/components/admin/admin-sidebar";
+import { CalendarView } from "@/components/admin/calendar-view";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ export const metadata = {
 const views: AdminView[] = [
   "overview",
   "appointments",
+  "calendar",
   "customers",
   "users",
   "emails",
@@ -61,6 +64,8 @@ export default async function AdminPage({
     status?: string;
     saved?: string;
     error?: string;
+    date?: string;
+    mode?: string;
   };
 }) {
   const session = verifySessionToken(
@@ -77,6 +82,10 @@ export default async function AdminPage({
     .trim()
     .toLowerCase();
   const status = String(searchParams?.status || "");
+  const calendarDate = /^\d{4}-\d{2}-\d{2}$/.test(String(searchParams?.date || ""))
+    ? String(searchParams?.date)
+    : new Date().toISOString().slice(0, 10);
+  const calendarMode = searchParams?.mode === "day" ? "day" : "week";
   const visibleAppointments = dashboard.appointments.filter((appointment) => {
     const matchesQuery =
       !query ||
@@ -135,6 +144,20 @@ export default async function AdminPage({
               status={status}
               dashboard={dashboard}
             />
+          ) : null}
+          {view === "calendar" ? (
+            <Panel
+              title="Calendar"
+              description="Every booking across all customers, laid out by day and time."
+              icon={CalendarRange}
+            >
+              <CalendarView
+                appointments={dashboard.appointments}
+                settings={dashboard.settings}
+                date={calendarDate}
+                mode={calendarMode}
+              />
+            </Panel>
           ) : null}
           {view === "customers" ? (
             <CustomersView dashboard={dashboard} />
@@ -883,20 +906,62 @@ function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
           </Field>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
-          <Field label="Default status">
-            <select
-              name="default_appointment_status"
-              defaultValue={settings.defaultAppointmentStatus}
-              className={adminSelectClass}
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">New booking approval</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Choose whether bookings made on the website are confirmed
+            instantly, or held as &ldquo;Pending&rdquo; until an admin
+            reviews them.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label
+              className={cn(
+                "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
+                settings.defaultAppointmentStatus === "approved"
+                  ? "border-teal-300 bg-teal-50/80 text-teal-800"
+                  : "border-white/60 bg-white/45 text-slate-700",
+              )}
             >
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <input
+                type="radio"
+                name="default_appointment_status"
+                value="approved"
+                defaultChecked={settings.defaultAppointmentStatus === "approved"}
+                className="mt-1 text-teal-600 focus:ring-teal-500"
+              />
+              <span>
+                Auto-approve
+                <span className="block text-xs font-normal text-slate-500">
+                  New bookings are confirmed instantly, no review needed.
+                </span>
+              </span>
+            </label>
+            <label
+              className={cn(
+                "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
+                settings.defaultAppointmentStatus !== "approved"
+                  ? "border-teal-300 bg-teal-50/80 text-teal-800"
+                  : "border-white/60 bg-white/45 text-slate-700",
+              )}
+            >
+              <input
+                type="radio"
+                name="default_appointment_status"
+                value="pending"
+                defaultChecked={settings.defaultAppointmentStatus !== "approved"}
+                className="mt-1 text-teal-600 focus:ring-teal-500"
+              />
+              <span>
+                Manual approval
+                <span className="block text-xs font-normal text-slate-500">
+                  New bookings stay &ldquo;Pending&rdquo; until you approve them.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
           <Field label="Start hour">
             <Input
               name="start_hour"
