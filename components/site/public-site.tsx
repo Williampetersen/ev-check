@@ -178,7 +178,7 @@ const testMoments = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/50 bg-white/60 shadow-sm shadow-sky-950/5 backdrop-blur-2xl">
+    <header className="sticky top-0 z-40 border-b border-white/70 bg-white/70 shadow-sm shadow-sky-950/5 backdrop-blur-2xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <Image
@@ -225,7 +225,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-indigo-950/90 text-white backdrop-blur-xl">
+    <footer className="border-t border-white/75 bg-white/60 text-slate-800 shadow-[0_-18px_55px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
         <div>
           <div className="flex items-center gap-3">
@@ -238,12 +238,12 @@ export function SiteFooter() {
             />
             <div>
               <p className="font-display text-lg font-bold">EV-Check.dk</p>
-              <p className="text-xs font-semibold text-sky-200">
+              <p className="text-xs font-semibold text-sky-700">
                 Batteritest af elbiler
               </p>
             </div>
           </div>
-          <p className="mt-4 max-w-md text-sm leading-6 text-slate-300">
+          <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
             Professionel og uafhængig batteridiagnose på Sjælland. Fast pris,
             klar rapport og booking direkte online.
           </p>
@@ -257,7 +257,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-sky-100 hover:border-sky-300 hover:bg-sky-400/20"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300 hover:bg-white/85"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -267,11 +267,11 @@ export function SiteFooter() {
         </div>
         <div>
           <p className="font-semibold">Kontakt</p>
-          <div className="mt-3 grid gap-2 text-sm text-slate-300">
-            <a href="tel:+4571900530" className="hover:text-sky-200">
+          <div className="mt-3 grid gap-2 text-sm text-slate-600">
+            <a href="tel:+4571900530" className="hover:text-sky-700">
               +45 71 90 05 30
             </a>
-            <a href="mailto:info@ev-check.dk" className="hover:text-sky-200">
+            <a href="mailto:info@ev-check.dk" className="hover:text-sky-700">
               info@ev-check.dk
             </a>
             <span>København og Sjælland</span>
@@ -279,23 +279,23 @@ export function SiteFooter() {
         </div>
         <div>
           <p className="font-semibold">Sider</p>
-          <div className="mt-3 grid gap-2 text-sm text-slate-300">
+          <div className="mt-3 grid gap-2 text-sm text-slate-600">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="hover:text-sky-200"
+                className="hover:text-sky-700"
               >
                 {item.label}
               </Link>
             ))}
-            <Link href="/cookiepolitik" className="hover:text-sky-200">
+            <Link href="/cookiepolitik" className="hover:text-sky-700">
               Cookiepolitik
             </Link>
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-slate-400">
+      <div className="border-t border-white/70 px-4 py-4 text-center text-xs text-slate-500">
         © {new Date().getFullYear()} EV-Check.dk. Alle rettigheder forbeholdes.
       </div>
     </footer>
@@ -322,7 +322,7 @@ export function SitePage({
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-indigo-950 text-white">
+    <section className="relative overflow-hidden text-slate-950">
       <div className="absolute inset-0">
         <Image
           src="/wp/ev-car-danmark-1.png"
@@ -332,24 +332,25 @@ export function HeroSection() {
           className="object-cover"
         />
       </div>
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(30,41,59,0.94),rgba(30,64,175,0.72),rgba(14,165,233,0.20))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,250,245,0.96),rgba(255,255,255,0.82),rgba(255,255,255,0.56))]" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(251,250,245,0),rgba(251,250,245,0.96))]" />
       <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_25rem] lg:px-8">
         <div>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-lg border border-sky-200/25 bg-sky-200/10 px-3 py-1.5 text-sm font-semibold text-sky-100">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-lg border border-white/75 bg-white/55 px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
             <BatteryCharging className="h-4 w-4" />
             Batteriet er den dyreste del af elbilen
           </p>
           <h1 className="max-w-4xl text-4xl font-bold tracking-normal sm:text-6xl lg:text-7xl">
             Kender du den reelle tilstand af dit elbilbatteri?
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-sky-50 sm:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-700 sm:text-lg">
             Få en professionel batteridiagnose før køb, salg eller når
             rækkevidden virker lavere.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <ButtonLink
               href="/book-tid"
-              className="bg-sky-500 hover:bg-sky-400"
+              className="shadow-xl shadow-sky-600/20"
             >
               <CalendarCheck className="h-4 w-4" />
               Book batteritest
@@ -357,7 +358,7 @@ export function HeroSection() {
             <ButtonLink
               href="/service"
               variant="outline"
-              className="border-white/25 bg-white/10 text-white hover:bg-white hover:text-slate-950"
+              className="bg-white/55"
             >
               Se hvad vi tester
               <ArrowRight className="h-4 w-4" />
@@ -367,9 +368,9 @@ export function HeroSection() {
             {heroBullets.map((point) => (
               <div
                 key={point}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-sky-50"
+                className="flex items-center gap-2 rounded-lg border border-white/75 bg-white/50 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl"
               >
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-200" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-600" />
                 <span>{point}</span>
               </div>
             ))}

@@ -20,13 +20,13 @@ export default function AboutPage() {
           about: { "@type": "LocalBusiness", name: "EV-Check.dk" },
         }}
       />
-      <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-300">Om EV-Check</p>
+      <section className="px-4 py-16 text-slate-950 sm:px-6 lg:px-8">
+        <div className="glass-shell mx-auto max-w-7xl rounded-lg p-6 sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-sky-700">Om EV-Check</p>
           <h1 className="mt-3 max-w-4xl text-4xl font-bold tracking-normal sm:text-6xl">
             Din trygge partner i elbil-batteridiagnose.
           </h1>
-          <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
             Vi giver elbilejere, købere og forhandlere et klart indblik i batteriets reelle tilstand og bilens tekniske data.
           </p>
         </div>

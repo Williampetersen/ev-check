@@ -30,7 +30,7 @@ export default function NavBar() {
           </Link>
           <Link
             href="/admin/login"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-950/80 bg-slate-950/85 px-4 py-1.5 text-sm font-semibold text-white shadow-sm shadow-slate-950/20 backdrop-blur transition-colors hover:bg-white/80 hover:text-black"
+            className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-white/60 px-4 py-1.5 text-sm font-semibold text-slate-800 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition-colors hover:border-sky-300 hover:bg-white/85 hover:text-sky-700"
           >
             <LayoutDashboard className="h-4 w-4" />
             Dashboard

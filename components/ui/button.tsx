@@ -7,12 +7,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const variants = {
-  primary: "bg-sky-600 text-white shadow-sm shadow-sky-600/20 hover:bg-sky-700",
+  primary:
+    "border border-sky-300/70 bg-sky-600/90 text-white shadow-lg shadow-sky-600/20 backdrop-blur-xl hover:bg-sky-700",
   secondary:
-    "bg-indigo-950 text-white shadow-sm shadow-indigo-950/15 hover:bg-indigo-900",
+    "border border-white/70 bg-white/70 text-slate-800 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:bg-white/90 hover:text-sky-700",
   outline:
-    "border border-sky-200 bg-white/70 text-slate-700 backdrop-blur hover:border-sky-400 hover:text-sky-700",
-  ghost: "text-slate-600 hover:bg-sky-50 hover:text-slate-950",
+    "border border-white/75 bg-white/55 text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300 hover:bg-white/80 hover:text-sky-700",
+  ghost: "text-slate-600 hover:bg-white/55 hover:text-slate-950",
   danger: "bg-rose-600 text-white hover:bg-rose-700",
 };
 

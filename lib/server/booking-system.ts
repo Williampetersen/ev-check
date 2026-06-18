@@ -93,10 +93,45 @@ const addMinutesToTime = (time: string, minutes: number) => minutesToTime(timeTo
 
 const sanitize = (value: unknown) => String(value ?? "").trim();
 const normalizeEmail = (value: string) => sanitize(value).toLowerCase();
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === "object" && !Array.isArray(value));
 const numberValue = (value: unknown, fallback: number) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+
+function normalizeBookingInput(input: unknown): BookingCreateInput {
+  const payload = isObject(input) ? input : {};
+  const customer = isObject(payload.customer) ? payload.customer : {};
+  const vehicle = isObject(payload.vehicle) ? payload.vehicle : {};
+
+  return {
+    serviceId: sanitize(payload.serviceId),
+    addonIds: Array.isArray(payload.addonIds)
+      ? payload.addonIds.map((item) => sanitize(item)).filter(Boolean)
+      : [],
+    appointmentDate: sanitize(payload.appointmentDate),
+    appointmentTime: sanitize(payload.appointmentTime).slice(0, 5),
+    customer: {
+      name: sanitize(customer.name),
+      email: normalizeEmail(sanitize(customer.email)),
+      phone: sanitize(customer.phone),
+      address: sanitize(customer.address),
+      postalCode: sanitize(customer.postalCode),
+      city: sanitize(customer.city),
+      company: sanitize(customer.company),
+      notes: sanitize(customer.notes),
+      acceptsTerms: customer.acceptsTerms === true,
+    },
+    vehicle: {
+      make: sanitize(vehicle.make),
+      model: sanitize(vehicle.model),
+      year: sanitize(vehicle.year),
+      registrationNumber: sanitize(vehicle.registrationNumber).toUpperCase(),
+      currentRange: sanitize(vehicle.currentRange),
+    },
+  };
+}
 
 function normalizeStatus(value: string): AppointmentStatus {
   return ["pending", "approved", "completed", "cancelled"].includes(value)
@@ -235,7 +270,9 @@ function validateDate(date: string) {
 }
 
 function validateTime(time: string) {
-  return /^\d{2}:\d{2}$/.test(time);
+  if (!/^\d{2}:\d{2}$/.test(time)) return false;
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 }
 
 export async function getAvailableSlots(input: {
@@ -247,6 +284,7 @@ export async function getAvailableSlots(input: {
 
   const config = await getBookingConfig();
   if (!config.settings.bookingEnabled) return [];
+  if (!getBookingService(input.serviceId, config.services)) return [];
 
   const pricing = calculateBooking(input, config.services, config.addons);
   const start = config.settings.startHour * 60;
@@ -292,7 +330,7 @@ export async function getAvailableSlots(input: {
 function validateBooking(input: BookingCreateInput, services: BookingService[]) {
   if (!input.customer.acceptsTerms) return "Du skal acceptere, at EV-Check må kontakte dig om bookingen.";
   if (!sanitize(input.customer.name)) return "Indtast dit fulde navn.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.customer.email)) return "Indtast en gyldig e-mailadresse.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(input.customer.email))) return "Indtast en gyldig e-mailadresse.";
   if (!sanitize(input.customer.phone)) return "Indtast dit telefonnummer.";
   if (!sanitize(input.customer.address) || !sanitize(input.customer.postalCode) || !sanitize(input.customer.city)) {
     return "Indtast adressen, hvor testen skal udføres.";
@@ -304,6 +342,8 @@ function validateBooking(input: BookingCreateInput, services: BookingService[]) 
 }
 
 export async function createBooking(input: BookingCreateInput) {
+  const bookingInput = normalizeBookingInput(input);
+
   if (!isDatabaseConfigured()) {
     throw new Error("Bookingsystemet mangler databaseopsætning. Tilføj DATABASE_URL før rigtige bookinger kan gemmes.");
   }
@@ -313,28 +353,30 @@ export async function createBooking(input: BookingCreateInput) {
     throw new Error("Online booking er midlertidigt lukket. Kontakt EV-Check for at aftale en tid.");
   }
 
-  const validationError = validateBooking(input, config.services);
+  const validationError = validateBooking(bookingInput, config.services);
   if (validationError) throw new Error(validationError);
 
   const addonIds: string[] = [];
-  const pricing = calculateBooking({ serviceId: input.serviceId, addonIds }, config.services, config.addons);
+  const pricing = calculateBooking({ serviceId: bookingInput.serviceId, addonIds }, config.services, config.addons);
   const slots = await getAvailableSlots({
-    date: input.appointmentDate,
-    serviceId: input.serviceId,
+    date: bookingInput.appointmentDate,
+    serviceId: bookingInput.serviceId,
     addonIds,
   });
-  if (!slots.includes(input.appointmentTime)) {
+  if (!slots.includes(bookingInput.appointmentTime)) {
     throw new Error("Tiden er ikke længere ledig. Vælg venligst en anden tid.");
   }
 
   await ensureSchema({ force: true });
   const sql = getSql();
-  const normalizedEmail = normalizeEmail(input.customer.email);
+  const normalizedEmail = normalizeEmail(bookingInput.customer.email);
   const token = portalToken();
   const customerId = id("cus");
   const appointmentId = id("apt");
-  const vehicleLabel = [input.vehicle.make, input.vehicle.model, input.vehicle.year].filter(Boolean).join(" ");
-  const appointmentEndTime = addMinutesToTime(input.appointmentTime, pricing.durationMinutes);
+  const vehicleLabel = [bookingInput.vehicle.make, bookingInput.vehicle.model, bookingInput.vehicle.year].filter(Boolean).join(" ");
+  const appointmentEndTime = addMinutesToTime(bookingInput.appointmentTime, pricing.durationMinutes);
+  const customerCompany = bookingInput.customer.company || "";
+  const customerNotes = bookingInput.customer.notes || "";
 
   const created = await sql.begin(async (tx) => {
     const [existingCustomer] = await tx<Array<{ id: string; portal_token: string | null }>>`
@@ -352,13 +394,13 @@ export async function createBooking(input: BookingCreateInput) {
       await tx`
         UPDATE customers
         SET
-          name = ${sanitize(input.customer.name)},
-          phone = ${sanitize(input.customer.phone)},
-          address = ${sanitize(input.customer.address)},
-          postal_code = ${sanitize(input.customer.postalCode)},
-          city = ${sanitize(input.customer.city)},
-          company = ${sanitize(input.customer.company)},
-          notes = ${sanitize(input.customer.notes)},
+          name = ${bookingInput.customer.name},
+          phone = ${bookingInput.customer.phone},
+          address = ${bookingInput.customer.address},
+          postal_code = ${bookingInput.customer.postalCode},
+          city = ${bookingInput.customer.city},
+          company = ${customerCompany},
+          notes = ${customerNotes},
           portal_token = ${finalPortalToken},
           updated_at = NOW()
         WHERE id = ${finalCustomerId}
@@ -369,10 +411,10 @@ export async function createBooking(input: BookingCreateInput) {
           id, name, email, phone, address, postal_code, city, company, notes, portal_token
         )
         VALUES (
-          ${finalCustomerId}, ${sanitize(input.customer.name)}, ${normalizedEmail},
-          ${sanitize(input.customer.phone)}, ${sanitize(input.customer.address)},
-          ${sanitize(input.customer.postalCode)}, ${sanitize(input.customer.city)},
-          ${sanitize(input.customer.company)}, ${sanitize(input.customer.notes)}, ${finalPortalToken}
+          ${finalCustomerId}, ${bookingInput.customer.name}, ${normalizedEmail},
+          ${bookingInput.customer.phone}, ${bookingInput.customer.address},
+          ${bookingInput.customer.postalCode}, ${bookingInput.customer.city},
+          ${customerCompany}, ${customerNotes}, ${finalPortalToken}
         )
       `;
     }
@@ -386,12 +428,12 @@ export async function createBooking(input: BookingCreateInput) {
       )
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
-        ${sanitize(input.vehicle.registrationNumber).toUpperCase()}, ${pricing.service.title},
-        'Batterirapport og systemdiagnose', ${input.appointmentDate}, ${input.appointmentTime},
+        ${bookingInput.vehicle.registrationNumber}, ${pricing.service.title},
+        'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${bookingInput.appointmentTime},
         ${appointmentEndTime}, ${config.settings.defaultAppointmentStatus}, 'unpaid',
-        'not_requested', ${pricing.total}, '', ${sanitize(input.customer.city)},
-        ${sanitize(input.customer.notes)}, ${tx.json(pricing.addons)},
-        ${tx.json({ vehicle: input.vehicle, customer: input.customer, pricing })}, 'website'
+        'not_requested', ${pricing.total}, '', ${bookingInput.customer.city},
+        ${customerNotes}, ${tx.json(pricing.addons)},
+        ${tx.json({ vehicle: bookingInput.vehicle, customer: bookingInput.customer, pricing })}, 'website'
       )
       RETURNING id
     `;
@@ -405,14 +447,14 @@ export async function createBooking(input: BookingCreateInput) {
 
   const customer: Customer = {
     id: created.customerId,
-    name: sanitize(input.customer.name),
+    name: bookingInput.customer.name,
     email: normalizedEmail,
-    phone: sanitize(input.customer.phone),
-    address: sanitize(input.customer.address),
-    postalCode: sanitize(input.customer.postalCode),
-    city: sanitize(input.customer.city),
-    company: sanitize(input.customer.company),
-    notes: sanitize(input.customer.notes),
+    phone: bookingInput.customer.phone,
+    address: bookingInput.customer.address,
+    postalCode: bookingInput.customer.postalCode,
+    city: bookingInput.customer.city,
+    company: customerCompany,
+    notes: customerNotes,
     portalToken: created.portalToken,
     createdAt: todayKey(),
   };
@@ -424,11 +466,11 @@ export async function createBooking(input: BookingCreateInput) {
     customerEmail: customer.email,
     customerPhone: customer.phone,
     vehicleLabel,
-    registrationNumber: sanitize(input.vehicle.registrationNumber).toUpperCase(),
+    registrationNumber: bookingInput.vehicle.registrationNumber,
     serviceLabel: pricing.service.title,
     reportLabel: "Batterirapport og systemdiagnose",
-    appointmentDate: input.appointmentDate,
-    appointmentTime: input.appointmentTime,
+    appointmentDate: bookingInput.appointmentDate,
+    appointmentTime: bookingInput.appointmentTime,
     appointmentEndTime,
     status: config.settings.defaultAppointmentStatus,
     paymentStatus: "unpaid",
@@ -471,7 +513,7 @@ export async function createBooking(input: BookingCreateInput) {
     portalToken: created.portalToken,
     portalUrl: `/kunde/${created.portalToken}`,
     total: pricing.total,
-    appointmentLabel: `${input.appointmentDate} kl. ${input.appointmentTime}`,
+    appointmentLabel: `${bookingInput.appointmentDate} kl. ${bookingInput.appointmentTime}`,
     serviceLabel: pricing.service.title,
   };
 }

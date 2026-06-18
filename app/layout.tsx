@@ -17,7 +17,7 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="da">
-      <body className={cx(sfPro.variable, inter.variable, "bg-slate-50 text-slate-950")}>
+      <body className={cx(sfPro.variable, inter.variable, "bg-[#fbfaf5] text-slate-950")}>
         {children}
         <VercelAnalytics />
       </body>
