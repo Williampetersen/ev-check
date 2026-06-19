@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BatteryCharging,
+  CalendarCheck,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -349,9 +350,12 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   }
 
   return (
-    <section className="bg-white px-4 py-10 sm:px-6 lg:px-8">
+    <section className="bg-gradient-to-b from-teal-50 via-slate-50 to-slate-50 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 text-center">
+          <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 text-white shadow-sm">
+            <CalendarCheck className="h-5 w-5" />
+          </span>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
             Book tid
           </p>
@@ -1135,45 +1139,56 @@ function SummaryCard({
   sticky?: boolean;
 }) {
   return (
-    <Card className={cn(sticky && "lg:sticky lg:top-20", className)}>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
-        Din booking
-      </p>
-      <p className="mt-3 text-lg font-bold text-slate-900">
-        {service?.title || "Batteritest"}
-      </p>
-      <div className="mt-3 grid gap-2 text-sm text-slate-600">
-        <span className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-teal-700" />
-          {durationMinutes || 0} min.
-        </span>
-        <span className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-teal-700" />
-          Hos dig på Sjælland
-        </span>
-        {vehicle.make ? (
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl border border-teal-700/20 bg-white shadow-md",
+        sticky && "lg:sticky lg:top-20",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-2 bg-teal-700 px-5 py-3 sm:px-6">
+        <CalendarCheck className="h-4 w-4 text-teal-100" />
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-white">
+          Din booking
+        </p>
+      </div>
+      <div className="p-5 sm:p-6">
+        <p className="text-lg font-bold text-slate-900">
+          {service?.title || "Batteritest"}
+        </p>
+        <div className="mt-3 grid gap-2 text-sm text-slate-600">
           <span className="flex items-center gap-2">
-            <BatteryCharging className="h-4 w-4 text-teal-700" />
-            {vehicle.make}
+            <Clock className="h-4 w-4 text-teal-700" />
+            {durationMinutes || 0} min.
           </span>
-        ) : null}
+          <span className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-teal-700" />
+            Hos dig på Sjælland
+          </span>
+          {vehicle.make ? (
+            <span className="flex items-center gap-2">
+              <BatteryCharging className="h-4 w-4 text-teal-700" />
+              {vehicle.make}
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-4 rounded-xl border border-dashed border-teal-200 bg-teal-50/60 px-3 py-2.5 text-sm">
+          {appointmentTime ? (
+            <p className="font-semibold text-slate-900">
+              {dateLabel(appointmentDate)} kl. {appointmentTime}
+            </p>
+          ) : (
+            <p className="font-semibold text-teal-700">Vælg dato og tid.</p>
+          )}
+        </div>
+        <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
+          <span className="text-sm font-semibold text-slate-500">Total</span>
+          <span className="text-xl font-bold text-teal-700">
+            {formatPrice(total)}
+          </span>
+        </div>
       </div>
-      <div className="mt-4 border-t border-slate-100 pt-4 text-sm">
-        {appointmentTime ? (
-          <p className="font-semibold text-slate-900">
-            {dateLabel(appointmentDate)} kl. {appointmentTime}
-          </p>
-        ) : (
-          <p className="text-slate-500">Vælg dato og tid.</p>
-        )}
-      </div>
-      <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
-        <span className="text-sm font-semibold text-slate-500">Total</span>
-        <span className="text-xl font-bold text-teal-700">
-          {formatPrice(total)}
-        </span>
-      </div>
-    </Card>
+    </div>
   );
 }
 
