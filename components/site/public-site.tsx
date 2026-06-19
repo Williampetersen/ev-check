@@ -162,13 +162,6 @@ const brandLogos = [
   { src: "/wp/hyundailogo.png", alt: "Hyundai elbil batteritest" },
 ];
 
-const heroBullets = [
-  "Dokumentation af batteriets tilstand",
-  "Professionel og uafhængig analyse",
-  "Ideelt før køb eller salg",
-  "Undgå dyre overraskelser",
-];
-
 const testMoments = [
   { text: "Før køb af en brugt elbil", icon: Car },
   { text: "Før salg af din elbil", icon: CalendarCheck },
@@ -322,61 +315,31 @@ export function SitePage({
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden text-slate-950">
-      <div className="absolute inset-0">
-        <Image
-          src="/wp/ev-car-danmark-1.png"
-          alt="Elbil klar til batteritest i Danmark"
-          fill
-          priority
-          className="object-cover"
-        />
-      </div>
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,250,245,0.96),rgba(255,255,255,0.82),rgba(255,255,255,0.56))]" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(251,250,245,0),rgba(251,250,245,0.96))]" />
-      <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_25rem] lg:px-8">
-        <div>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-lg border border-white/75 bg-white/55 px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl">
-            <BatteryCharging className="h-4 w-4" />
-            Batteriet er den dyreste del af elbilen
-          </p>
-          <h1 className="max-w-4xl text-4xl font-bold tracking-normal sm:text-6xl lg:text-7xl">
-            Kender du den reelle tilstand af dit elbilbatteri?
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-700 sm:text-lg">
-            Få en professionel batteridiagnose før køb, salg eller når
-            rækkevidden virker lavere.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <ButtonLink
-              href="/book-tid"
-              className="shadow-xl shadow-sky-600/20"
-            >
-              <CalendarCheck className="h-4 w-4" />
-              Book batteritest
-            </ButtonLink>
-            <ButtonLink
-              href="/service"
-              variant="outline"
-              className="bg-white/55"
-            >
-              Se hvad vi tester
-              <ArrowRight className="h-4 w-4" />
-            </ButtonLink>
-          </div>
-          <div className="mt-8 grid max-w-2xl gap-2 sm:grid-cols-2">
-            {heroBullets.map((point) => (
-              <div
-                key={point}
-                className="flex items-center gap-2 rounded-lg border border-white/75 bg-white/50 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl"
-              >
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-600" />
-                <span>{point}</span>
-              </div>
-            ))}
-          </div>
+    <section className="relative isolate flex min-h-[92vh] items-center overflow-hidden text-white">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/video/herovideo.mp4"
+        poster="/wp/ev-car-danmark-1.png"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-slate-950/10" />
+      <div className="relative mx-auto w-full max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+          Kender du dit elbilbatteris reelle tilstand?
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/80 sm:text-lg">
+          Professionel batteritest på 15 minutter, hjemme hos dig.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <ButtonLink href="/book-tid" className="shadow-xl shadow-black/30">
+            <CalendarCheck className="h-4 w-4" />
+            Book batteritest
+          </ButtonLink>
         </div>
-        <PriceCard />
       </div>
     </section>
   );
