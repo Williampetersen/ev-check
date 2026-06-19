@@ -10,7 +10,10 @@ import {
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { saveInvoiceForAppointment } from "@/lib/server/invoices";
-import { sendAdminBookingEmail, sendCustomerAppointmentEmail } from "@/lib/server/mail";
+import {
+  sendAdminBookingEmail,
+  sendCustomerAppointmentEmail,
+} from "@/lib/server/mail";
 
 export type BookingService = {
   id: string;
@@ -103,9 +106,12 @@ const timeToMinutes = (time: string) => {
 };
 
 const minutesToTime = (minutes: number) =>
-  `${Math.floor(minutes / 60).toString().padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`;
+  `${Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`;
 
-const addMinutesToTime = (time: string, minutes: number) => minutesToTime(timeToMinutes(time) + minutes);
+const addMinutesToTime = (time: string, minutes: number) =>
+  minutesToTime(timeToMinutes(time) + minutes);
 
 const sanitize = (value: unknown) => String(value ?? "").trim();
 const normalizeEmail = (value: string) => sanitize(value).toLowerCase();
@@ -159,20 +165,27 @@ function normalizeSettings(row: any): DashboardSettings {
   return {
     companyName: sanitize(row?.company_name) || defaultSettings.companyName,
     supportEmail: sanitize(row?.support_email) || defaultSettings.supportEmail,
-    adminNotifyEmail: sanitize(row?.admin_notify_email) || defaultSettings.adminNotifyEmail,
+    adminNotifyEmail:
+      sanitize(row?.admin_notify_email) || defaultSettings.adminNotifyEmail,
     defaultAppointmentStatus: normalizeStatus(
-      sanitize(row?.default_appointment_status) || defaultSettings.defaultAppointmentStatus,
+      sanitize(row?.default_appointment_status) ||
+        defaultSettings.defaultAppointmentStatus,
     ),
-    bookingEnabled: Boolean(row?.booking_enabled ?? defaultSettings.bookingEnabled),
+    bookingEnabled: Boolean(
+      row?.booking_enabled ?? defaultSettings.bookingEnabled,
+    ),
     startHour: numberValue(row?.start_hour, defaultSettings.startHour),
     endHour: numberValue(row?.end_hour, defaultSettings.endHour),
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
     serviceAreas: Array.isArray(row?.service_areas_json)
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
-    services: Array.isArray(row?.services_json) ? row.services_json : defaultSettings.services,
+    services: Array.isArray(row?.services_json)
+      ? row.services_json
+      : defaultSettings.services,
     emailAutomation:
-      row?.email_automation_json && typeof row.email_automation_json === "object"
+      row?.email_automation_json &&
+      typeof row.email_automation_json === "object"
         ? { ...defaultSettings.emailAutomation, ...row.email_automation_json }
         : defaultSettings.emailAutomation,
   };
@@ -207,7 +220,8 @@ export const bookingServices: BookingService[] = [
   {
     id: "battery-health",
     title: "Batteritest af elbil",
-    description: "Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.",
+    description:
+      "Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.",
     duration: "15 min.",
     durationMinutes: 15,
     badge: "Fast service",
@@ -308,7 +322,9 @@ export async function updateBookingServiceRecord(
   if (input.imageData === null) {
     await sql`
       UPDATE booking_services
-      SET title = ${input.title}, description = ${input.description}, badge = ${input.badge},
+      SET title = ${input.title}, description = ${input.description}, badge = ${
+      input.badge
+    },
           duration_minutes = ${input.durationMinutes}, price = ${input.price},
           features_json = ${sql.json(input.features)}, updated_at = NOW()
       WHERE id = ${serviceId}
@@ -316,9 +332,13 @@ export async function updateBookingServiceRecord(
   } else {
     await sql`
       UPDATE booking_services
-      SET title = ${input.title}, description = ${input.description}, badge = ${input.badge},
+      SET title = ${input.title}, description = ${input.description}, badge = ${
+      input.badge
+    },
           duration_minutes = ${input.durationMinutes}, price = ${input.price},
-          image_data = ${input.imageData}, features_json = ${sql.json(input.features)},
+          image_data = ${input.imageData}, features_json = ${sql.json(
+      input.features,
+    )},
           updated_at = NOW()
       WHERE id = ${serviceId}
     `;
@@ -367,7 +387,8 @@ export function getCarBrands(): CarBrand[] {
   return files
     .map((file) => {
       const slug = path.parse(file).name.toLowerCase();
-      const label = carBrandLabels[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
+      const label =
+        carBrandLabels[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
       return { id: slug, label, logo: `/bilbrands/${file}` };
     })
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -387,11 +408,17 @@ export async function getBookingConfig(): Promise<BookingConfig> {
   };
 }
 
-export function getBookingService(serviceId: string, services: BookingService[] = bookingServices) {
+export function getBookingService(
+  serviceId: string,
+  services: BookingService[] = bookingServices,
+) {
   return services.find((item) => item.id === serviceId);
 }
 
-export function getBookingAddons(addonIds: string[], addons: BookingAddon[] = bookingAddons) {
+export function getBookingAddons(
+  addonIds: string[],
+  addons: BookingAddon[] = bookingAddons,
+) {
   const idSet = new Set(addonIds);
   return addons.filter((item) => idSet.has(item.id));
 }
@@ -401,11 +428,15 @@ export function calculateBooking(
   services: BookingService[] = bookingServices,
   availableAddons: BookingAddon[] = bookingAddons,
 ) {
-  const service = getBookingService(input.serviceId, services) || services[0] || bookingServices[0];
+  const service =
+    getBookingService(input.serviceId, services) ||
+    services[0] ||
+    bookingServices[0];
   const addons = getBookingAddons(input.addonIds, availableAddons);
   const addonTotal = addons.reduce((sum, addon) => sum + addon.price, 0);
   const durationMinutes =
-    service.durationMinutes + addons.reduce((sum, addon) => sum + addon.durationMinutes, 0);
+    service.durationMinutes +
+    addons.reduce((sum, addon) => sum + addon.durationMinutes, 0);
 
   return {
     service,
@@ -452,12 +483,17 @@ export async function getAvailableSlots(input: {
   if (weekday === 0) return [];
   if (input.date < config.minDate || input.date > config.maxDate) return [];
 
-  let existing: Array<{ appointment_time: string; appointment_end_time: string }> = [];
+  let existing: Array<{
+    appointment_time: string;
+    appointment_end_time: string;
+  }> = [];
   if (isDatabaseConfigured()) {
     try {
       await ensureSchema({ force: true });
       const sql = getSql();
-      existing = await sql<Array<{ appointment_time: string; appointment_end_time: string }>>`
+      existing = await sql<
+        Array<{ appointment_time: string; appointment_end_time: string }>
+      >`
         SELECT appointment_time, appointment_end_time
         FROM appointments
         WHERE appointment_date = ${input.date}
@@ -469,12 +505,24 @@ export async function getAvailableSlots(input: {
   }
 
   const slots: string[] = [];
-  for (let minutes = start; minutes + pricing.durationMinutes <= end; minutes += interval) {
+  for (
+    let minutes = start;
+    minutes + pricing.durationMinutes <= end;
+    minutes += interval
+  ) {
     const slot = minutesToTime(minutes);
     const slotEnd = minutes + pricing.durationMinutes;
     const hasConflict = existing.some((item) => {
-      const existingStart = timeToMinutes(String(item.appointment_time || "00:00").slice(0, 5));
-      const existingEnd = timeToMinutes(String(item.appointment_end_time || "").slice(0, 5) || addMinutesToTime(String(item.appointment_time || "00:00").slice(0, 5), pricing.durationMinutes));
+      const existingStart = timeToMinutes(
+        String(item.appointment_time || "00:00").slice(0, 5),
+      );
+      const existingEnd = timeToMinutes(
+        String(item.appointment_end_time || "").slice(0, 5) ||
+          addMinutesToTime(
+            String(item.appointment_time || "00:00").slice(0, 5),
+            pricing.durationMinutes,
+          ),
+      );
       return minutes < existingEnd && slotEnd > existingStart;
     });
     if (!hasConflict) slots.push(slot);
@@ -483,17 +531,32 @@ export async function getAvailableSlots(input: {
   return slots;
 }
 
-function validateBooking(input: BookingCreateInput, services: BookingService[]) {
-  if (!input.customer.acceptsTerms) return "Du skal acceptere, at EV-Check må kontakte dig om bookingen.";
+function validateBooking(
+  input: BookingCreateInput,
+  services: BookingService[],
+) {
+  if (!input.customer.acceptsTerms)
+    return "Du skal acceptere, at EV-Check må kontakte dig om bookingen.";
   if (!sanitize(input.customer.name)) return "Indtast dit fulde navn.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(input.customer.email))) return "Indtast en gyldig e-mailadresse.";
-  if (!validatePhone(input.customer.phone)) return "Indtast et gyldigt telefonnummer.";
-  if (!sanitize(input.customer.address) || !sanitize(input.customer.postalCode) || !sanitize(input.customer.city)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(input.customer.email)))
+    return "Indtast en gyldig e-mailadresse.";
+  if (!validatePhone(input.customer.phone))
+    return "Indtast et gyldigt telefonnummer.";
+  if (
+    !sanitize(input.customer.address) ||
+    !sanitize(input.customer.postalCode) ||
+    !sanitize(input.customer.city)
+  ) {
     return "Indtast adressen, hvor testen skal udføres.";
   }
   if (!sanitize(input.vehicle.make)) return "Indtast bilens navn.";
-  if (!validateDate(input.appointmentDate) || !validateTime(input.appointmentTime)) return "Vælg en ledig dato og tid.";
-  if (!getBookingService(input.serviceId, services)) return "Vælg en gyldig testpakke.";
+  if (
+    !validateDate(input.appointmentDate) ||
+    !validateTime(input.appointmentTime)
+  )
+    return "Vælg en ledig dato og tid.";
+  if (!getBookingService(input.serviceId, services))
+    return "Vælg en gyldig testpakke.";
   return "";
 }
 
@@ -501,19 +564,27 @@ export async function createBooking(input: BookingCreateInput) {
   const bookingInput = normalizeBookingInput(input);
 
   if (!isDatabaseConfigured()) {
-    throw new Error("Bookingsystemet mangler databaseopsætning. Tilføj DATABASE_URL før rigtige bookinger kan gemmes.");
+    throw new Error(
+      "Bookingsystemet mangler databaseopsætning. Tilføj DATABASE_URL før rigtige bookinger kan gemmes.",
+    );
   }
 
   const config = await getBookingConfig();
   if (!config.settings.bookingEnabled) {
-    throw new Error("Online booking er midlertidigt lukket. Kontakt EV-Check for at aftale en tid.");
+    throw new Error(
+      "Online booking er midlertidigt lukket. Kontakt EV-Check for at aftale en tid.",
+    );
   }
 
   const validationError = validateBooking(bookingInput, config.services);
   if (validationError) throw new Error(validationError);
 
   const addonIds: string[] = [];
-  const pricing = calculateBooking({ serviceId: bookingInput.serviceId, addonIds }, config.services, config.addons);
+  const pricing = calculateBooking(
+    { serviceId: bookingInput.serviceId, addonIds },
+    config.services,
+    config.addons,
+  );
   const slots = await getAvailableSlots({
     date: bookingInput.appointmentDate,
     serviceId: bookingInput.serviceId,
@@ -530,13 +601,19 @@ export async function createBooking(input: BookingCreateInput) {
   const customerId = id("cus");
   const appointmentId = id("apt");
   const vehicleLabel = bookingInput.vehicle.make;
-  const vehicleRegistrationNumber = bookingInput.vehicle.registrationNumber || "";
-  const appointmentEndTime = addMinutesToTime(bookingInput.appointmentTime, pricing.durationMinutes);
+  const vehicleRegistrationNumber =
+    bookingInput.vehicle.registrationNumber || "";
+  const appointmentEndTime = addMinutesToTime(
+    bookingInput.appointmentTime,
+    pricing.durationMinutes,
+  );
   const customerCompany = bookingInput.customer.company || "";
   const customerNotes = bookingInput.customer.notes || "";
 
   const created = await sql.begin(async (tx) => {
-    const [existingCustomer] = await tx<Array<{ id: string; portal_token: string | null }>>`
+    const [existingCustomer] = await tx<
+      Array<{ id: string; portal_token: string | null }>
+    >`
       SELECT id, portal_token
       FROM customers
       WHERE LOWER(email) = ${normalizedEmail}
@@ -586,11 +663,19 @@ export async function createBooking(input: BookingCreateInput) {
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
         ${vehicleRegistrationNumber}, ${pricing.service.title},
-        'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${bookingInput.appointmentTime},
-        ${appointmentEndTime}, ${config.settings.defaultAppointmentStatus}, 'unpaid',
+        'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${
+      bookingInput.appointmentTime
+    },
+        ${appointmentEndTime}, ${
+      config.settings.defaultAppointmentStatus
+    }, 'unpaid',
         'not_requested', ${pricing.total}, '', ${bookingInput.customer.city},
         ${customerNotes}, ${tx.json(pricing.addons)},
-        ${tx.json({ vehicle: bookingInput.vehicle, customer: bookingInput.customer, pricing })}, 'website'
+        ${tx.json({
+          vehicle: bookingInput.vehicle,
+          customer: bookingInput.customer,
+          pricing,
+        })}, 'website'
       )
       RETURNING id
     `;
@@ -653,12 +738,15 @@ export async function createBooking(input: BookingCreateInput) {
   }
 
   try {
-    if (config.settings.emailAutomation.customerOnCreate) {
+    if (config.settings.emailAutomation.customerOnCreate !== false) {
+      const publicAppUrl = String(
+        process.env.APP_URL || "https://ev-check.dk",
+      ).replace(/\/$/, "");
       await sendCustomerAppointmentEmail({
         customer,
         appointment,
         settings: config.settings,
-        portalUrl: `${process.env.APP_URL || "https://ev-check.dk"}/kunde/${created.portalToken}`,
+        portalUrl: `${publicAppUrl}/kunde/${created.portalToken}`,
       });
     }
   } catch {
@@ -666,7 +754,7 @@ export async function createBooking(input: BookingCreateInput) {
   }
 
   try {
-    if (config.settings.emailAutomation.adminOnCreate) {
+    if (config.settings.emailAutomation.adminOnCreate !== false) {
       await sendAdminBookingEmail({
         customer,
         appointment,

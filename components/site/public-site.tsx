@@ -161,9 +161,15 @@ const brandLogos = [
   { src: "/wp/hyundailogo.png", alt: "Hyundai elbil batteritest" },
 ];
 
+const heroFacts = [
+  { label: "Fast pris", value: "1300 kr.", icon: CheckCircle2 },
+  { label: "Testtid", value: "15 min.", icon: Clock },
+  { label: "PDF-rapport", value: "Samme dag", icon: FileText },
+];
+
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/70 bg-white/70 shadow-sm shadow-sky-950/5 backdrop-blur-2xl">
+    <header className="bg-white/78 sticky top-0 z-40 border-b border-white/75 shadow-sm shadow-teal-950/5 backdrop-blur-2xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <Image
@@ -182,7 +188,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-semibold text-slate-600 hover:text-sky-700"
+              className="text-sm font-semibold text-slate-600 transition hover:text-teal-700"
             >
               {item.label}
             </Link>
@@ -307,7 +313,7 @@ export function SitePage({
 
 export function HeroSection() {
   return (
-    <section className="relative isolate flex min-h-[92vh] items-center overflow-hidden text-white">
+    <section className="relative isolate flex min-h-[calc(100svh-3.5rem)] w-full max-w-[100vw] items-center overflow-hidden text-white sm:min-h-[calc(100svh-4rem)]">
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/video/herovideo.mp4"
@@ -318,19 +324,55 @@ export function HeroSection() {
         playsInline
         preload="auto"
       />
-      <div className="via-slate-950/35 absolute inset-0 bg-gradient-to-t from-slate-950/90 to-slate-950/10" />
-      <div className="relative mx-auto w-full max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-          Kender du dit elbilbatteris reelle tilstand?
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/80 sm:text-lg">
-          Professionel batteritest på 15 minutter, hjemme hos dig.
+      <div className="from-slate-950/92 via-slate-950/48 to-slate-950/16 absolute inset-0 bg-gradient-to-t" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#fbfaf5] to-transparent" />
+      <div className="relative mx-auto w-full max-w-[100vw] overflow-hidden px-4 py-20 text-center sm:max-w-5xl sm:px-6 sm:py-24 lg:px-8">
+        <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-teal-100 shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
+          <ShieldCheck className="h-4 w-4" />
+          <span>Mobil batteridiagnose på Sjælland</span>
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/book-tid" className="shadow-xl shadow-black/30">
+        <h1 className="mx-auto mt-5 w-full max-w-[22rem] text-3xl font-bold tracking-normal [text-wrap:balance] sm:max-w-4xl sm:text-6xl lg:text-7xl">
+          Få klar besked om elbilens batteri, før du beslutter dig
+        </h1>
+        <p className="text-white/84 mx-auto mt-5 max-w-[19.5rem] text-sm leading-7 sm:max-w-2xl sm:text-lg">
+          EV-Check.dk tester batteriets sundhed, læser bilens data og sender en
+          professionel rapport, uden at du skal på værksted.
+        </p>
+        <div className="mx-auto mt-8 grid w-full max-w-[19.5rem] gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
+          <ButtonLink
+            href="/book-tid"
+            className="h-12 w-full px-5 shadow-xl shadow-black/30 sm:h-11 sm:w-auto"
+          >
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
           </ButtonLink>
+          <ButtonLink
+            href="/service"
+            variant="secondary"
+            className="bg-white/14 shadow-black/15 hover:bg-white/22 h-12 w-full border-white/25 px-5 text-white shadow-xl hover:text-white sm:h-11 sm:w-auto"
+          >
+            Se hvad vi tester
+            <ArrowRight className="h-4 w-4" />
+          </ButtonLink>
+        </div>
+        <div className="mx-auto mt-10 grid w-full max-w-[calc(100vw-2rem)] gap-3 sm:max-w-3xl sm:grid-cols-3">
+          {heroFacts.map((fact) => {
+            const Icon = fact.icon;
+            return (
+              <div
+                key={fact.label}
+                className="border-white/16 rounded-lg border bg-white/10 px-4 py-3 text-left shadow-lg shadow-black/10 backdrop-blur-xl"
+              >
+                <Icon className="h-4 w-4 text-teal-200" />
+                <p className="text-white/58 mt-2 text-xs font-semibold uppercase tracking-[0.12em]">
+                  {fact.label}
+                </p>
+                <p className="mt-1 text-lg font-bold text-white">
+                  {fact.value}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -346,20 +388,20 @@ export function PriceCard() {
   ];
 
   return (
-    <aside className="glass-shell rounded-lg p-5 text-slate-950">
-      <p className="inline-flex items-center gap-2 rounded-lg bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
+    <aside className="glass-shell rounded-lg p-5 text-slate-950 sm:p-6">
+      <p className="inline-flex items-center gap-2 rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
         <Star className="h-3.5 w-3.5" />
         Fast service
       </p>
       <h2 className="mt-4 text-2xl font-bold">Batteritest af elbil</h2>
       <div className="mt-4 flex items-end gap-2">
-        <p className="text-4xl font-bold text-sky-700">1300 kr.</p>
+        <p className="text-4xl font-bold text-teal-700">1300 kr.</p>
         <p className="pb-1 text-sm font-semibold text-slate-500">15 min.</p>
       </div>
       <div className="mt-5 grid gap-3">
         {points.map((point) => (
           <div key={point} className="flex gap-3 text-sm text-slate-700">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
             <span>{point}</span>
           </div>
         ))}
@@ -378,12 +420,12 @@ export function HowItWorks() {
 
 export function ServicesSection({ compact = false }: { compact?: boolean }) {
   return (
-    <section className="py-16">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Det får du"
           title="Et klart billede af batteriets sundhed"
-          description="Skjulte batteriproblemer kan påvirke rækkevidde, værdi og driftssikkerhed. EV-Check gør data let at forstå."
+          description="Skjulte batteriproblemer kan påvirke rækkevidde, værdi og driftssikkerhed. Vi gør bilens data lette at forstå og bruge."
         />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => {
@@ -391,9 +433,9 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
             return (
               <article
                 key={service.title}
-                className="glass-card rounded-lg p-5"
+                className="glass-card hover:shadow-teal-950/8 rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50/80 text-sky-700 backdrop-blur">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50/90 text-teal-700 backdrop-blur">
                   <Icon className="h-5 w-5" />
                 </span>
                 <h3 className="mt-5 text-lg font-bold text-slate-950">
@@ -419,13 +461,14 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
 
 export function AboutSection() {
   return (
-    <section className="bg-white/25 py-16 backdrop-blur-sm">
+    <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="relative min-h-[24rem] overflow-hidden rounded-lg">
+        <div className="shadow-teal-950/8 relative min-h-[24rem] overflow-hidden rounded-lg shadow-xl">
           <Image
             src="/wp/teslacertificate.jpg"
             alt="EV-Check certificering og træning"
             fill
+            sizes="(min-width: 1024px) 44vw, 100vw"
             className="object-cover"
           />
         </div>
@@ -446,7 +489,7 @@ export function AboutSection() {
                 key={item}
                 className="glass-card flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-slate-700"
               >
-                <CheckCircle2 className="h-4 w-4 text-sky-600" />
+                <CheckCircle2 className="h-4 w-4 text-teal-600" />
                 {item}
               </div>
             ))}
@@ -468,21 +511,22 @@ export function AboutSection() {
 
 export function BrandsAndCertificate() {
   return (
-    <section className="glass-card rounded-lg p-5">
-      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">
+    <section className="glass-card rounded-lg p-5 sm:p-6">
+      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">
         Mærker vi tester
       </p>
       <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
         {brandLogos.map((brand) => (
           <div
             key={brand.src}
-            className="flex h-16 items-center justify-center rounded-lg border border-white/70 bg-white/60 p-3 backdrop-blur"
+            className="bg-white/68 flex h-16 items-center justify-center rounded-lg border border-white/70 p-3 shadow-sm shadow-teal-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white"
           >
             <Image
               src={brand.src}
               alt={brand.alt}
               width={90}
               height={42}
+              sizes="90px"
               className="max-h-10 w-auto object-contain"
             />
           </div>
@@ -498,16 +542,20 @@ export function BrandsAndCertificate() {
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-white/25 py-16 backdrop-blur-sm">
+    <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Kunder"
-          title="Korte svar, klare beslutninger"
+          title="Klar rapport, tryggere beslutning"
+          description="Kunder bruger EV-Check før køb, salg og fejlfinding, når batteriets reelle tilstand skal være dokumenteret."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {testimonials.map((item) => (
-            <article key={item.name} className="glass-card rounded-lg p-5">
-              <div className="flex gap-1 text-sky-600" aria-label="5 stjerner">
+            <article
+              key={item.name}
+              className="glass-card hover:shadow-teal-950/8 rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
+            >
+              <div className="flex gap-1 text-teal-600" aria-label="5 stjerner">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} className="h-4 w-4 fill-current" />
                 ))}
@@ -518,7 +566,7 @@ export function TestimonialsSection() {
               <div className="mt-5 border-t border-sky-100 pt-4">
                 <p className="font-bold text-slate-950">{item.name}</p>
                 <p className="text-sm text-slate-500">{item.detail}</p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-teal-700">
                   {item.date}
                 </p>
               </div>
@@ -532,19 +580,25 @@ export function TestimonialsSection() {
 
 export function FaqSection() {
   return (
-    <section className="py-16">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading eyebrow="FAQ" title="Spørgsmål om batteritest" />
+        <SectionHeading
+          eyebrow="FAQ"
+          title="Spørgsmål om batteritest"
+          description="Kort og praktisk svar på det, kunder typisk spørger om før en test."
+        />
         <div className="mt-8 grid gap-3">
           {faqs.map((faq) => (
             <details
               key={faq.question}
-              className="glass-card group rounded-lg p-5"
+              className="glass-card group rounded-lg p-5 transition hover:border-teal-200 hover:bg-white/90"
             >
               <summary className="cursor-pointer list-none font-bold text-slate-950">
                 <span className="flex items-center justify-between gap-4">
                   {faq.question}
-                  <span className="text-sky-700 group-open:rotate-45">+</span>
+                  <span className="text-teal-700 transition group-open:rotate-45">
+                    +
+                  </span>
                 </span>
               </summary>
               <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -560,13 +614,17 @@ export function FaqSection() {
 
 export function ContactSection({ booking = false }: { booking?: boolean }) {
   return (
-    <section className="py-16">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
         <div>
           <SectionHeading
             eyebrow={booking ? "Book tid" : "Kontakt"}
             title={booking ? "Klar til batteritest?" : "Kontakt EV-Check.dk"}
-            description="Skriv kort om bilen, så vender vi tilbage med praktisk information."
+            description={
+              booking
+                ? "Book direkte online, eller skriv kort om bilen, så hjælper vi med næste ledige tid."
+                : "Skriv kort om bilen, så vender vi tilbage med praktisk information."
+            }
           />
           <div className="mt-6 grid gap-3 text-sm text-slate-700">
             <ContactLine
@@ -583,7 +641,11 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <ContactLine icon={Clock} text="Svar samme dag på hverdage" />
           </div>
         </div>
-        <form action="/tak" method="GET" className="glass-panel rounded-lg p-5">
+        <form
+          action="/tak"
+          method="GET"
+          className="glass-panel rounded-lg p-5 sm:p-6"
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Fulde navn">
               <Input name="navn" required />
@@ -597,7 +659,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <Field label="Bilmærke">
               <select
                 name="maerke"
-                className="focus:bg-white/85 h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
+                className="bg-white/85 h-12 w-full rounded-lg border border-slate-200/90 px-3 text-base outline-none backdrop-blur transition focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm"
               >
                 {[
                   "Tesla",
@@ -629,7 +691,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <input
               required
               type="checkbox"
-              className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             />
             Jeg accepterer, at EV-Check må kontakte mig vedrørende min
             henvendelse.
@@ -654,8 +716,8 @@ function ContactLine({
   href?: string;
 }) {
   const content = (
-    <span className="glass-card flex items-center gap-3 rounded-lg px-4 py-3">
-      <Icon className="h-4 w-4 text-sky-700" />
+    <span className="glass-card flex items-center gap-3 rounded-lg px-4 py-3 transition hover:border-teal-200 hover:bg-white/90">
+      <Icon className="h-4 w-4 text-teal-700" />
       <span>{text}</span>
     </span>
   );
@@ -695,7 +757,7 @@ export function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
+      <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-700">
         {eyebrow}
       </p>
       <h2 className="mt-2 max-w-3xl text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">

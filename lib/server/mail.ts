@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer";
-import { defaultSettings, type Appointment, type Customer, type DashboardSettings } from "@/lib/ev-domain";
+import {
+  defaultSettings,
+  type Appointment,
+  type Customer,
+  type DashboardSettings,
+} from "@/lib/ev-domain";
 import { recordEmailLog } from "@/lib/server/dashboard";
 
 const getMailConfig = () => ({
@@ -10,7 +15,9 @@ const getMailConfig = () => ({
   pass: process.env.SMTP_PASSWORD || "",
   from:
     process.env.MAIL_FROM ||
-    `${process.env.MAIL_FROM_NAME || "EV Check"} <${process.env.SMTP_USER || ""}>`,
+    `${process.env.MAIL_FROM_NAME || "EV Check"} <${
+      process.env.SMTP_USER || ""
+    }>`,
 });
 
 export const isMailConfigured = () => {
@@ -39,7 +46,8 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const siteUrl = () => String(process.env.APP_URL || "https://ev-check.dk").replace(/\/$/, "");
+const siteUrl = () =>
+  String(process.env.APP_URL || "https://ev-check.dk").replace(/\/$/, "");
 const logoUrl = () => `${siteUrl()}/wp/ev-check-dk.png`;
 
 type MessageAction = {
@@ -66,10 +74,14 @@ function renderRows(rows: Array<[string, string]>) {
         .map(
           ([label, value], index) => `
             <tr>
-              <td style="padding:13px 16px;border-bottom:${index === rows.length - 1 ? "0" : "1px solid #edf7f5"};font-size:13px;line-height:18px;color:#64748b;width:38%;">
+              <td style="padding:13px 16px;border-bottom:${
+                index === rows.length - 1 ? "0" : "1px solid #edf7f5"
+              };font-size:13px;line-height:18px;color:#64748b;width:38%;">
                 ${escapeHtml(label)}
               </td>
-              <td style="padding:13px 16px;border-bottom:${index === rows.length - 1 ? "0" : "1px solid #edf7f5"};font-size:14px;line-height:20px;color:#0f172a;font-weight:700;text-align:right;">
+              <td style="padding:13px 16px;border-bottom:${
+                index === rows.length - 1 ? "0" : "1px solid #edf7f5"
+              };font-size:14px;line-height:20px;color:#0f172a;font-weight:700;text-align:right;">
                 ${escapeHtml(value || "-")}
               </td>
             </tr>
@@ -80,7 +92,16 @@ function renderRows(rows: Array<[string, string]>) {
   `;
 }
 
-function renderMessage({ title, eyebrow, intro, rows, settings, action, notice, preheader }: MessageOptions) {
+function renderMessage({
+  title,
+  eyebrow,
+  intro,
+  rows,
+  settings,
+  action,
+  notice,
+  preheader,
+}: MessageOptions) {
   const supportEmail = settings.supportEmail || defaultSettings.supportEmail;
   const actionHtml =
     action && action.url
@@ -88,7 +109,9 @@ function renderMessage({ title, eyebrow, intro, rows, settings, action, notice, 
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 2px;">
           <tr>
             <td style="border-radius:12px;background:#0f766e;">
-              <a href="${escapeHtml(action.url)}" style="display:inline-block;padding:13px 18px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;line-height:18px;">
+              <a href="${escapeHtml(
+                action.url,
+              )}" style="display:inline-block;padding:13px 18px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;line-height:18px;">
                 ${escapeHtml(action.label)}
               </a>
             </td>
@@ -140,11 +163,19 @@ function renderMessage({ title, eyebrow, intro, rows, settings, action, notice, 
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td class="mobile-stack" style="vertical-align:middle;width:52px;">
-                          <img class="email-logo" src="${escapeHtml(logoUrl())}" width="52" height="52" alt="${escapeHtml(settings.companyName)}" style="display:block;width:52px;height:52px;border-radius:14px;background:#ffffff;" />
+                          <img class="email-logo" src="${escapeHtml(
+                            logoUrl(),
+                          )}" width="52" height="52" alt="${escapeHtml(
+    settings.companyName,
+  )}" style="display:block;width:52px;height:52px;border-radius:14px;background:#ffffff;" />
                         </td>
                         <td class="mobile-stack" style="vertical-align:middle;padding-left:14px;">
-                          <div class="email-brand" style="font-size:20px;line-height:24px;font-weight:800;color:#ffffff;">${escapeHtml(settings.companyName)}</div>
-                          <div style="margin-top:5px;font-size:11px;line-height:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#5eead4;">${escapeHtml(eyebrow)}</div>
+                          <div class="email-brand" style="font-size:20px;line-height:24px;font-weight:800;color:#ffffff;">${escapeHtml(
+                            settings.companyName,
+                          )}</div>
+                          <div style="margin-top:5px;font-size:11px;line-height:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#5eead4;">${escapeHtml(
+                            eyebrow,
+                          )}</div>
                         </td>
                       </tr>
                     </table>
@@ -152,8 +183,12 @@ function renderMessage({ title, eyebrow, intro, rows, settings, action, notice, 
                 </tr>
                 <tr>
                   <td class="email-body" style="padding:26px;">
-                    <h1 class="email-title" style="margin:0 0 10px;font-size:28px;line-height:34px;color:#0f172a;font-weight:800;">${escapeHtml(title)}</h1>
-                    <p style="margin:0;color:#475569;font-size:15px;line-height:24px;">${escapeHtml(intro)}</p>
+                    <h1 class="email-title" style="margin:0 0 10px;font-size:28px;line-height:34px;color:#0f172a;font-weight:800;">${escapeHtml(
+                      title,
+                    )}</h1>
+                    <p style="margin:0;color:#475569;font-size:15px;line-height:24px;">${escapeHtml(
+                      intro,
+                    )}</p>
                     ${actionHtml}
                     <div style="height:20px;line-height:20px;">&nbsp;</div>
                     ${renderRows(rows)}
@@ -163,7 +198,11 @@ function renderMessage({ title, eyebrow, intro, rows, settings, action, notice, 
                 <tr>
                   <td style="padding:17px 26px;background:#f8fafc;border-top:1px solid #edf7f5;color:#64748b;font-size:12px;line-height:19px;">
                     Spørgsmål? Svar på denne mail eller skriv til
-                    <a href="mailto:${escapeHtml(supportEmail)}" style="color:#0f766e;font-weight:700;text-decoration:none;">${escapeHtml(supportEmail)}</a>.
+                    <a href="mailto:${escapeHtml(
+                      supportEmail,
+                    )}" style="color:#0f766e;font-weight:700;text-decoration:none;">${escapeHtml(
+    supportEmail,
+  )}</a>.
                   </td>
                 </tr>
               </table>
@@ -208,7 +247,8 @@ export async function sendTestEmail(to: string, settings: DashboardSettings) {
       html: renderMessage({
         title: "SMTP is working",
         eyebrow: "Email test",
-        intro: "This is a test email from EV-Check.dk. Your SMTP settings are connected correctly.",
+        intro:
+          "This is a test email from EV-Check.dk. Your SMTP settings are connected correctly.",
         rows: [["Recipient", to]],
         settings,
         preheader: "EV-Check.dk SMTP test email",
@@ -231,7 +271,10 @@ export async function sendTestEmail(to: string, settings: DashboardSettings) {
       status: "failed",
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -241,7 +284,9 @@ export async function sendCustomerAppointmentEmail(input: {
   settings: DashboardSettings;
   portalUrl?: string;
 }) {
-  const subject = `${input.settings.companyName}: booking confirmation`;
+  const supportEmail =
+    input.settings.supportEmail || defaultSettings.supportEmail;
+  const subject = `${input.settings.companyName}: Bookingbekræftelse`;
   const transporter = getTransporter();
   if (!transporter) {
     await recordEmailLog({
@@ -261,11 +306,12 @@ export async function sendCustomerAppointmentEmail(input: {
     await transporter.sendMail({
       from: getMailConfig().from,
       to: input.customer.email,
+      replyTo: supportEmail,
       subject,
       text: `Din booking hos EV-Check.dk er modtaget til ${input.appointment.appointmentDate} kl. ${input.appointment.appointmentTime}.`,
       html: renderMessage({
         title: "Din booking er modtaget",
-        eyebrow: "Bookingbekraeftelse",
+        eyebrow: "Bookingbekræftelse",
         intro:
           "Tak for din booking. Vi har modtaget dine oplysninger og reserveret den valgte tid til batteritest af din elbil.",
         rows: [
@@ -274,14 +320,28 @@ export async function sendCustomerAppointmentEmail(input: {
           ["Service", input.appointment.serviceLabel],
           ["Bil", input.appointment.vehicleLabel],
           ["Dato", input.appointment.appointmentDate],
-          ["Tid", `${input.appointment.appointmentTime}-${input.appointment.appointmentEndTime}`],
+          [
+            "Tid",
+            `${input.appointment.appointmentTime}-${input.appointment.appointmentEndTime}`,
+          ],
           ["Pris", `${input.appointment.total} DKK`],
-          ["Adresse", [input.customer.address, input.customer.postalCode, input.customer.city].filter(Boolean).join(", ")],
+          [
+            "Adresse",
+            [
+              input.customer.address,
+              input.customer.postalCode,
+              input.customer.city,
+            ]
+              .filter(Boolean)
+              .join(", "),
+          ],
         ],
         settings: input.settings,
-        action: input.portalUrl ? { label: "Aabn kundeportal", url: input.portalUrl } : undefined,
+        action: input.portalUrl
+          ? { label: "Åbn kundeportal", url: input.portalUrl }
+          : undefined,
         notice:
-          "Naeste skridt: Vi gennemgaar bookingen og kontakter dig, hvis vi mangler oplysninger. Efter testen modtager du rapporten digitalt.",
+          "Næste skridt: Vi gennemgår bookingen og kontakter dig, hvis vi mangler oplysninger. Efter testen modtager du rapporten digitalt.",
         preheader: `Booking modtaget til ${input.appointment.appointmentDate} kl. ${input.appointment.appointmentTime}`,
       }),
     });
@@ -319,18 +379,26 @@ export async function sendAdminBookingEmail(input: {
     process.env.BOOKING_ADMIN_EMAIL ||
     input.settings.supportEmail ||
     defaultSettings.supportEmail;
-  const subject = `${input.settings.companyName}: ny booking`;
+  const subject = `${input.settings.companyName}: Ny booking fra ${input.customer.name}`;
   const transporter = getTransporter();
   const rows: Array<[string, string]> = [
     ["Kunde", input.customer.name],
-    ["Email", input.customer.email],
+    ["E-mail", input.customer.email],
     ["Telefon", input.customer.phone],
-    ["Adresse", [input.customer.address, input.customer.postalCode, input.customer.city].filter(Boolean).join(", ")],
+    [
+      "Adresse",
+      [input.customer.address, input.customer.postalCode, input.customer.city]
+        .filter(Boolean)
+        .join(", "),
+    ],
     ["Bil", input.appointment.vehicleLabel],
     ["Faktura", input.appointment.invoiceNumber],
     ["Service", input.appointment.serviceLabel],
     ["Dato", input.appointment.appointmentDate],
-    ["Tid", `${input.appointment.appointmentTime}-${input.appointment.appointmentEndTime}`],
+    [
+      "Tid",
+      `${input.appointment.appointmentTime}-${input.appointment.appointmentEndTime}`,
+    ],
     ["Pris", `${input.appointment.total} DKK`],
     ["Besked", input.customer.notes],
   ];
@@ -353,16 +421,22 @@ export async function sendAdminBookingEmail(input: {
     await transporter.sendMail({
       from: getMailConfig().from,
       to: recipient,
+      replyTo: input.customer.email,
       subject,
       text: `Ny booking: ${input.customer.name}, ${input.appointment.appointmentDate} kl. ${input.appointment.appointmentTime}`,
       html: renderMessage({
         title: "Ny booking modtaget",
         eyebrow: "Admin notifikation",
-        intro: "En kunde har booket en batteritest via hjemmesiden. Her er alle oplysninger til opfoelgning.",
+        intro:
+          "En kunde har booket en batteritest via hjemmesiden. Her er alle oplysninger til opfølgning.",
         rows,
         settings: input.settings,
-        action: { label: "Aabn admin dashboard", url: `${siteUrl()}/admin?view=bookings` },
-        notice: "Husk at kontrollere adresse, bil og tidspunkt foer endelig planlaegning.",
+        action: {
+          label: "Åbn admin dashboard",
+          url: `${siteUrl()}/admin?view=bookings`,
+        },
+        notice:
+          "Husk at kontrollere adresse, bil og tidspunkt før endelig planlægning.",
         preheader: `Ny booking fra ${input.customer.name}`,
       }),
     });

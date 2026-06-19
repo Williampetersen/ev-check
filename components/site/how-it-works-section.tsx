@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 const steps = [
   {
     number: "01",
-    title: "Book online",
-    text: "Vælg en tid, skriv bilmodel og adresse. Hele bookingen er enkel og tager under et minut.",
+    title: "Book en tid",
+    text: "Vælg tidspunkt, bilmodel og testadresse. Bookingen er enkel og tager under ét minut.",
     detail: "Under 1 minut",
     action: "Book tid",
     href: "/book-tid",
@@ -28,7 +28,7 @@ const steps = [
   {
     number: "02",
     title: "Vi kommer til dig",
-    text: "Testen udføres hjemme hos dig eller på arbejdspladsen. Du skal bare sørge for adgang til bilen.",
+    text: "Teknikeren udfører testen hjemme hos dig eller på arbejdspladsen. Du skal blot give adgang til bilen.",
     detail: "Sjælland og København",
     action: "Se kontakt",
     href: "/kontakt",
@@ -39,7 +39,7 @@ const steps = [
   {
     number: "03",
     title: "Rapport samme dag",
-    text: "Du modtager en klar PDF-rapport med batteriets sundhed, målinger og konklusion.",
+    text: "Du får en overskuelig PDF-rapport med batteriets sundhed, målinger og en tydelig konklusion.",
     detail: "Klar dokumentation",
     action: "Se rapport",
     href: "/min-konto",
@@ -77,8 +77,9 @@ const item = {
 export function HowItWorksSection() {
   return (
     <motion.section
-      className="bg-white/45 relative isolate overflow-hidden py-16 backdrop-blur-sm sm:py-20"
-      initial="hidden"
+      id="saadan-fungerer-det"
+      className="bg-white/55 relative isolate overflow-hidden py-16 backdrop-blur-sm sm:py-20"
+      initial={false}
       whileInView="show"
       viewport={{ once: true, amount: 0.28 }}
     >
@@ -92,8 +93,8 @@ export function HowItWorksSection() {
             Fra booking til batterirapport uden værkstedsbesøg
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            En rolig, tydelig proces med mobil test og dokumentation, du kan
-            bruge ved køb, salg eller service.
+            En enkel proces med mobil test og dokumentation, du kan bruge ved
+            køb, salg eller service.
           </p>
         </motion.div>
 
@@ -120,7 +121,7 @@ export function HowItWorksSection() {
                   variants={item}
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.22 }}
-                  className="bg-white/82 group relative overflow-hidden rounded-lg border border-slate-200/80 p-5 shadow-lg shadow-teal-950/5 backdrop-blur-2xl sm:p-6"
+                  className="bg-white/88 group relative overflow-hidden rounded-lg border border-slate-200/80 p-5 shadow-lg shadow-teal-950/5 backdrop-blur-2xl transition-colors hover:border-teal-200 sm:p-6"
                 >
                   <div
                     className={cn(
@@ -144,7 +145,7 @@ export function HowItWorksSection() {
                     >
                       <Icon className="h-7 w-7" />
                     </motion.span>
-                    <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">
+                    <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500 shadow-sm">
                       {step.number}
                     </span>
                   </div>
@@ -163,7 +164,7 @@ export function HowItWorksSection() {
                     </span>
                     <Link
                       href={step.href}
-                      className="inline-flex items-center gap-1.5 text-sm font-bold text-sky-700 transition group-hover:text-teal-700"
+                      className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 transition group-hover:text-teal-800"
                     >
                       {step.action}
                       <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -185,7 +186,7 @@ export function HowItWorksSection() {
               <motion.div
                 key={fact.label}
                 variants={item}
-                className="flex items-center gap-3 rounded-lg border border-slate-200/80 bg-white/70 px-4 py-3 shadow-sm shadow-teal-950/5 backdrop-blur-xl"
+                className="bg-white/78 flex items-center gap-3 rounded-lg border border-slate-200/80 px-4 py-3 shadow-sm shadow-teal-950/5 backdrop-blur-xl"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
                   <Icon className="h-4 w-4" />
