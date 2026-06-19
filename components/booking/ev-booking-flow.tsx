@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BatteryCharging,
@@ -34,7 +33,10 @@ type BookingFlowProps = {
   config: BookingConfig;
 };
 
+type CustomerType = "private" | "business";
+
 type CustomerForm = {
+  customerType: CustomerType;
   name: string;
   email: string;
   phone: string;
@@ -59,6 +61,7 @@ type Confirmation = {
 };
 
 const initialCustomer: CustomerForm = {
+  customerType: "private",
   name: "",
   email: "",
   phone: "",
@@ -193,6 +196,11 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanValue(value));
 }
 
+function isValidPhone(value: string) {
+  const digits = cleanValue(value).replace(/[\s-]/g, "");
+  return /^\+?\d{8,12}$/.test(digits);
+}
+
 export function EvBookingFlow({ config }: BookingFlowProps) {
   const [step, setStep] = useState<Step>(1);
   const [serviceId, setServiceId] = useState(config.services[0]?.id || "");
@@ -273,11 +281,14 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     () =>
       [
         !hasValue(customer.name) && "Fulde navn",
-        !hasValue(customer.phone) && "Telefonnummer",
+        !isValidPhone(customer.phone) && "Gyldigt telefonnummer",
         !isValidEmail(customer.email) && "Gyldig e-mail",
         !hasValue(customer.address) && "Adresse",
         !hasValue(customer.postalCode) && "Postnummer",
         !hasValue(customer.city) && "By",
+        customer.customerType === "business" &&
+          !hasValue(customer.company) &&
+          "Firmanavn",
         !customer.acceptsTerms && "Kontaktaccept",
       ].filter(Boolean) as string[],
     [customer],
@@ -874,7 +885,54 @@ function DetailsStep({
         title="Dine oplysninger"
         description="Så vi kan bekræfte og finde dig på adressen."
       />
+
+      <div className="mb-5">
+        <p className="mb-2 text-sm font-semibold text-slate-700">Kundetype</p>
+        <div className="inline-flex w-full rounded-xl border border-slate-200 bg-slate-50 p-1 sm:w-auto">
+          {(
+            [
+              { value: "private", label: "Privat" },
+              { value: "business", label: "Erhverv" },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() =>
+                onCustomerChange((current) => ({
+                  ...current,
+                  customerType: option.value,
+                }))
+              }
+              className={cn(
+                "flex-1 rounded-lg px-5 py-2 text-sm font-semibold transition sm:flex-none sm:px-8",
+                customer.customerType === option.value
+                  ? "bg-white text-teal-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700",
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
+        {customer.customerType === "business" ? (
+          <Field label="Firmanavn / CVR-nr." required className="sm:col-span-2">
+            <Input
+              autoComplete="organization"
+              value={customer.company}
+              onChange={(event) =>
+                onCustomerChange((current) => ({
+                  ...current,
+                  company: event.target.value,
+                }))
+              }
+              required
+            />
+          </Field>
+        ) : null}
         <Field label="Fulde navn" required>
           <Input
             autoComplete="name"
@@ -892,11 +950,13 @@ function DetailsStep({
           <Input
             autoComplete="tel"
             inputMode="tel"
+            maxLength={15}
+            placeholder="Fx 12345678"
             value={customer.phone}
             onChange={(event) =>
               onCustomerChange((current) => ({
                 ...current,
-                phone: event.target.value,
+                phone: event.target.value.replace(/[^\d+\s-]/g, ""),
               }))
             }
             required
@@ -957,18 +1017,6 @@ function DetailsStep({
             required
           />
         </Field>
-        <Field label="Firma">
-          <Input
-            autoComplete="organization"
-            value={customer.company}
-            onChange={(event) =>
-              onCustomerChange((current) => ({
-                ...current,
-                company: event.target.value,
-              }))
-            }
-          />
-        </Field>
         <Field label="Besked" className="sm:col-span-2">
           <Textarea
             value={customer.notes}
@@ -1000,29 +1048,12 @@ function DetailsStep({
         </span>
       </label>
 
-      {missingDetails.length > 0 ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-          <p className="flex items-center gap-2 font-bold">
-            <AlertTriangle className="h-4 w-4" />
-            Mangler før du kan fortsætte
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {missingDetails.map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-semibold"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : (
+      {missingDetails.length === 0 ? (
         <p className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
           <CheckCircle2 className="h-4 w-4" />
           Oplysningerne er klar.
         </p>
-      )}
+      ) : null}
 
       <StepNav
         onBack={onBack}
@@ -1074,6 +1105,13 @@ function ReviewStep({
           value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`}
         />
         <ReviewRow label="Bil" value={vehicle.make} />
+        <ReviewRow
+          label="Kundetype"
+          value={customer.customerType === "business" ? "Erhverv" : "Privat"}
+        />
+        {customer.customerType === "business" ? (
+          <ReviewRow label="Firma" value={customer.company} />
+        ) : null}
         <ReviewRow label="Navn" value={customer.name} />
         <ReviewRow label="Telefon" value={customer.phone} />
         <ReviewRow label="E-mail" value={customer.email} />

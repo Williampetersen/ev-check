@@ -82,6 +82,12 @@ const addDays = (dateKey: string, days: number) => {
   return toDateKey(date);
 };
 
+const addMonths = (dateKey: string, months: number) => {
+  const date = new Date(`${dateKey}T12:00:00`);
+  date.setMonth(date.getMonth() + months);
+  return toDateKey(date);
+};
+
 const timeToMinutes = (time: string) => {
   const [hours, minutes] = time.split(":").map((item) => Number(item || 0));
   return hours * 60 + minutes;
@@ -232,7 +238,7 @@ export async function getBookingConfig(): Promise<BookingConfig> {
     services: servicesForSettings(settings).slice(0, 1),
     addons: [],
     minDate,
-    maxDate: addDays(minDate, 60),
+    maxDate: addMonths(minDate, 6),
     databaseConfigured: isDatabaseConfigured(),
   };
 }
@@ -276,6 +282,11 @@ function validateTime(time: string) {
   return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 }
 
+function validatePhone(phone: string) {
+  const digits = sanitize(phone).replace(/[\s-]/g, "");
+  return /^\+?\d{8,12}$/.test(digits);
+}
+
 export async function getAvailableSlots(input: {
   date: string;
   serviceId: string;
@@ -295,7 +306,7 @@ export async function getAvailableSlots(input: {
   const weekday = selectedDate.getDay();
 
   if (weekday === 0) return [];
-  if (input.date < addDays(todayKey(), 1) || input.date > addDays(todayKey(), 60)) return [];
+  if (input.date < config.minDate || input.date > config.maxDate) return [];
 
   let existing: Array<{ appointment_time: string; appointment_end_time: string }> = [];
   if (isDatabaseConfigured()) {
@@ -332,7 +343,7 @@ function validateBooking(input: BookingCreateInput, services: BookingService[]) 
   if (!input.customer.acceptsTerms) return "Du skal acceptere, at EV-Check må kontakte dig om bookingen.";
   if (!sanitize(input.customer.name)) return "Indtast dit fulde navn.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(input.customer.email))) return "Indtast en gyldig e-mailadresse.";
-  if (!sanitize(input.customer.phone)) return "Indtast dit telefonnummer.";
+  if (!validatePhone(input.customer.phone)) return "Indtast et gyldigt telefonnummer.";
   if (!sanitize(input.customer.address) || !sanitize(input.customer.postalCode) || !sanitize(input.customer.city)) {
     return "Indtast adressen, hvor testen skal udføres.";
   }
