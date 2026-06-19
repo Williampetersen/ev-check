@@ -4,7 +4,6 @@ import {
   ArrowRight,
   BatteryCharging,
   CalendarCheck,
-  Car,
   CheckCircle2,
   Clock,
   Facebook,
@@ -18,12 +17,12 @@ import {
   ShieldCheck,
   Star,
   Twitter,
-  Wrench,
   Zap,
 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { cn } from "@/lib/utils";
 
 export const siteUrl = "https://ev-check.dk";
@@ -162,13 +161,6 @@ const brandLogos = [
   { src: "/wp/hyundailogo.png", alt: "Hyundai elbil batteritest" },
 ];
 
-const testMoments = [
-  { text: "Før køb af en brugt elbil", icon: Car },
-  { text: "Før salg af din elbil", icon: CalendarCheck },
-  { text: "Når rækkevidden føles lavere", icon: Gauge },
-  { text: "Når du vil kende bilens reelle værdi", icon: ShieldCheck },
-];
-
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/70 bg-white/70 shadow-sm shadow-sky-950/5 backdrop-blur-2xl">
@@ -250,7 +242,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 bg-white/55 text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300 hover:bg-white/85"
+                  className="bg-white/55 hover:bg-white/85 flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -326,7 +318,7 @@ export function HeroSection() {
         playsInline
         preload="auto"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-slate-950/10" />
+      <div className="via-slate-950/35 absolute inset-0 bg-gradient-to-t from-slate-950/90 to-slate-950/10" />
       <div className="relative mx-auto w-full max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
         <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
           Kender du dit elbilbatteris reelle tilstand?
@@ -381,31 +373,7 @@ export function PriceCard() {
 }
 
 export function HowItWorks() {
-  return (
-    <section className="bg-white/25 py-16 backdrop-blur-sm">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="Hvornår bør du teste?"
-          title="Før en beslutning bliver dyr"
-        />
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {testMoments.map((item) => {
-            const Icon = item.icon;
-            return (
-              <article key={item.text} className="glass-card rounded-lg p-5">
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/70 text-sky-700 shadow-sm backdrop-blur">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-5 text-base font-bold text-slate-950">
-                  {item.text}
-                </h3>
-              </article>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+  return <HowItWorksSection />;
 }
 
 export function ServicesSection({ compact = false }: { compact?: boolean }) {
@@ -629,7 +597,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <Field label="Bilmærke">
               <select
                 name="maerke"
-                className="h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
+                className="focus:bg-white/85 h-12 w-full rounded-lg border border-white/70 bg-white/70 px-3 text-base outline-none backdrop-blur focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
               >
                 {[
                   "Tesla",
