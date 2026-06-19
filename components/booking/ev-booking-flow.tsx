@@ -1,15 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  BatteryCharging,
   CalendarCheck,
+  Car,
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -22,6 +24,7 @@ import {
 import type {
   BookingConfig,
   BookingService,
+  CarBrand,
 } from "@/lib/server/booking-system";
 import { formatPrice } from "@/lib/ev-domain";
 import { Button } from "@/components/ui/button";
@@ -49,6 +52,7 @@ type CustomerForm = {
 };
 
 type VehicleForm = {
+  brand: string;
   make: string;
 };
 
@@ -73,7 +77,7 @@ const initialCustomer: CustomerForm = {
   acceptsTerms: false,
 };
 
-const initialVehicle: VehicleForm = { make: "" };
+const initialVehicle: VehicleForm = { brand: "", make: "" };
 
 const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
 
@@ -172,18 +176,6 @@ function calendarDaysForMonth(
   });
 }
 
-function timeToMinutesValue(time: string) {
-  const [hours, minutes] = time.split(":").map((part) => Number(part || 0));
-  return hours * 60 + minutes;
-}
-
-function timePeriod(time: string) {
-  const minutes = timeToMinutesValue(time);
-  if (minutes < 12 * 60) return "Formiddag";
-  if (minutes < 15 * 60) return "Middag";
-  return "Eftermiddag";
-}
-
 function cleanValue(value: string) {
   return value.trim();
 }
@@ -275,7 +267,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     return () => controller.abort();
   }, [appointmentDate, serviceId]);
 
-  const step1Valid = Boolean(serviceId) && hasValue(vehicle.make);
+  const step1Valid = Boolean(serviceId) && hasValue(vehicle.brand);
   const step2Valid = Boolean(appointmentDate && appointmentTime);
   const missingDetails = useMemo(
     () =>
@@ -319,6 +311,12 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     setStep(target);
   };
 
+  const selectedBrand = useMemo(
+    () => config.carBrands.find((item) => item.id === vehicle.brand),
+    [config.carBrands, vehicle.brand],
+  );
+  const brandLabel = selectedBrand?.label || "";
+
   const submitBooking = async () => {
     if (!canSubmit) return;
     setSubmitError("");
@@ -333,7 +331,11 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           appointmentDate,
           appointmentTime,
           customer: { ...customer, email: cleanValue(customer.email) },
-          vehicle: { ...vehicle },
+          vehicle: {
+            make: [brandLabel, cleanValue(vehicle.make)]
+              .filter(Boolean)
+              .join(" "),
+          },
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -385,6 +387,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             <SummaryCard
               service={selectedService}
               vehicle={vehicle}
+              brand={selectedBrand}
               appointmentDate={appointmentDate}
               appointmentTime={appointmentTime}
               total={total}
@@ -395,6 +398,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             {step === 1 ? (
               <VehicleServiceStep
                 services={config.services}
+                carBrands={config.carBrands}
                 serviceId={serviceId}
                 vehicle={vehicle}
                 onServiceChange={setServiceId}
@@ -444,6 +448,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                 appointmentTime={appointmentTime}
                 customer={customer}
                 vehicle={vehicle}
+                brandLabel={brandLabel}
                 service={selectedService}
                 total={total}
                 databaseConfigured={config.databaseConfigured}
@@ -459,6 +464,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           <SummaryCard
             service={selectedService}
             vehicle={vehicle}
+            brand={selectedBrand}
             appointmentDate={appointmentDate}
             appointmentTime={appointmentTime}
             total={total}
@@ -560,12 +566,14 @@ function Card({
 function StepHeading({
   title,
   description,
+  className,
 }: {
   title: string;
   description?: string;
+  className?: string;
 }) {
   return (
-    <div className="mb-5">
+    <div className={cn("mb-5", className)}>
       <h2 className="text-lg font-bold text-slate-900 sm:text-xl">{title}</h2>
       {description ? (
         <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -603,8 +611,106 @@ function StepNav({
   );
 }
 
+function BrandDropdown({
+  brands,
+  value,
+  onChange,
+}: {
+  brands: CarBrand[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selected = brands.find((brand) => brand.id === value);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
+      >
+        <span className="flex items-center gap-2">
+          {selected ? (
+            <Image
+              src={selected.logo}
+              alt={selected.label}
+              width={22}
+              height={22}
+              className="h-5 w-5 object-contain"
+            />
+          ) : (
+            <Car className="h-4 w-4 text-slate-400" />
+          )}
+          {selected ? selected.label : "Vælg bilmærke"}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-slate-400 transition",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open ? (
+        <div className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+          {brands.length === 0 ? (
+            <p className="px-3 py-2 text-sm text-slate-500">
+              Ingen bilmærker tilføjet endnu.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-1.5">
+              {brands.map((brand) => (
+                <button
+                  key={brand.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(brand.id);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
+                    brand.id === value
+                      ? "bg-teal-50 text-teal-700"
+                      : "text-slate-700 hover:bg-slate-50",
+                  )}
+                >
+                  <Image
+                    src={brand.logo}
+                    alt={brand.label}
+                    width={22}
+                    height={22}
+                    className="h-5 w-5 object-contain"
+                  />
+                  {brand.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function VehicleServiceStep({
   services,
+  carBrands,
   serviceId,
   vehicle,
   onServiceChange,
@@ -613,6 +719,7 @@ function VehicleServiceStep({
   canContinue,
 }: {
   services: BookingService[];
+  carBrands: CarBrand[];
   serviceId: string;
   vehicle: VehicleForm;
   onServiceChange: (id: string) => void;
@@ -623,8 +730,37 @@ function VehicleServiceStep({
   return (
     <Card>
       <StepHeading
+        title="Vælg din bil"
+        description="Vælg bilmærke, og fortæl os hvilken model det er."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Bilmærke" required plain>
+          <BrandDropdown
+            brands={carBrands}
+            value={vehicle.brand}
+            onChange={(brand) =>
+              onVehicleChange((current) => ({ ...current, brand }))
+            }
+          />
+        </Field>
+        <Field label="Model">
+          <Input
+            value={vehicle.make}
+            onChange={(event) =>
+              onVehicleChange((current) => ({
+                ...current,
+                make: event.target.value,
+              }))
+            }
+            placeholder="Fx Model 3"
+          />
+        </Field>
+      </div>
+
+      <StepHeading
         title="Vælg service"
-        description="Vælg den service, du ønsker, og fortæl os om din bil."
+        description="Vælg den service, du ønsker."
+        className="mt-7"
       />
       <div className="grid gap-3">
         {services.map((service) => {
@@ -671,22 +807,6 @@ function VehicleServiceStep({
         })}
       </div>
 
-      <div className="mt-6">
-        <Field label="Bilens navn" required>
-          <Input
-            value={vehicle.make}
-            onChange={(event) =>
-              onVehicleChange((current) => ({
-                ...current,
-                make: event.target.value,
-              }))
-            }
-            placeholder="Fx Tesla Model 3"
-            required
-          />
-        </Field>
-      </div>
-
       <StepNav onContinue={onContinue} canContinue={canContinue} />
     </Card>
   );
@@ -731,15 +851,6 @@ function TimeStep({
   const nextMonth = addMonths(visibleMonth, 1);
   const canGoPrevious = previousMonth >= minMonth;
   const canGoNext = nextMonth <= maxMonth;
-  const groupedSlots = slots.reduce<Record<string, string[]>>(
-    (groups, slot) => {
-      const period = timePeriod(slot);
-      groups[period] = [...(groups[period] || []), slot];
-      return groups;
-    },
-    {},
-  );
-  const groupOrder = ["Formiddag", "Middag", "Eftermiddag"];
 
   return (
     <Card>
@@ -819,36 +930,25 @@ function TimeStep({
                 {slotsError}
               </p>
             ) : slots.length > 0 ? (
-              <div className="grid max-h-[16rem] gap-3 overflow-y-auto pr-1">
-                {groupOrder
-                  .filter((period) => groupedSlots[period]?.length)
-                  .map((period) => (
-                    <div key={period}>
-                      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        {period}
-                      </p>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {groupedSlots[period].map((slot) => {
-                          const selected = appointmentTime === slot;
-                          return (
-                            <button
-                              key={slot}
-                              type="button"
-                              onClick={() => onTimeChange(slot)}
-                              className={cn(
-                                "flex h-9 items-center justify-center rounded-lg border text-sm font-semibold transition",
-                                selected
-                                  ? "border-teal-700 bg-teal-700 text-white"
-                                  : "border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700",
-                              )}
-                            >
-                              {slot}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+              <div className="grid max-h-[16rem] grid-cols-3 gap-1.5 overflow-y-auto pr-1">
+                {slots.map((slot) => {
+                  const selected = appointmentTime === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => onTimeChange(slot)}
+                      className={cn(
+                        "flex h-9 items-center justify-center rounded-lg border text-sm font-semibold transition",
+                        selected
+                          ? "border-teal-700 bg-teal-700 text-white"
+                          : "border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700",
+                      )}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 px-4 text-center text-sm font-semibold text-slate-500">
@@ -1070,6 +1170,7 @@ function ReviewStep({
   appointmentTime,
   customer,
   vehicle,
+  brandLabel,
   service,
   total,
   databaseConfigured,
@@ -1083,6 +1184,7 @@ function ReviewStep({
   appointmentTime: string;
   customer: CustomerForm;
   vehicle: VehicleForm;
+  brandLabel: string;
   service?: BookingService;
   total: number;
   databaseConfigured: boolean;
@@ -1104,7 +1206,10 @@ function ReviewStep({
           label="Tid"
           value={`${dateLabel(appointmentDate)} kl. ${appointmentTime}`}
         />
-        <ReviewRow label="Bil" value={vehicle.make} />
+        <ReviewRow
+          label="Bil"
+          value={[brandLabel, vehicle.make].filter(Boolean).join(" ")}
+        />
         <ReviewRow
           label="Kundetype"
           value={customer.customerType === "business" ? "Erhverv" : "Privat"}
@@ -1160,6 +1265,7 @@ function ReviewStep({
 function SummaryCard({
   service,
   vehicle,
+  brand,
   appointmentDate,
   appointmentTime,
   total,
@@ -1169,6 +1275,7 @@ function SummaryCard({
 }: {
   service?: BookingService;
   vehicle: VehicleForm;
+  brand?: CarBrand;
   appointmentDate: string;
   appointmentTime: string;
   total: number;
@@ -1203,10 +1310,16 @@ function SummaryCard({
             <MapPin className="h-4 w-4 text-teal-700" />
             Hos dig på Sjælland
           </span>
-          {vehicle.make ? (
+          {brand ? (
             <span className="flex items-center gap-2">
-              <BatteryCharging className="h-4 w-4 text-teal-700" />
-              {vehicle.make}
+              <Image
+                src={brand.logo}
+                alt={brand.label}
+                width={18}
+                height={18}
+                className="h-4 w-4 object-contain"
+              />
+              {[brand.label, vehicle.make].filter(Boolean).join(" ")}
             </span>
           ) : null}
         </div>
@@ -1235,14 +1348,17 @@ function Field({
   children,
   className,
   required,
+  plain,
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
   required?: boolean;
+  plain?: boolean;
 }) {
+  const Wrapper = plain ? "div" : "label";
   return (
-    <label
+    <Wrapper
       className={cn(
         "grid gap-1.5 text-sm font-semibold text-slate-700",
         className,
@@ -1253,7 +1369,7 @@ function Field({
         {required ? <span className="text-teal-700"> *</span> : null}
       </span>
       {children}
-    </label>
+    </Wrapper>
   );
 }
 

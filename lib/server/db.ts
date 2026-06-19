@@ -224,6 +224,42 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
         VALUES ('default')
         ON CONFLICT (settings_key) DO NOTHING;
       `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS booking_services (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL DEFAULT '',
+          description TEXT NOT NULL DEFAULT '',
+          badge TEXT NOT NULL DEFAULT '',
+          duration_minutes INTEGER NOT NULL DEFAULT 15,
+          price INTEGER NOT NULL DEFAULT 0,
+          image_data TEXT NOT NULL DEFAULT '',
+          features_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        INSERT INTO booking_services (
+          id, title, description, badge, duration_minutes, price, image_data, features_json, sort_order
+        )
+        VALUES (
+          'battery-health', 'Batteritest af elbil',
+          'Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.',
+          'Fast service', 15, 1300, '/wp/ev-car-danmark-1.png',
+          ${sql.json([
+            "Test af batteriets sundhed (SoH)",
+            "Opladningstilstand (SoC)",
+            "Celle-spændingsbalance",
+            "Temperaturmåling",
+            "BMS- og fejlkodekontrol",
+            "PDF-rapport samme dag",
+          ])}, 0
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `;
     })();
     globalThis.EvCheckSchemaPromise = schemaPromise;
   }

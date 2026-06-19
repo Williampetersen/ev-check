@@ -2,13 +2,18 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   BarChart3,
+  BatteryCharging,
   CalendarDays,
   CalendarRange,
   CreditCard,
   FileText,
+  ImagePlus,
   Mail,
+  Pencil,
+  Plus,
   Search,
   Settings2,
+  Trash2,
   User,
   Users,
 } from "lucide-react";
@@ -31,6 +36,10 @@ import {
   type AppointmentStatus,
 } from "@/lib/ev-domain";
 import { getAdminDashboardData } from "@/lib/server/dashboard";
+import {
+  getAllBookingServices,
+  type BookingService,
+} from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 import { isMailConfigured } from "@/lib/server/mail";
 import { cn } from "@/lib/utils";
@@ -44,6 +53,7 @@ const views: AdminView[] = [
   "overview",
   "appointments",
   "calendar",
+  "services",
   "customers",
   "users",
   "emails",
@@ -75,6 +85,7 @@ export default async function AdminPage({
   if (!session) redirect("/admin/login");
 
   const dashboard = await getAdminDashboardData();
+  const services = await getAllBookingServices();
   const view = views.includes(searchParams?.view as AdminView)
     ? (searchParams?.view as AdminView)
     : "overview";
@@ -158,6 +169,12 @@ export default async function AdminPage({
                 mode={calendarMode}
               />
             </Panel>
+          ) : null}
+          {view === "services" ? (
+            <ServicesView
+              services={services}
+              databaseConfigured={dashboard.databaseConfigured}
+            />
           ) : null}
           {view === "customers" ? (
             <CustomersView dashboard={dashboard} />
@@ -585,6 +602,199 @@ function AppointmentTable({
           </tbody>
         </table>
       </div>
+    </>
+  );
+}
+
+function ServicesView({
+  services,
+  databaseConfigured,
+}: {
+  services: BookingService[];
+  databaseConfigured: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <Panel
+        title="Add service"
+        description="Create a new booking service customers can choose in the booking flow."
+        icon={Plus}
+      >
+        <form
+          action="/api/admin/services"
+          method="POST"
+          encType="multipart/form-data"
+          className="grid gap-4"
+        >
+          <ServiceFields />
+          <Button
+            type="submit"
+            disabled={!databaseConfigured}
+            className="w-full sm:w-fit"
+          >
+            <Plus className="h-4 w-4" />
+            Add service
+          </Button>
+        </form>
+      </Panel>
+
+      <Panel
+        title="Services"
+        description="Edit pricing, descriptions, features, and images, or remove a service."
+        icon={BatteryCharging}
+      >
+        {services.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {services.map((service) => (
+              <article key={service.id} className="glass-card rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/60">
+                    {service.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={service.imageUrl}
+                        alt={service.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-slate-300">
+                        <ImagePlus className="h-5 w-5" />
+                      </span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-bold text-slate-950">
+                      {service.title}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {formatPrice(service.price)} · {service.duration}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-slate-600">
+                  {service.description}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {service.features.map((feature) => (
+                    <span
+                      key={feature}
+                      className="rounded-full border border-teal-200/80 bg-teal-50/80 px-2.5 py-1 text-xs font-semibold text-teal-700 backdrop-blur"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+
+                <details className="mt-3">
+                  <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-teal-300 hover:text-teal-700">
+                    <Pencil className="h-4 w-4" />
+                    Edit service
+                  </summary>
+                  <form
+                    action={`/api/admin/services/${service.id}`}
+                    method="POST"
+                    encType="multipart/form-data"
+                    className="glass-panel mt-2 grid gap-4 rounded-lg p-3"
+                  >
+                    <ServiceFields service={service} />
+                    <Button
+                      type="submit"
+                      disabled={!databaseConfigured}
+                      className="w-full sm:w-fit"
+                    >
+                      Save changes
+                    </Button>
+                  </form>
+                </details>
+
+                <form
+                  action={`/api/admin/services/${service.id}/delete`}
+                  method="POST"
+                  className="mt-2"
+                >
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={!databaseConfigured}
+                    className="w-full text-rose-600 hover:border-rose-300 hover:text-rose-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete service
+                  </Button>
+                </form>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="No services yet. Add one above." />
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+function ServiceFields({ service }: { service?: BookingService }) {
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Title">
+          <Input name="title" defaultValue={service?.title} required />
+        </Field>
+        <Field label="Badge">
+          <Input
+            name="badge"
+            defaultValue={service?.badge}
+            placeholder="Fx Fast service"
+          />
+        </Field>
+      </div>
+      <Field label="Description">
+        <Textarea name="description" defaultValue={service?.description} />
+      </Field>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Duration (minutes)">
+          <Input
+            name="duration_minutes"
+            type="number"
+            min={5}
+            step={5}
+            defaultValue={service?.durationMinutes ?? 15}
+          />
+        </Field>
+        <Field label="Price (DKK)">
+          <Input
+            name="price"
+            type="number"
+            min={0}
+            defaultValue={service?.price ?? 0}
+          />
+        </Field>
+      </div>
+      <Field label="Features (one per line)">
+        <Textarea
+          name="features"
+          defaultValue={service?.features.join("\n")}
+          className="min-h-24"
+        />
+      </Field>
+      <Field label={service ? "Replace image" : "Image"}>
+        <input
+          name="image"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal-700 hover:file:bg-teal-100"
+        />
+      </Field>
+      {service?.imageUrl ? (
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input
+            name="remove_image"
+            type="checkbox"
+            className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+          />
+          Remove current image
+        </label>
+      ) : null}
     </>
   );
 }

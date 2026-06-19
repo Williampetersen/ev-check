@@ -1,4 +1,6 @@
 import { randomBytes } from "crypto";
+import fs from "fs";
+import path from "path";
 import {
   defaultSettings,
   type Appointment,
@@ -31,10 +33,17 @@ export type BookingAddon = {
   imageUrl: string;
 };
 
+export type CarBrand = {
+  id: string;
+  label: string;
+  logo: string;
+};
+
 export type BookingConfig = {
   settings: DashboardSettings;
   services: BookingService[];
   addons: BookingAddon[];
+  carBrands: CarBrand[];
   minDate: string;
   maxDate: string;
   databaseConfigured: boolean;
@@ -194,18 +203,6 @@ function formatDuration(minutes: number) {
   return rest ? `${hours} t. ${rest} min.` : `${hours} t.`;
 }
 
-function servicesForSettings(_settings: DashboardSettings) {
-  return bookingServices.map((service) => {
-    return {
-      ...service,
-      title: service.title,
-      price: service.price,
-      durationMinutes: service.durationMinutes,
-      duration: formatDuration(service.durationMinutes),
-    };
-  });
-}
-
 export const bookingServices: BookingService[] = [
   {
     id: "battery-health",
@@ -225,18 +222,165 @@ export const bookingServices: BookingService[] = [
       "PDF-rapport samme dag",
     ],
   },
-
 ];
 
 export const bookingAddons: BookingAddon[] = [];
+
+function mapServiceRow(row: any): BookingService {
+  return {
+    id: row.id,
+    title: row.title || "",
+    description: row.description || "",
+    durationMinutes: Number(row.duration_minutes || 0),
+    duration: formatDuration(Number(row.duration_minutes || 0)),
+    badge: row.badge || "",
+    price: Number(row.price || 0),
+    imageUrl: row.image_data || "",
+    features: Array.isArray(row.features_json) ? row.features_json : [],
+  };
+}
+
+export async function getAllBookingServices(): Promise<BookingService[]> {
+  if (!isDatabaseConfigured()) return bookingServices;
+
+  try {
+    await ensureSchema({ force: true });
+    const sql = getSql();
+    const rows = await sql<any[]>`
+      SELECT *
+      FROM booking_services
+      ORDER BY sort_order ASC, created_at ASC
+    `;
+    return rows.length > 0 ? rows.map(mapServiceRow) : bookingServices;
+  } catch {
+    return bookingServices;
+  }
+}
+
+export async function createBookingServiceRecord(input: {
+  title: string;
+  description: string;
+  badge: string;
+  durationMinutes: number;
+  price: number;
+  imageData: string;
+  features: string[];
+}) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("Bookingsystemet mangler databaseopsætning.");
+  }
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  const [{ next_order }] = await sql<Array<{ next_order: number }>>`
+    SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM booking_services
+  `;
+  const serviceId = id("svc");
+  await sql`
+    INSERT INTO booking_services (
+      id, title, description, badge, duration_minutes, price, image_data, features_json, sort_order
+    )
+    VALUES (
+      ${serviceId}, ${input.title}, ${input.description}, ${input.badge},
+      ${input.durationMinutes}, ${input.price}, ${input.imageData},
+      ${sql.json(input.features)}, ${next_order}
+    )
+  `;
+  return serviceId;
+}
+
+export async function updateBookingServiceRecord(
+  serviceId: string,
+  input: {
+    title: string;
+    description: string;
+    badge: string;
+    durationMinutes: number;
+    price: number;
+    imageData: string | null;
+    features: string[];
+  },
+) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("Bookingsystemet mangler databaseopsætning.");
+  }
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  if (input.imageData === null) {
+    await sql`
+      UPDATE booking_services
+      SET title = ${input.title}, description = ${input.description}, badge = ${input.badge},
+          duration_minutes = ${input.durationMinutes}, price = ${input.price},
+          features_json = ${sql.json(input.features)}, updated_at = NOW()
+      WHERE id = ${serviceId}
+    `;
+  } else {
+    await sql`
+      UPDATE booking_services
+      SET title = ${input.title}, description = ${input.description}, badge = ${input.badge},
+          duration_minutes = ${input.durationMinutes}, price = ${input.price},
+          image_data = ${input.imageData}, features_json = ${sql.json(input.features)},
+          updated_at = NOW()
+      WHERE id = ${serviceId}
+    `;
+  }
+}
+
+export async function deleteBookingServiceRecord(serviceId: string) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("Bookingsystemet mangler databaseopsætning.");
+  }
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  await sql`DELETE FROM booking_services WHERE id = ${serviceId}`;
+}
+
+const carBrandLabels: Record<string, string> = {
+  tesla: "Tesla",
+  vw: "Volkswagen",
+  bmw: "BMW",
+  audi: "Audi",
+  byd: "BYD",
+  kia: "Kia",
+  hyundai: "Hyundai",
+  polestar: "Polestar",
+  mercedes: "Mercedes-Benz",
+  skoda: "Skoda",
+  renault: "Renault",
+  nissan: "Nissan",
+  volvo: "Volvo",
+  porsche: "Porsche",
+  ford: "Ford",
+  toyota: "Toyota",
+};
+
+export function getCarBrands(): CarBrand[] {
+  const dir = path.join(process.cwd(), "public", "bilbrands");
+  let files: string[] = [];
+  try {
+    files = fs
+      .readdirSync(dir)
+      .filter((file) => /\.(png|jpg|jpeg|svg|webp)$/i.test(file));
+  } catch {
+    files = [];
+  }
+
+  return files
+    .map((file) => {
+      const slug = path.parse(file).name.toLowerCase();
+      const label = carBrandLabels[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
+      return { id: slug, label, logo: `/bilbrands/${file}` };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
 
 export async function getBookingConfig(): Promise<BookingConfig> {
   const settings = await getBookingSettings();
   const minDate = addDays(todayKey(), 1);
   return {
     settings,
-    services: servicesForSettings(settings).slice(0, 1),
+    services: await getAllBookingServices(),
     addons: [],
+    carBrands: getCarBrands(),
     minDate,
     maxDate: addMonths(minDate, 6),
     databaseConfigured: isDatabaseConfigured(),
