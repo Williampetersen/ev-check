@@ -1,8 +1,9 @@
+import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { brandLogoPath } from "@/lib/seo";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export const metadata = {
@@ -24,9 +25,13 @@ export default function AdminLoginPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-transparent px-3 py-10">
       <section className="glass-shell w-full max-w-md rounded-lg p-5 sm:p-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-950/90 text-teal-300 shadow-sm shadow-slate-950/20">
-          <Lock className="h-6 w-6" />
-        </div>
+        <Image
+          src={brandLogoPath}
+          alt="EV-Check.dk logo"
+          width={52}
+          height={52}
+          className="h-12 w-12 rounded-lg bg-white object-contain shadow-sm shadow-slate-950/10"
+        />
         <h1 className="mt-6 text-2xl font-bold leading-tight text-slate-950">
           Admin login
         </h1>

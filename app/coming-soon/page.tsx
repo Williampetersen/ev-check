@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { brandLogoPath } from "@/lib/seo";
 import { getSafeNextPath } from "@/lib/site-access";
 
 export const metadata: Metadata = {
@@ -33,11 +34,11 @@ export default function ComingSoon({
         <div className="max-w-3xl">
           <div className="flex items-center gap-3">
             <Image
-              src="/wp/ev-check-dk.png"
+              src={brandLogoPath}
               alt="EV-Check.dk logo"
               width={48}
               height={48}
-              className="rounded-xl bg-white"
+              className="rounded-xl bg-white object-contain"
             />
             <span className="font-display text-xl font-bold">EV-Check.dk</span>
           </div>

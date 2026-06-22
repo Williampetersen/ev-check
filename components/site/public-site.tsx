@@ -23,7 +23,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
-import { sameAsLinks, siteUrl } from "@/lib/seo";
+import { brandLogoPath, sameAsLinks, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export { siteUrl };
@@ -184,11 +184,11 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <Image
-            src="/wp/ev-check-dk.png"
+            src={brandLogoPath}
             alt="EV-Check.dk logo"
             width={42}
             height={42}
-            className="h-9 w-9 rounded-lg bg-white sm:h-[42px] sm:w-[42px]"
+            className="h-9 w-9 rounded-lg bg-white object-contain sm:h-[42px] sm:w-[42px]"
           />
           <span className="truncate font-display text-base font-bold text-slate-950 sm:text-lg">
             EV-Check.dk
@@ -232,11 +232,11 @@ export function SiteFooter() {
         <div>
           <div className="flex items-center gap-3">
             <Image
-              src="/wp/ev-check-dk.png"
+              src={brandLogoPath}
               alt="EV-Check.dk logo"
               width={42}
               height={42}
-              className="rounded-lg bg-white"
+              className="rounded-lg bg-white object-contain"
             />
             <div>
               <p className="font-display text-lg font-bold">EV-Check.dk</p>

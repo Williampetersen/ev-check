@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   BarChart3,
@@ -14,6 +15,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { formatPrice, type AdminDashboardData } from "@/lib/ev-domain";
+import { brandLogoPath } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -44,9 +46,13 @@ export function AdminSidebar({
     <aside className="glass-shell overflow-hidden rounded-lg xl:sticky xl:top-5 xl:self-start">
       <div className="border-b border-white/50 px-4 py-4 sm:py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-950/90 text-sm font-black text-teal-300 shadow-sm shadow-slate-950/20 backdrop-blur">
-            EV
-          </div>
+          <Image
+            src={brandLogoPath}
+            alt="EV-Check.dk logo"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-lg bg-white object-contain shadow-sm shadow-slate-950/10"
+          />
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
               EV Check
@@ -112,7 +118,7 @@ export function AdminSidebar({
 
 function SidebarStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/60 bg-white/45 px-2.5 py-2 backdrop-blur">
+    <div className="bg-white/45 rounded-lg border border-white/60 px-2.5 py-2 backdrop-blur">
       <span className="block truncate text-[11px] font-medium text-slate-500">
         {label}
       </span>

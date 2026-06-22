@@ -1,5 +1,7 @@
 export const siteUrl = "https://ev-check.dk";
 export const siteName = "EV-Check.dk";
+export const brandLogoPath = "/evfaviconlogo.png";
+export const brandLogoUrl = `${siteUrl}${brandLogoPath}`;
 export const contactPhone = "+45 71 90 05 30";
 export const contactEmail = "info@ev-check.dk";
 export const servicePrice = 1300;
@@ -39,7 +41,7 @@ export const businessJsonLd = {
   "@id": `${siteUrl}#business`,
   name: siteName,
   url: siteUrl,
-  logo: `${siteUrl}/wp/ev-check-dk.png`,
+  logo: brandLogoUrl,
   image: `${siteUrl}/wp/ev-car-danmark-1.png`,
   telephone: contactPhone,
   email: contactEmail,

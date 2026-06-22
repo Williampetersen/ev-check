@@ -7,6 +7,7 @@ import {
   useMemo,
 } from "react";
 import Image from "next/image";
+import { brandLogoPath } from "@/lib/seo";
 
 const DemoModal = ({
   showDemoModal,
@@ -21,16 +22,17 @@ const DemoModal = ({
         <div className="flex flex-col items-center justify-center space-y-3 bg-white px-4 py-6 pt-8 text-center md:px-16">
           <a href="https://ev-check.dk">
             <Image
-              src="/logo.png"
+              src={brandLogoPath}
               alt="EV Check logo"
-              className="h-10 w-10 rounded-full"
+              className="h-10 w-10 rounded-full object-contain"
               width={20}
               height={20}
             />
           </a>
           <h3 className="font-display text-2xl font-bold">EV Check</h3>
           <p className="text-sm text-gray-500">
-            EV Check brings appointments, customers, reports, and operations into one dashboard.
+            EV Check brings appointments, customers, reports, and operations
+            into one dashboard.
           </p>
         </div>
       </div>

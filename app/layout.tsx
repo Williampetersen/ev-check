@@ -2,7 +2,7 @@ import "./globals.css";
 import cx from "classnames";
 import { sfPro, inter } from "./fonts";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
-import { seoKeywords, siteName, siteUrl } from "@/lib/seo";
+import { brandLogoPath, seoKeywords, siteName, siteUrl } from "@/lib/seo";
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -29,9 +29,9 @@ export const metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/evfaviconlogo.png",
+    icon: brandLogoPath,
+    shortcut: brandLogoPath,
+    apple: brandLogoPath,
   },
 };
 

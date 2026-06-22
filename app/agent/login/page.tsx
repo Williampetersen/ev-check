@@ -1,8 +1,9 @@
+import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { brandLogoPath } from "@/lib/seo";
 import { AGENT_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export const metadata = {
@@ -10,17 +11,30 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AgentLoginPage({ searchParams }: { searchParams?: { error?: string } }) {
-  const session = verifySessionToken(cookies().get(AGENT_COOKIE_NAME)?.value, "agent");
+export default function AgentLoginPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
+  const session = verifySessionToken(
+    cookies().get(AGENT_COOKIE_NAME)?.value,
+    "agent",
+  );
   if (session) redirect("/agent");
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <section className="w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
-          <User className="h-6 w-6" />
-        </div>
-        <h1 className="mt-6 text-2xl font-bold text-slate-950">Service user login</h1>
+        <Image
+          src={brandLogoPath}
+          alt="EV-Check.dk logo"
+          width={52}
+          height={52}
+          className="h-12 w-12 rounded-2xl bg-white object-contain shadow-sm shadow-slate-950/10"
+        />
+        <h1 className="mt-6 text-2xl font-bold text-slate-950">
+          Service user login
+        </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Field users can view assigned EV checks and daily work.
         </p>
@@ -29,7 +43,11 @@ export default function AgentLoginPage({ searchParams }: { searchParams?: { erro
             Login failed.
           </div>
         ) : null}
-        <form action="/api/agent/login" method="POST" className="mt-6 grid gap-4">
+        <form
+          action="/api/agent/login"
+          method="POST"
+          className="mt-6 grid gap-4"
+        >
           <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
             Email
             <Input name="email" type="email" required />

@@ -5,6 +5,7 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
+import { brandLogoPath } from "@/lib/seo";
 import { recordEmailLog } from "@/lib/server/dashboard";
 
 const getMailConfig = () => ({
@@ -48,7 +49,7 @@ const escapeHtml = (value: string) =>
 
 const siteUrl = () =>
   String(process.env.APP_URL || "https://ev-check.dk").replace(/\/$/, "");
-const logoUrl = () => `${siteUrl()}/wp/ev-check-dk.png`;
+const logoUrl = () => `${siteUrl()}${brandLogoPath}`;
 
 type MessageAction = {
   label: string;

@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
 import {
-  AboutSection,
-  BatteryUseCasesSection,
-  ContactSection,
-  DiagnosticDetailsSection,
-  FaqSection,
   HeroSection,
   HowItWorks,
   JsonLd,
-  ServicesSection,
   SitePage,
-  TestimonialsSection,
   siteUrl,
 } from "@/components/site/public-site";
+import { HomeShowcaseSections } from "@/components/site/home-showcase-sections";
 import {
+  brandLogoUrl,
   batteryServiceJsonLd,
   businessJsonLd,
   seoKeywords,
@@ -36,7 +31,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/wp/ev-car-danmark-1.png`,
+        url: brandLogoUrl,
         width: 1200,
         height: 630,
         alt: "EV-Check batteritest af elbil",
@@ -48,7 +43,7 @@ export const metadata: Metadata = {
     title: "Batteritest af elbil | EV-Check.dk",
     description:
       "Få klar besked om din elbils batteri med professionel diagnose og PDF-rapport.",
-    images: [`${siteUrl}/wp/ev-car-danmark-1.png`],
+    images: [brandLogoUrl],
   },
 };
 
@@ -74,13 +69,7 @@ export default function Home() {
       />
       <HeroSection />
       <HowItWorks />
-      <BatteryUseCasesSection />
-      <DiagnosticDetailsSection />
-      <ServicesSection />
-      <AboutSection />
-      <TestimonialsSection />
-      <FaqSection />
-      <ContactSection booking />
+      <HomeShowcaseSections />
     </SitePage>
   );
 }

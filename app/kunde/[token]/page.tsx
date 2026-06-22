@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { BatteryCharging, CalendarDays, FileText, LogOut } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
 import { formatPrice, formatShortDate } from "@/lib/ev-domain";
+import { brandLogoPath } from "@/lib/seo";
 import { getCustomerDashboardByToken } from "@/lib/server/dashboard";
 
 export const metadata = {
@@ -27,20 +29,29 @@ export default async function CustomerTokenPage({
       <div className="mx-auto max-w-6xl space-y-5">
         <header className="glass-dark rounded-lg p-5 text-white sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">
-                EV Check portal
-              </p>
-              <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">
-                Welcome, {portal.customer.name}
-              </h1>
-              <p className="mt-2 max-w-2xl text-slate-300">
-                Follow your appointments, statuses, invoices, and reports in one
-                place.
-              </p>
+            <div className="flex min-w-0 gap-3">
+              <Image
+                src={brandLogoPath}
+                alt="EV-Check.dk logo"
+                width={52}
+                height={52}
+                className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain shadow-sm shadow-black/10"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">
+                  EV Check portal
+                </p>
+                <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">
+                  Welcome, {portal.customer.name}
+                </h1>
+                <p className="mt-2 max-w-2xl text-slate-300">
+                  Follow your appointments, statuses, invoices, and reports in
+                  one place.
+                </p>
+              </div>
             </div>
             <form action="/api/customer/auth/logout" method="POST">
-              <button className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/10 sm:h-10">
+              <button className="border-white/15 inline-flex h-11 items-center gap-2 rounded-lg border px-4 text-sm font-semibold text-white hover:bg-white/10 sm:h-10">
                 <LogOut className="h-4 w-4" />
                 Log out
               </button>
@@ -115,7 +126,7 @@ export default async function CustomerTokenPage({
                 </article>
               ))
             ) : (
-              <div className="rounded-lg border border-dashed border-white/70 bg-white/45 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
+              <div className="bg-white/45 rounded-lg border border-dashed border-white/70 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
                 No appointments yet.
               </div>
             )}

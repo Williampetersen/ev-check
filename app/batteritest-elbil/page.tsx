@@ -22,6 +22,7 @@ import {
 import { ButtonLink } from "@/components/ui/button";
 import {
   batteryServiceJsonLd,
+  brandLogoUrl,
   buildBreadcrumbJsonLd,
   businessJsonLd,
   seoKeywords,
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/wp/ev-car-danmark-1.png`,
+        url: brandLogoUrl,
         width: 1200,
         height: 630,
         alt: "EV-Check batteritest af elbil på Sjælland",
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Batteritest af elbil | EV-Check.dk",
     description: pageDescription,
-    images: [`${siteUrl}/wp/ev-car-danmark-1.png`],
+    images: [brandLogoUrl],
   },
 };
 
