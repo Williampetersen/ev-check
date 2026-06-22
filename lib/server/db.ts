@@ -191,6 +191,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           currency TEXT NOT NULL DEFAULT 'DKK',
           "pdfUrl" TEXT,
           "pdfPath" TEXT,
+          "pdfData" BYTEA,
           "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `;
@@ -204,6 +205,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'DKK',
           ADD COLUMN IF NOT EXISTS "pdfUrl" TEXT,
           ADD COLUMN IF NOT EXISTS "pdfPath" TEXT,
+          ADD COLUMN IF NOT EXISTS "pdfData" BYTEA,
           ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW();
       `;
 

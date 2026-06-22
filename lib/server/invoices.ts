@@ -1,5 +1,4 @@
 import { randomBytes } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import PDFDocument from "pdfkit";
 import {
@@ -14,20 +13,13 @@ import { getAdminDashboardData } from "@/lib/server/dashboard";
 
 type InvoiceResult = {
   invoiceNumber: string;
-  pdfPath: string;
-  pdfUrl: string;
+  pdf: Buffer;
 };
 
 const invoiceId = () => `inv_${randomBytes(8).toString("hex")}`;
 
 const nextInvoiceNumber = (date = new Date()) =>
   `EV-${date.getFullYear()}-${randomBytes(3).toString("hex").toUpperCase()}`;
-
-const publicInvoiceDir = () =>
-  path.join(process.cwd(), "public", "generated", "invoices");
-
-const relativeInvoicePath = (invoiceNumber: string) =>
-  `/generated/invoices/${invoiceNumber}.pdf`;
 
 const brandLogoFile = () =>
   path.join(process.cwd(), "public", brandLogoPath.replace(/^\//, ""));
@@ -161,21 +153,13 @@ export async function createInvoicePdf(input: {
   invoiceNumber?: string;
 }): Promise<InvoiceResult> {
   const invoiceNumber = input.invoiceNumber || nextInvoiceNumber();
-  const pdfUrl = relativeInvoicePath(invoiceNumber);
-  const absoluteDir = publicInvoiceDir();
-  const absolutePath = path.join(absoluteDir, `${invoiceNumber}.pdf`);
   const pdf = await renderInvoicePdf({ ...input, invoiceNumber });
-
-  await mkdir(absoluteDir, { recursive: true });
-  await writeFile(absolutePath, pdf);
-
-  return {
-    invoiceNumber,
-    pdfUrl,
-    pdfPath: absolutePath,
-  };
+  return { invoiceNumber, pdf };
 }
 
+// Invoices are stored as bytes in Postgres (not on local disk) because the
+// app runs on serverless hosting, where the filesystem is read-only/ephemeral
+// outside of build time.
 export async function saveInvoiceForAppointment(input: {
   appointment: Appointment;
   customer: Customer;
@@ -192,19 +176,18 @@ export async function saveInvoiceForAppointment(input: {
 
   await sql`
     INSERT INTO invoices (
-      id, "appointmentId", "invoiceNumber", amount, currency, "pdfUrl", "pdfPath"
+      id, "appointmentId", "invoiceNumber", amount, currency, "pdfData"
     )
     VALUES (
       ${invoiceId()}, ${input.appointment.id}, ${invoice.invoiceNumber},
-      ${input.appointment.total}, 'DKK', ${invoice.pdfUrl}, ${invoice.pdfPath}
+      ${input.appointment.total}, 'DKK', ${invoice.pdf}
     )
     ON CONFLICT ("appointmentId")
     DO UPDATE SET
       "invoiceNumber" = EXCLUDED."invoiceNumber",
       amount = EXCLUDED.amount,
       currency = EXCLUDED.currency,
-      "pdfUrl" = EXCLUDED."pdfUrl",
-      "pdfPath" = EXCLUDED."pdfPath"
+      "pdfData" = EXCLUDED."pdfData"
   `;
 
   await sql`
@@ -226,6 +209,20 @@ export async function ensureInvoiceForAppointment(
   }
 
   await ensureSchema({ force: true });
+  const sql = getSql();
+  const [existing] = await sql<
+    Array<{ invoiceNumber: string; pdfData: Buffer | null }>
+  >`
+    SELECT "invoiceNumber", "pdfData"
+    FROM invoices
+    WHERE "appointmentId" = ${appointmentId}
+    LIMIT 1
+  `;
+
+  if (existing?.pdfData) {
+    return { invoiceNumber: existing.invoiceNumber, pdf: existing.pdfData };
+  }
+
   const dashboard = await getAdminDashboardData();
   const appointment = dashboard.appointments.find(
     (item) => item.id === appointmentId,
@@ -236,23 +233,11 @@ export async function ensureInvoiceForAppointment(
   );
   if (!customer) throw new Error("Customer was not found.");
 
-  const sql = getSql();
-  const [existing] = await sql<
-    Array<{ invoiceNumber: string; pdfPath: string; pdfUrl: string }>
-  >`
-    SELECT "invoiceNumber", "pdfPath", "pdfUrl"
-    FROM invoices
-    WHERE "appointmentId" = ${appointmentId}
-    LIMIT 1
-  `;
-
-  const invoice = await saveInvoiceForAppointment({
+  return saveInvoiceForAppointment({
     appointment,
     customer,
     settings: dashboard.settings,
     invoiceNumber:
       existing?.invoiceNumber || appointment.invoiceNumber || undefined,
   });
-
-  return invoice;
 }

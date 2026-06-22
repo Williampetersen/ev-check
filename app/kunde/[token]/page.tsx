@@ -1,6 +1,12 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { BatteryCharging, CalendarDays, FileText, LogOut } from "lucide-react";
+import {
+  BatteryCharging,
+  CalendarDays,
+  Download,
+  FileText,
+  LogOut,
+} from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
 import { formatPrice, formatShortDate } from "@/lib/ev-domain";
@@ -123,6 +129,17 @@ export default async function CustomerTokenPage({
                       value={formatPrice(appointment.total)}
                     />
                   </div>
+                  {appointment.invoiceNumber ? (
+                    <a
+                      href={`/api/customer/invoices/${appointment.id}?token=${params.token}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-teal-700/30 bg-teal-50 px-3 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download invoice
+                    </a>
+                  ) : null}
                 </article>
               ))
             ) : (

@@ -1,4 +1,3 @@
-import { readFile } from "fs/promises";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ensureInvoiceForAppointment } from "@/lib/server/invoices";
@@ -18,8 +17,7 @@ export async function GET(
 
   try {
     const invoice = await ensureInvoiceForAppointment(params.appointmentId);
-    const file = await readFile(invoice.pdfPath);
-    return new NextResponse(file, {
+    return new NextResponse(invoice.pdf, {
       headers: {
         "content-type": "application/pdf",
         "content-disposition": `inline; filename="${invoice.invoiceNumber}.pdf"`,
