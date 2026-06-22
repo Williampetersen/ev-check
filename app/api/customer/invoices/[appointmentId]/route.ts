@@ -4,8 +4,9 @@ import { ensureInvoiceForAppointment } from "@/lib/server/invoices";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { appointmentId: string } },
+  { params }: { params: Promise<{ appointmentId: string }> },
 ) {
+  const { appointmentId } = await params;
   const token = request.nextUrl.searchParams.get("token") || "";
   const portal = token ? await getCustomerDashboardByToken(token) : null;
   if (!portal) {
@@ -13,7 +14,7 @@ export async function GET(
   }
 
   const ownsAppointment = portal.appointments.some(
-    (item) => item.id === params.appointmentId,
+    (item) => item.id === appointmentId,
   );
   if (!ownsAppointment) {
     return NextResponse.json(
@@ -23,8 +24,8 @@ export async function GET(
   }
 
   try {
-    const invoice = await ensureInvoiceForAppointment(params.appointmentId);
-    return new NextResponse(invoice.pdf, {
+    const invoice = await ensureInvoiceForAppointment(appointmentId);
+    return new NextResponse(new Uint8Array(invoice.pdf), {
       headers: {
         "content-type": "application/pdf",
         "content-disposition": `inline; filename="${invoice.invoiceNumber}.pdf"`,

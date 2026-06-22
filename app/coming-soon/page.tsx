@@ -10,12 +10,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ComingSoon({
+export default async function ComingSoon({
   searchParams,
 }: {
-  searchParams?: { error?: string; next?: string };
+  searchParams?: Promise<{ error?: string; next?: string }>;
 }) {
-  const nextPath = getSafeNextPath(searchParams?.next);
+  const resolvedSearchParams = await searchParams;
+  const nextPath = getSafeNextPath(resolvedSearchParams?.next);
   const formAction = `/api/site-access?next=${encodeURIComponent(nextPath)}`;
 
   return (
@@ -105,7 +106,7 @@ export default function ComingSoon({
               />
             </label>
 
-            {searchParams?.error ? (
+            {resolvedSearchParams?.error ? (
               <p className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm font-semibold text-red-700">
                 Forkert username eller password.
               </p>

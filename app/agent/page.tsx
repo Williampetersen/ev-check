@@ -15,7 +15,7 @@ export const metadata = {
 
 export default async function AgentDashboardPage() {
   const session = verifySessionToken(
-    cookies().get(AGENT_COOKIE_NAME)?.value,
+    (await cookies()).get(AGENT_COOKIE_NAME)?.value,
     "agent",
   );
   if (!session) redirect("/agent/login");

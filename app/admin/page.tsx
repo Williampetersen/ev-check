@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  ArrowLeft,
   BarChart3,
   BatteryCharging,
   CalendarDays,
@@ -22,7 +23,7 @@ import { AdminSidebar, type AdminView } from "@/components/admin/admin-sidebar";
 import { CalendarView } from "@/components/admin/calendar-view";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,6 +35,7 @@ import {
   type AdminDashboardData,
   type Appointment,
   type AppointmentStatus,
+  type Customer,
 } from "@/lib/ev-domain";
 import { getAdminDashboardData } from "@/lib/server/dashboard";
 import {
@@ -70,9 +72,9 @@ const adminSelectClass =
   "h-12 rounded-lg border border-white/70 bg-white/70 px-3 text-base font-medium text-slate-700 outline-none backdrop-blur focus:border-teal-400 focus:bg-white/85 focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm";
 
 export default async function AdminPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     view?: string;
     q?: string;
     status?: string;
@@ -80,18 +82,26 @@ export default async function AdminPage({
     error?: string;
     date?: string;
     mode?: string;
-  };
+    id?: string;
+    from?: string;
+  }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const session = verifySessionToken(
-    cookies().get(ADMIN_COOKIE_NAME)?.value,
+    (await cookies()).get(ADMIN_COOKIE_NAME)?.value,
     "admin",
   );
   if (!session) redirect("/admin/login");
 
   const dashboard = await getAdminDashboardData();
   const services = await getAllBookingServices();
+  const isBookingDetail = searchParams?.view === "booking" && Boolean(searchParams?.id);
   const view = views.includes(searchParams?.view as AdminView)
     ? (searchParams?.view as AdminView)
+    : isBookingDetail
+    ? (views.includes(searchParams?.from as AdminView)
+        ? (searchParams?.from as AdminView)
+        : "calendar")
     : "overview";
   const query = String(searchParams?.q || "")
     .trim()
@@ -120,6 +130,16 @@ export default async function AdminPage({
     return matchesQuery && matchesStatus;
   });
 
+  const bookingAppointment = isBookingDetail
+    ? dashboard.appointments.find((item) => item.id === searchParams?.id)
+    : undefined;
+  const bookingCustomer = bookingAppointment
+    ? dashboard.customers.find((item) => item.id === bookingAppointment.customerId)
+    : undefined;
+  const bookingBackHref = `/admin?view=${view}${
+    view === "calendar" ? `&date=${calendarDate}&mode=${calendarMode}` : ""
+  }`;
+
   return (
     <AdminShell>
       <div className="grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)]">
@@ -146,13 +166,33 @@ export default async function AdminPage({
             <Notice tone="rose">The action could not be completed.</Notice>
           ) : null}
 
-          {view === "overview" ? (
+          {isBookingDetail && bookingAppointment && bookingCustomer ? (
+            <BookingDetailView
+              appointment={bookingAppointment}
+              customer={bookingCustomer}
+              dashboard={dashboard}
+              backHref={bookingBackHref}
+            />
+          ) : isBookingDetail ? (
+            <Panel
+              title="Booking not found"
+              description="This booking may have been removed."
+              icon={CalendarDays}
+            >
+              <ButtonLink href={bookingBackHref} variant="outline">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </ButtonLink>
+            </Panel>
+          ) : null}
+
+          {!isBookingDetail && view === "overview" ? (
             <Overview
               dashboard={dashboard}
               appointments={visibleAppointments}
             />
           ) : null}
-          {view === "appointments" ? (
+          {!isBookingDetail && view === "appointments" ? (
             <AppointmentsView
               appointments={visibleAppointments}
               query={query}
@@ -160,7 +200,7 @@ export default async function AdminPage({
               dashboard={dashboard}
             />
           ) : null}
-          {view === "calendar" ? (
+          {!isBookingDetail && view === "calendar" ? (
             <Panel
               title="Calendar"
               description="Every booking across all customers, laid out by day and time."
@@ -174,27 +214,33 @@ export default async function AdminPage({
               />
             </Panel>
           ) : null}
-          {view === "services" ? (
+          {!isBookingDetail && view === "services" ? (
             <ServicesView
               services={services}
               databaseConfigured={dashboard.databaseConfigured}
             />
           ) : null}
-          {view === "customers" ? (
+          {!isBookingDetail && view === "customers" ? (
             <CustomersView dashboard={dashboard} />
           ) : null}
-          {view === "users" ? <UsersView dashboard={dashboard} /> : null}
-          {view === "emails" ? <EmailsView dashboard={dashboard} /> : null}
-          {view === "invoices" ? (
+          {!isBookingDetail && view === "users" ? (
+            <UsersView dashboard={dashboard} />
+          ) : null}
+          {!isBookingDetail && view === "emails" ? (
+            <EmailsView dashboard={dashboard} />
+          ) : null}
+          {!isBookingDetail && view === "invoices" ? (
             <InvoicesView
               appointments={visibleAppointments}
               databaseConfigured={dashboard.databaseConfigured}
             />
           ) : null}
-          {view === "payments" ? (
+          {!isBookingDetail && view === "payments" ? (
             <PaymentsView appointments={visibleAppointments} />
           ) : null}
-          {view === "settings" ? <SettingsView dashboard={dashboard} /> : null}
+          {!isBookingDetail && view === "settings" ? (
+            <SettingsView dashboard={dashboard} />
+          ) : null}
         </section>
       </div>
     </AdminShell>
@@ -463,9 +509,18 @@ function AppointmentTable({
               ) : null}
             </div>
             {editable ? (
+              <ButtonLink
+                href={`/admin?view=booking&id=${appointment.id}&from=appointments`}
+                variant="outline"
+                className="mt-3 w-full"
+              >
+                View / edit booking
+              </ButtonLink>
+            ) : null}
+            {editable ? (
               <details className="mt-3">
                 <summary className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-teal-300 hover:text-teal-700">
-                  Update booking
+                  Quick status update
                 </summary>
                 <form
                   action={`/api/admin/bookings/${appointment.id}`}
@@ -558,9 +613,17 @@ function AppointmentTable({
                 </td>
                 {editable ? (
                   <td className="px-3 py-3">
+                    <div className="flex flex-wrap gap-1.5">
+                    <ButtonLink
+                      href={`/admin?view=booking&id=${appointment.id}&from=appointments`}
+                      variant="outline"
+                      className="h-9 text-xs"
+                    >
+                      View / edit
+                    </ButtonLink>
                     <details className="group">
                       <summary className="cursor-pointer rounded-lg border border-white/70 bg-white/55 px-3 py-2 text-xs font-semibold text-slate-700 backdrop-blur marker:content-[''] hover:border-teal-300 hover:text-teal-700">
-                        Update
+                        Quick update
                       </summary>
                       <form
                         action={`/api/admin/bookings/${appointment.id}`}
@@ -599,6 +662,7 @@ function AppointmentTable({
                         </Button>
                       </form>
                     </details>
+                    </div>
                   </td>
                 ) : null}
               </tr>
@@ -607,6 +671,219 @@ function AppointmentTable({
         </table>
       </div>
     </>
+  );
+}
+
+function BookingDetailView({
+  appointment,
+  customer,
+  dashboard,
+  backHref,
+}: {
+  appointment: Appointment;
+  customer: Customer;
+  dashboard: AdminDashboardData;
+  backHref: string;
+}) {
+  return (
+    <Panel
+      title={appointment.customerName}
+      description={`Booking ${appointment.id}`}
+      icon={CalendarDays}
+      action={
+        <ButtonLink href={backHref} variant="outline">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </ButtonLink>
+      }
+    >
+      <form
+        action={`/api/admin/bookings/${appointment.id}/update`}
+        method="POST"
+        className="grid gap-5"
+      >
+        <input type="hidden" name="return_to" value={backHref} />
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <InfoLine label="Created" value={appointment.createdAt} />
+          <InfoLine label="Invoice number" value={appointment.invoiceNumber} />
+        </div>
+
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Booking details</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Date">
+              <Input
+                type="date"
+                name="appointment_date"
+                defaultValue={appointment.appointmentDate}
+                required
+              />
+            </Field>
+            <Field label="Time">
+              <Input
+                type="time"
+                name="appointment_time"
+                defaultValue={appointment.appointmentTime}
+                required
+              />
+            </Field>
+            <Field label="End time">
+              <Input
+                type="time"
+                name="appointment_end_time"
+                defaultValue={appointment.appointmentEndTime}
+              />
+            </Field>
+            <Field label="Service">
+              <Input
+                name="service_label"
+                defaultValue={appointment.serviceLabel}
+              />
+            </Field>
+            <Field label="Vehicle">
+              <Input
+                name="vehicle_label"
+                defaultValue={appointment.vehicleLabel}
+              />
+            </Field>
+            <Field label="Registration number">
+              <Input
+                name="registration_number"
+                defaultValue={appointment.registrationNumber}
+              />
+            </Field>
+            <Field label="Total (DKK)">
+              <Input
+                type="number"
+                min={0}
+                name="total"
+                defaultValue={appointment.total}
+              />
+            </Field>
+            <Field label="Area">
+              <Input name="area_name" defaultValue={appointment.areaName} />
+            </Field>
+            <Field label="Assigned user">
+              <select
+                name="assigned_user"
+                defaultValue={appointment.assignedUser}
+                className={adminSelectClass}
+              >
+                <option value="Unassigned">Unassigned</option>
+                {dashboard.users.map((user) => (
+                  <option key={user.id} value={user.fullName}>
+                    {user.fullName}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </div>
+
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Status</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <Field label="Booking status">
+              <select
+                name="status"
+                defaultValue={appointment.status}
+                className={adminSelectClass}
+              >
+                {Object.entries(statusLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Payment status">
+              <select
+                name="payment_status"
+                defaultValue={appointment.paymentStatus}
+                className={adminSelectClass}
+              >
+                {Object.entries(paymentLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Invoice status">
+              <select
+                name="invoice_status"
+                defaultValue={appointment.invoiceStatus}
+                className={adminSelectClass}
+              >
+                {Object.entries(invoiceLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </div>
+
+        <Field label="Admin notes">
+          <Textarea
+            name="admin_notes"
+            defaultValue={appointment.adminNotes}
+            className="min-h-24"
+          />
+        </Field>
+
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Customer details</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Full name">
+              <Input name="customer_name" defaultValue={customer.name} />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                name="customer_email"
+                defaultValue={customer.email}
+              />
+            </Field>
+            <Field label="Phone">
+              <Input name="customer_phone" defaultValue={customer.phone} />
+            </Field>
+            <Field label="Company">
+              <Input name="customer_company" defaultValue={customer.company} />
+            </Field>
+            <Field label="Address" className="sm:col-span-2">
+              <Input name="customer_address" defaultValue={customer.address} />
+            </Field>
+            <Field label="Postal code">
+              <Input
+                name="customer_postal_code"
+                defaultValue={customer.postalCode}
+              />
+            </Field>
+            <Field label="City">
+              <Input name="customer_city" defaultValue={customer.city} />
+            </Field>
+            <Field label="Customer notes" className="sm:col-span-2">
+              <Textarea
+                name="customer_notes"
+                defaultValue={customer.notes}
+                className="min-h-20"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={!dashboard.databaseConfigured}
+          className="w-full sm:w-fit"
+        >
+          Save changes
+        </Button>
+      </form>
+    </Panel>
   );
 }
 
@@ -1314,12 +1591,19 @@ function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
 function Field({
   label,
   children,
+  className,
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
+    <label
+      className={cn(
+        "grid gap-1.5 text-sm font-semibold text-slate-700",
+        className,
+      )}
+    >
       {label}
       {children}
     </label>

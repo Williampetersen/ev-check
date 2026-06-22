@@ -1,9 +1,17 @@
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  turbopack: {
+    root: path.join(__dirname),
+  },
   images: {
-    domains: ["lh3.googleusercontent.com", "vercel.com", "evcheck.dk"],
+    remotePatterns: [
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "vercel.com" },
+      { protocol: "https", hostname: "evcheck.dk" },
+    ],
   },
   async redirects() {
     return [

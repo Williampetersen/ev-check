@@ -5,10 +5,10 @@ import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export async function GET(
   request: Request,
-  { params }: { params: { appointmentId: string } },
+  { params }: { params: Promise<{ appointmentId: string }> },
 ) {
   const session = verifySessionToken(
-    cookies().get(ADMIN_COOKIE_NAME)?.value,
+    (await cookies()).get(ADMIN_COOKIE_NAME)?.value,
     "admin",
   );
   if (!session) {
@@ -16,8 +16,9 @@ export async function GET(
   }
 
   try {
-    const invoice = await ensureInvoiceForAppointment(params.appointmentId);
-    return new NextResponse(invoice.pdf, {
+    const { appointmentId } = await params;
+    const invoice = await ensureInvoiceForAppointment(appointmentId);
+    return new NextResponse(new Uint8Array(invoice.pdf), {
       headers: {
         "content-type": "application/pdf",
         "content-disposition": `inline; filename="${invoice.invoiceNumber}.pdf"`,

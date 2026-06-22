@@ -21,9 +21,10 @@ export const metadata = {
 export default async function CustomerTokenPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
-  const portal = await getCustomerDashboardByToken(params.token);
+  const { token } = await params;
+  const portal = await getCustomerDashboardByToken(token);
   if (!portal) notFound();
 
   const upcoming = portal.appointments.filter(
@@ -131,7 +132,7 @@ export default async function CustomerTokenPage({
                   </div>
                   {appointment.invoiceNumber ? (
                     <a
-                      href={`/api/customer/invoices/${appointment.id}?token=${params.token}`}
+                      href={`/api/customer/invoices/${appointment.id}?token=${token}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-teal-700/30 bg-teal-50 px-3 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"

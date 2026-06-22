@@ -5,7 +5,7 @@ import { sendTestEmail, verifyMailConnection } from "@/lib/server/mail";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export async function GET() {
-  const session = verifySessionToken(cookies().get(ADMIN_COOKIE_NAME)?.value, "admin");
+  const session = verifySessionToken((await cookies()).get(ADMIN_COOKIE_NAME)?.value, "admin");
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -22,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = verifySessionToken(cookies().get(ADMIN_COOKIE_NAME)?.value, "admin");
+  const session = verifySessionToken((await cookies()).get(ADMIN_COOKIE_NAME)?.value, "admin");
   if (!session) {
     return NextResponse.redirect(new URL("/admin/login", request.url), 303);
   }

@@ -264,9 +264,7 @@ export function CalendarView({
                 return (
                   <Link
                     key={appointment.id}
-                    href={`/admin?view=appointments&q=${encodeURIComponent(
-                      appointment.customerName,
-                    )}`}
+                    href={`/admin?view=booking&id=${appointment.id}&from=calendar&date=${anchor}&mode=${mode}`}
                     className={cn(
                       "absolute inset-x-1 overflow-hidden rounded-md border px-1.5 py-1 text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
                       statusBlockStyles[appointment.status],

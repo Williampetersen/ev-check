@@ -11,13 +11,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AdminLoginPage({
+export default async function AdminLoginPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; configured?: string };
+  searchParams?: Promise<{ error?: string; configured?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const session = verifySessionToken(
-    cookies().get(ADMIN_COOKIE_NAME)?.value,
+    (await cookies()).get(ADMIN_COOKIE_NAME)?.value,
     "admin",
   );
   if (session) redirect("/admin");
@@ -39,7 +40,7 @@ export default function AdminLoginPage({
           Access appointments, customers, users, emails, invoices, and settings.
         </p>
 
-        {searchParams?.error ? (
+        {resolvedSearchParams?.error ? (
           <div className="mt-5 rounded-lg border border-rose-200/80 bg-rose-50/80 px-4 py-3 text-sm font-medium text-rose-700 backdrop-blur">
             Login failed. Check `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and
             `ADMIN_SESSION_SECRET`.

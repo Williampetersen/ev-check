@@ -14,13 +14,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CustomerLoginPage({
+export default async function CustomerLoginPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams?: Promise<{ error?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const session = verifySessionToken(
-    cookies().get(CUSTOMER_COOKIE_NAME)?.value,
+    (await cookies()).get(CUSTOMER_COOKIE_NAME)?.value,
     "customer",
   );
   if (session) redirect(`/kunde/${session.sub}`);
@@ -42,7 +43,7 @@ export default function CustomerLoginPage({
           Enter the email used for your EV Check appointment to open your
           customer dashboard.
         </p>
-        {searchParams?.error ? (
+        {resolvedSearchParams?.error ? (
           <div className="mt-5 rounded-lg border border-rose-200/80 bg-rose-50/80 px-4 py-3 text-sm font-medium text-rose-700 backdrop-blur">
             No customer was found for that email.
           </div>

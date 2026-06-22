@@ -6,10 +6,10 @@ import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = verifySessionToken(
-    cookies().get(ADMIN_COOKIE_NAME)?.value,
+    (await cookies()).get(ADMIN_COOKIE_NAME)?.value,
     "admin",
   );
   if (!session) {
@@ -17,8 +17,9 @@ export async function POST(
   }
 
   try {
+    const { id } = await params;
     const dashboard = await getAdminDashboardData();
-    const appointment = dashboard.appointments.find((item) => item.id === params.id);
+    const appointment = dashboard.appointments.find((item) => item.id === id);
     const customer = appointment
       ? dashboard.customers.find((item) => item.id === appointment.customerId)
       : null;

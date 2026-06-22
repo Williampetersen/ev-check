@@ -11,13 +11,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AgentLoginPage({
+export default async function AgentLoginPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams?: Promise<{ error?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const session = verifySessionToken(
-    cookies().get(AGENT_COOKIE_NAME)?.value,
+    (await cookies()).get(AGENT_COOKIE_NAME)?.value,
     "agent",
   );
   if (session) redirect("/agent");
@@ -38,7 +39,7 @@ export default function AgentLoginPage({
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Field users can view assigned EV checks and daily work.
         </p>
-        {searchParams?.error ? (
+        {resolvedSearchParams?.error ? (
           <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
             Login failed.
           </div>

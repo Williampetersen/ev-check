@@ -13,6 +13,8 @@ import {
   type DashboardSettings,
   type DashboardUser,
   type EmailLog,
+  type InvoiceStatus,
+  type PaymentStatus,
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { resolveTimeZone, todayKeyInTimeZone } from "@/lib/server/timezone";
@@ -245,6 +247,79 @@ export async function updateAppointmentStatus(
   await sql`
     UPDATE appointments
     SET status = ${status}, admin_notes = ${notes}, updated_at = NOW()
+    WHERE id = ${appointmentId}
+  `;
+}
+
+export async function updateAppointmentDetails(
+  appointmentId: string,
+  input: {
+    status: AppointmentStatus;
+    paymentStatus: PaymentStatus;
+    invoiceStatus: InvoiceStatus;
+    appointmentDate: string;
+    appointmentTime: string;
+    appointmentEndTime: string;
+    serviceLabel: string;
+    vehicleLabel: string;
+    registrationNumber: string;
+    total: number;
+    assignedUser: string;
+    areaName: string;
+    adminNotes: string;
+    customer: {
+      name: string;
+      email: string;
+      phone: string;
+      address: string;
+      postalCode: string;
+      city: string;
+      company: string;
+      notes: string;
+    };
+  },
+) {
+  if (!isDatabaseConfigured()) return;
+  await ensureSchema({ force: true });
+  const sql = getSql();
+
+  const [appointmentRow] = await sql<Array<{ customer_id: string }>>`
+    SELECT customer_id FROM appointments WHERE id = ${appointmentId} LIMIT 1
+  `;
+  if (!appointmentRow) throw new Error("Booking was not found.");
+
+  await sql`
+    UPDATE customers
+    SET
+      name = ${input.customer.name},
+      email = ${input.customer.email},
+      phone = ${input.customer.phone},
+      address = ${input.customer.address},
+      postal_code = ${input.customer.postalCode},
+      city = ${input.customer.city},
+      company = ${input.customer.company},
+      notes = ${input.customer.notes},
+      updated_at = NOW()
+    WHERE id = ${appointmentRow.customer_id}
+  `;
+
+  await sql`
+    UPDATE appointments
+    SET
+      status = ${input.status},
+      payment_status = ${input.paymentStatus},
+      invoice_status = ${input.invoiceStatus},
+      appointment_date = ${input.appointmentDate},
+      appointment_time = ${input.appointmentTime},
+      appointment_end_time = ${input.appointmentEndTime},
+      service_label = ${input.serviceLabel},
+      vehicle_label = ${input.vehicleLabel},
+      registration_number = ${input.registrationNumber},
+      total = ${input.total},
+      assigned_user = ${input.assignedUser},
+      area_name = ${input.areaName},
+      admin_notes = ${input.adminNotes},
+      updated_at = NOW()
     WHERE id = ${appointmentId}
   `;
 }

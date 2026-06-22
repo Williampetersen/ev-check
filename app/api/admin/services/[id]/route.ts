@@ -4,19 +4,20 @@ import { updateBookingServiceRecord } from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 import { fileToDataUrl } from "@/lib/server/uploads";
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const session = verifySessionToken(cookies().get(ADMIN_COOKIE_NAME)?.value, "admin");
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = verifySessionToken((await cookies()).get(ADMIN_COOKIE_NAME)?.value, "admin");
   if (!session) {
     return NextResponse.redirect(new URL("/admin/login", request.url), 303);
   }
 
   try {
+    const { id } = await params;
     const formData = await request.formData();
     const removeImage = Boolean(formData.get("remove_image"));
     const uploadedImage = await fileToDataUrl(formData.get("image") as File | null);
     const imageData = uploadedImage || (removeImage ? "" : null);
 
-    await updateBookingServiceRecord(params.id, {
+    await updateBookingServiceRecord(id, {
       title: String(formData.get("title") || ""),
       description: String(formData.get("description") || ""),
       badge: String(formData.get("badge") || ""),
