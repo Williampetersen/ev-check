@@ -71,6 +71,7 @@ export type DashboardSettings = {
   adminNotifyEmail: string;
   defaultAppointmentStatus: AppointmentStatus;
   bookingEnabled: boolean;
+  timezone: string;
   startHour: number;
   endHour: number;
   slotMinutes: number;
@@ -131,6 +132,7 @@ export const defaultSettings: DashboardSettings = {
   adminNotifyEmail: "",
   defaultAppointmentStatus: "pending",
   bookingEnabled: true,
+  timezone: "Europe/Copenhagen",
   startHour: 9,
   endHour: 18,
   slotMinutes: 15,
@@ -327,8 +329,11 @@ export function formatShortDate(date: string) {
   }
 }
 
-export function buildStats(appointments: Appointment[], customers: Customer[]) {
-  const todayKey = new Date().toISOString().slice(0, 10);
+export function buildStats(
+  appointments: Appointment[],
+  customers: Customer[],
+  todayKey: string = new Date().toISOString().slice(0, 10),
+) {
   const activeAppointments = appointments.filter((item) => item.status !== "cancelled");
   return {
     todayAppointments: activeAppointments.filter((item) => item.appointmentDate === todayKey).length,

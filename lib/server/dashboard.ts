@@ -15,6 +15,7 @@ import {
   type EmailLog,
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
+import { resolveTimeZone, todayKeyInTimeZone } from "@/lib/server/timezone";
 
 const id = (prefix: string) => `${prefix}_${randomBytes(8).toString("hex")}`;
 
@@ -39,6 +40,7 @@ function normalizeSettings(row: any): DashboardSettings {
       text(row?.default_appointment_status, defaultSettings.defaultAppointmentStatus),
     ),
     bookingEnabled: Boolean(row?.booking_enabled ?? defaultSettings.bookingEnabled),
+    timezone: resolveTimeZone(row?.timezone ?? defaultSettings.timezone),
     startHour: numberValue(row?.start_hour, defaultSettings.startHour),
     endHour: numberValue(row?.end_hour, defaultSettings.endHour),
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
@@ -54,7 +56,11 @@ function normalizeSettings(row: any): DashboardSettings {
 }
 
 const demoDashboard = (databaseError?: string): AdminDashboardData => ({
-  stats: buildStats(demoAppointments, demoCustomers),
+  stats: buildStats(
+    demoAppointments,
+    demoCustomers,
+    todayKeyInTimeZone(defaultSettings.timezone),
+  ),
   appointments: demoAppointments,
   customers: demoCustomers,
   users: demoUsers,
@@ -174,7 +180,11 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
 
     const settings = normalizeSettings(settingsRows[0]);
     return {
-      stats: buildStats(mappedAppointments, mappedCustomers),
+      stats: buildStats(
+        mappedAppointments,
+        mappedCustomers,
+        todayKeyInTimeZone(settings.timezone),
+      ),
       appointments: mappedAppointments,
       customers: mappedCustomers,
       users: mappedUsers.length > 0 ? mappedUsers : demoUsers,
@@ -250,6 +260,7 @@ export async function saveDashboardSettings(formData: FormData) {
     adminNotifyEmail: text(formData.get("admin_notify_email"), ""),
     defaultAppointmentStatus: normalizeStatus(text(formData.get("default_appointment_status"), "pending")),
     bookingEnabled: Boolean(formData.get("booking_enabled")),
+    timezone: resolveTimeZone(formData.get("timezone")),
     startHour: numberValue(formData.get("start_hour"), 8),
     endHour: numberValue(formData.get("end_hour"), 18),
     slotMinutes: numberValue(formData.get("slot_minutes"), 60),
@@ -270,13 +281,13 @@ export async function saveDashboardSettings(formData: FormData) {
   await sql`
     INSERT INTO dashboard_settings (
       settings_key, company_name, support_email, admin_notify_email, default_appointment_status,
-      booking_enabled, start_hour, end_hour, slot_minutes, service_areas_json, services_json,
+      booking_enabled, timezone, start_hour, end_hour, slot_minutes, service_areas_json, services_json,
       email_automation_json, updated_at
     )
     VALUES (
       'default', ${settings.companyName}, ${settings.supportEmail}, ${settings.adminNotifyEmail},
-      ${settings.defaultAppointmentStatus}, ${settings.bookingEnabled}, ${settings.startHour},
-      ${settings.endHour}, ${settings.slotMinutes}, ${sql.json(settings.serviceAreas)},
+      ${settings.defaultAppointmentStatus}, ${settings.bookingEnabled}, ${settings.timezone},
+      ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes}, ${sql.json(settings.serviceAreas)},
       ${sql.json(settings.services)}, ${sql.json(settings.emailAutomation)}, NOW()
     )
     ON CONFLICT (settings_key)
@@ -286,6 +297,7 @@ export async function saveDashboardSettings(formData: FormData) {
       admin_notify_email = EXCLUDED.admin_notify_email,
       default_appointment_status = EXCLUDED.default_appointment_status,
       booking_enabled = EXCLUDED.booking_enabled,
+      timezone = EXCLUDED.timezone,
       start_hour = EXCLUDED.start_hour,
       end_hour = EXCLUDED.end_hour,
       slot_minutes = EXCLUDED.slot_minutes,

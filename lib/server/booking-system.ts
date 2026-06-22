@@ -14,6 +14,11 @@ import {
   sendAdminBookingEmail,
   sendCustomerAppointmentEmail,
 } from "@/lib/server/mail";
+import {
+  nowMinutesInTimeZone,
+  resolveTimeZone,
+  todayKeyInTimeZone,
+} from "@/lib/server/timezone";
 
 export type BookingService = {
   id: string;
@@ -80,24 +85,21 @@ export type BookingCreateInput = {
 const id = (prefix: string) => `${prefix}_${randomBytes(8).toString("hex")}`;
 const portalToken = () => randomBytes(18).toString("base64url");
 
-const toDateKey = (date: Date) => {
-  const copy = new Date(date);
-  copy.setHours(12, 0, 0, 0);
-  return copy.toISOString().slice(0, 10);
-};
-
-const todayKey = () => toDateKey(new Date());
+// Pure calendar math on a "YYYY-MM-DD" key, done in UTC so the result never
+// depends on the host machine's local timezone setting.
+const toDateKey = (date: Date) =>
+  `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    date.getUTCDate(),
+  ).padStart(2, "0")}`;
 
 const addDays = (dateKey: string, days: number) => {
-  const date = new Date(`${dateKey}T12:00:00`);
-  date.setDate(date.getDate() + days);
-  return toDateKey(date);
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return toDateKey(new Date(Date.UTC(year, month - 1, day + days)));
 };
 
 const addMonths = (dateKey: string, months: number) => {
-  const date = new Date(`${dateKey}T12:00:00`);
-  date.setMonth(date.getMonth() + months);
-  return toDateKey(date);
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return toDateKey(new Date(Date.UTC(year, month - 1 + months, day)));
 };
 
 const timeToMinutes = (time: string) => {
@@ -174,6 +176,7 @@ function normalizeSettings(row: any): DashboardSettings {
     bookingEnabled: Boolean(
       row?.booking_enabled ?? defaultSettings.bookingEnabled,
     ),
+    timezone: resolveTimeZone(row?.timezone ?? defaultSettings.timezone),
     startHour: numberValue(row?.start_hour, defaultSettings.startHour),
     endHour: numberValue(row?.end_hour, defaultSettings.endHour),
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
@@ -396,7 +399,7 @@ export function getCarBrands(): CarBrand[] {
 
 export async function getBookingConfig(): Promise<BookingConfig> {
   const settings = await getBookingSettings();
-  const minDate = addDays(todayKey(), 1);
+  const minDate = addDays(todayKeyInTimeZone(settings.timezone), 1);
   return {
     settings,
     services: await getAllBookingServices(),
@@ -477,11 +480,21 @@ export async function getAvailableSlots(input: {
   const start = config.settings.startHour * 60;
   const end = config.settings.endHour * 60;
   const interval = Math.max(15, config.settings.slotMinutes);
-  const selectedDate = new Date(`${input.date}T12:00:00`);
-  const weekday = selectedDate.getDay();
+  const [selectedYear, selectedMonth, selectedDay] = input.date
+    .split("-")
+    .map(Number);
+  const weekday = new Date(
+    Date.UTC(selectedYear, selectedMonth - 1, selectedDay),
+  ).getUTCDay();
 
   if (weekday === 0) return [];
   if (input.date < config.minDate || input.date > config.maxDate) return [];
+
+  // Live cutoff: a slot today must still be in the future in the configured
+  // timezone (Copenhagen handles its own summer/winter time switch).
+  const timezone = config.settings.timezone;
+  const isToday = input.date === todayKeyInTimeZone(timezone);
+  const cutoffMinutes = isToday ? nowMinutesInTimeZone(timezone) : -1;
 
   let existing: Array<{
     appointment_time: string;
@@ -510,6 +523,7 @@ export async function getAvailableSlots(input: {
     minutes + pricing.durationMinutes <= end;
     minutes += interval
   ) {
+    if (minutes <= cutoffMinutes) continue;
     const slot = minutesToTime(minutes);
     const slotEnd = minutes + pricing.durationMinutes;
     const hasConflict = existing.some((item) => {
@@ -698,7 +712,7 @@ export async function createBooking(input: BookingCreateInput) {
     company: customerCompany,
     notes: customerNotes,
     portalToken: created.portalToken,
-    createdAt: todayKey(),
+    createdAt: todayKeyInTimeZone(config.settings.timezone),
   };
 
   const appointment: Appointment = {
@@ -722,7 +736,7 @@ export async function createBooking(input: BookingCreateInput) {
     assignedUser: "",
     areaName: customer.city,
     adminNotes: customer.notes,
-    createdAt: todayKey(),
+    createdAt: todayKeyInTimeZone(config.settings.timezone),
   };
 
   try {

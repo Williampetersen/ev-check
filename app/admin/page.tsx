@@ -42,6 +42,10 @@ import {
 } from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 import { isMailConfigured } from "@/lib/server/mail";
+import {
+  SUPPORTED_TIMEZONES,
+  nowLabelInTimeZone,
+} from "@/lib/server/timezone";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -1168,6 +1172,37 @@ function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
                 </span>
               </span>
             </label>
+          </div>
+        </div>
+
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Time zone</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Every booking date, time slot, and &ldquo;today&rdquo; cut-off is
+            calculated live against this time zone, not the server&apos;s own
+            clock. Summer/winter time (CEST/CET) switches are handled
+            automatically &mdash; there is nothing to adjust manually when the
+            clocks change.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Booking system time zone">
+              <select
+                name="timezone"
+                defaultValue={settings.timezone}
+                className={adminSelectClass}
+              >
+                {SUPPORTED_TIMEZONES.map((zone) => (
+                  <option key={zone.id} value={zone.id}>
+                    {zone.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Current live time">
+              <div className="flex h-12 items-center rounded-lg border border-white/70 bg-white/70 px-3 text-sm font-semibold text-slate-700 backdrop-blur sm:h-10">
+                {nowLabelInTimeZone(settings.timezone)}
+              </div>
+            </Field>
           </div>
         </div>
 

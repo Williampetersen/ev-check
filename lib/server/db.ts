@@ -148,6 +148,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           admin_notify_email TEXT NOT NULL DEFAULT '',
           default_appointment_status TEXT NOT NULL DEFAULT 'pending',
           booking_enabled BOOLEAN NOT NULL DEFAULT true,
+          timezone TEXT NOT NULL DEFAULT 'Europe/Copenhagen',
           start_hour INTEGER NOT NULL DEFAULT 8,
           end_hour INTEGER NOT NULL DEFAULT 18,
           slot_minutes INTEGER NOT NULL DEFAULT 60,
@@ -157,6 +158,11 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+      `;
+
+      await sql`
+        ALTER TABLE dashboard_settings
+          ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Copenhagen';
       `;
 
       await sql`
