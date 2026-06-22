@@ -3,9 +3,10 @@ import Image from "next/image";
 import { getSafeNextPath } from "@/lib/site-access";
 
 export const metadata: Metadata = {
-  title: "EV-Check.dk | Kommer snart",
+  title: "Kommer snart",
   description:
     "EV-Check.dk er midlertidigt privat, mens hjemmesiden bliver opdateret.",
+  robots: { index: false, follow: false },
 };
 
 export default function ComingSoon({
@@ -76,7 +77,7 @@ export default function ComingSoon({
               </p>
               <h2 className="mt-1 text-2xl font-bold">Enter preview</h2>
             </div>
-            <span className="rounded-full border border-sky-200 bg-white/55 px-3 py-1 text-xs font-semibold text-sky-700 backdrop-blur">
+            <span className="bg-white/55 rounded-full border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 backdrop-blur">
               Locked
             </span>
           </div>
@@ -89,7 +90,7 @@ export default function ComingSoon({
                 type="text"
                 autoComplete="username"
                 required
-                className="h-12 w-full rounded-xl border border-white/75 bg-white/55 px-4 text-base text-slate-950 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-sky-300 focus:bg-white/80 focus:ring-4 focus:ring-sky-400/10"
+                className="bg-white/55 h-12 w-full rounded-xl border border-white/75 px-4 text-base text-slate-950 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-sky-300 focus:bg-white/80 focus:ring-4 focus:ring-sky-400/10"
               />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-slate-700">
@@ -99,7 +100,7 @@ export default function ComingSoon({
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-12 w-full rounded-xl border border-white/75 bg-white/55 px-4 text-base text-slate-950 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-sky-300 focus:bg-white/80 focus:ring-4 focus:ring-sky-400/10"
+                className="bg-white/55 h-12 w-full rounded-xl border border-white/75 px-4 text-base text-slate-950 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-sky-300 focus:bg-white/80 focus:ring-4 focus:ring-sky-400/10"
               />
             </label>
 

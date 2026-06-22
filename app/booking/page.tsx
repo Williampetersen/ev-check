@@ -1,1 +1,5 @@
-export { metadata, default } from "../book-tid/page";
+import { permanentRedirect } from "next/navigation";
+
+export default function LegacyBookingRedirectPage() {
+  permanentRedirect("/book-tid");
+}

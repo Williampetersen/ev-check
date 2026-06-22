@@ -1,0 +1,25 @@
+# EV-Check.dk
+
+EV-Check.dk tilbyder mobil batteritest og elbil-diagnose på Sjælland.
+Servicen hjælper elbilejere, købere, sælgere og forhandlere med at forstå
+højvoltsbatteriets tilstand før køb, salg, service eller fejlfinding.
+
+## Vigtige sider
+
+- Batteritest af elbil: https://ev-check.dk/batteritest-elbil
+- Book tid: https://ev-check.dk/book-tid
+- Om EV-Check.dk: https://ev-check.dk/om-ev-check
+- Kontakt: https://ev-check.dk/kontakt
+
+## Servicefakta
+
+- Pris: 1300 DKK
+- Område: København og Sjælland
+- Rapport: professionel PDF-rapport
+- Målepunkter: SoH, SoC, BMS-status, cellebalance, temperaturer og relevante fejlkoder
+- Relevante situationer: køb af brugt elbil, salg af elbil, lavere rækkevidde, garantisag og teknisk fejlfinding
+
+## Kontakt
+
+- Telefon: +45 71 90 05 30
+- E-mail: info@ev-check.dk

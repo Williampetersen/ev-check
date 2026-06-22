@@ -23,13 +23,14 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
+import { sameAsLinks, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-export const siteUrl = "https://ev-check.dk";
+export { siteUrl };
 
 export const navItems = [
   { href: "/", label: "Forside" },
-  { href: "/service", label: "Service" },
+  { href: "/batteritest-elbil", label: "Batteritest" },
   { href: "/om-ev-check", label: "Om EV-Check" },
   { href: "/hvad-vores-kunder-siger", label: "Kunder" },
   { href: "/kontakt", label: "Kontakt" },
@@ -38,60 +39,60 @@ export const navItems = [
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://www.instagram.com/ev_check.dk?igsh=MTJkbXZ4em5tejBubg%3D%3D&utm_source=qr",
+    href: sameAsLinks[0],
     icon: Instagram,
   },
   {
     label: "Facebook",
-    href: "https://www.facebook.com/share/1PK3SGWZbf/?mibextid=wwXIfr",
+    href: sameAsLinks[1],
     icon: Facebook,
   },
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/in/omid-mohebi-8b7644345?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+    href: sameAsLinks[2],
     icon: Linkedin,
   },
   {
     label: "X",
-    href: "https://x.com/ev_checkdk",
+    href: sameAsLinks[3],
     icon: Twitter,
   },
   {
     label: "Trustpilot",
-    href: "https://dk.trustpilot.com/review/ev-check.dk",
+    href: sameAsLinks[4],
     icon: Star,
   },
 ];
 
 export const services = [
   {
-    title: "Batteriets sundhed",
-    text: "SoH viser, hvor meget kapacitet batteriet reelt har tilbage.",
+    title: "SoH og kapacitet",
+    text: "State of Health viser, hvor meget brugbar batterikapacitet bilen reelt har tilbage.",
     icon: BatteryCharging,
   },
   {
-    title: "Rækkevidde og opladning",
-    text: "Vi kontrollerer SoC, ladestatus og om bilens data giver mening.",
+    title: "Rækkevidde og SoC",
+    text: "Vi kontrollerer ladestatus, rækkeviddedata og om bilens egne tal hænger sammen.",
     icon: Gauge,
   },
   {
     title: "Cellebalance",
-    text: "Ubalance kan påvirke rækkevidde, ydelse og bilens værdi.",
+    text: "Celle- eller modulubalance kan påvirke rækkevidde, ydelse og bilens værdi.",
     icon: Zap,
   },
   {
-    title: "Temperaturer",
-    text: "Vi ser efter ujævn varme og forhold, der kan forkorte levetiden.",
+    title: "Temperatur og belastning",
+    text: "Vi ser efter ujævn varme og forhold, der kan forkorte batteriets levetid.",
     icon: Clock,
   },
   {
-    title: "BMS og fejlkoder",
-    text: "Vi læser relevante signaler fra bilens batteristyring.",
+    title: "BMS og OBD-data",
+    text: "Vi læser relevante signaler fra batteristyringen og tjekker fejlkoder.",
     icon: ShieldCheck,
   },
   {
-    title: "Klar rapport",
-    text: "Du får dokumentation, konklusion og målinger i én PDF.",
+    title: "Klar batterirapport",
+    text: "Du får målinger, konklusion og beslutningsgrundlag samlet i én PDF.",
     icon: FileText,
   },
 ];
@@ -100,7 +101,7 @@ export const faqs = [
   {
     question: "Hvad er en batteritest, og hvad indeholder rapporten?",
     answer:
-      "En batteritest er en digital diagnose af elbilens højspændingsbatteri. Vi måler blandt andet SoH, SoC, cellebalance, temperaturer og relevante BMS-fejlkoder. Efter testen får du en professionel PDF-rapport.",
+      "En batteritest er en digital diagnose af elbilens højvoltsbatteri. Vi måler blandt andet SoH, SoC, cellebalance, temperaturer og relevante BMS-fejlkoder. Efter testen får du en professionel PDF-rapport.",
   },
   {
     question: "Skader testen batteriet eller garantien?",
@@ -110,7 +111,7 @@ export const faqs = [
   {
     question: "Hvor lang tid tager en batteritest?",
     answer:
-      "Selve servicen er sat til 15 minutter. Rapport og praktisk gennemgang afhænger af bilmodel og adgang til data.",
+      "Selve testen er sat til 15 minutter. Rapport og praktisk gennemgang afhænger af bilmodel og adgang til data.",
   },
   {
     question: "Hvilke bilmærker tester I?",
@@ -125,6 +126,16 @@ export const faqs = [
     question: "Hvad koster en batteritest?",
     answer:
       "Batteritest af elbil koster 1300 kr. og bookes som en fast 15 minutters service.",
+  },
+  {
+    question: "Hvornår giver en batteritest mest mening?",
+    answer:
+      "En batteritest er særligt relevant før køb eller salg af en brugt elbil, ved mistanke om lavere rækkevidde, før garantien udløber eller når du ønsker dokumentation for batteriets tilstand.",
+  },
+  {
+    question: "Er EV-Check en reparation eller en diagnose?",
+    answer:
+      "EV-Check er en diagnose og vurdering af batteriets data. Vi åbner ikke batteripakken og udfører ikke reparationer, men rapporten kan bruges som dokumentation over for køber, sælger eller værksted.",
   },
 ];
 
@@ -329,14 +340,14 @@ export function HeroSection() {
       <div className="relative mx-auto w-full max-w-[100vw] overflow-hidden px-4 py-20 text-center sm:max-w-5xl sm:px-6 sm:py-24 lg:px-8">
         <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-teal-100 shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
           <ShieldCheck className="h-4 w-4" />
-          <span>Mobil batteridiagnose på Sjælland</span>
+          <span>Mobil batteritest af elbil på Sjælland</span>
         </p>
         <h1 className="mx-auto mt-5 w-full max-w-[22rem] text-3xl font-bold tracking-normal [text-wrap:balance] sm:max-w-4xl sm:text-6xl lg:text-7xl">
-          Få klar besked om elbilens batteri, før du beslutter dig
+          Batteritest af elbil med klar rapport samme dag
         </h1>
         <p className="text-white/84 mx-auto mt-5 max-w-[19.5rem] text-sm leading-7 sm:max-w-2xl sm:text-lg">
-          EV-Check.dk tester batteriets sundhed, læser bilens data og sender en
-          professionel rapport, uden at du skal på værksted.
+          Få målt SoH, BMS-status, cellebalance og relevante fejlkoder før køb,
+          salg eller fejlfinding, uden at du skal på værksted.
         </p>
         <div className="mx-auto mt-8 grid w-full max-w-[19.5rem] gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
           <ButtonLink
@@ -347,7 +358,7 @@ export function HeroSection() {
             Book batteritest
           </ButtonLink>
           <ButtonLink
-            href="/service"
+            href="/batteritest-elbil"
             variant="secondary"
             className="bg-white/14 shadow-black/15 hover:bg-white/22 h-12 w-full border-white/25 px-5 text-white shadow-xl hover:text-white sm:h-11 sm:w-auto"
           >
@@ -381,8 +392,9 @@ export function HeroSection() {
 
 export function PriceCard() {
   const points = [
-    "Batteriets sundhed (SoH)",
-    "Analyse af batteriets tilstand",
+    "State of Health (SoH)",
+    "Højvoltsbatteriets tilstand",
+    "Cellebalance og temperaturer",
     "Fejlkoder og BMS-status",
     "PDF-rapport inkluderet",
   ];
@@ -396,7 +408,7 @@ export function PriceCard() {
       <h2 className="mt-4 text-2xl font-bold">Batteritest af elbil</h2>
       <div className="mt-4 flex items-end gap-2">
         <p className="text-4xl font-bold text-teal-700">1300 kr.</p>
-        <p className="pb-1 text-sm font-semibold text-slate-500">15 min.</p>
+        <p className="pb-1 text-sm font-semibold text-slate-500">mobil test</p>
       </div>
       <div className="mt-5 grid gap-3">
         {points.map((point) => (
@@ -424,8 +436,8 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Det får du"
-          title="Et klart billede af batteriets sundhed"
-          description="Skjulte batteriproblemer kan påvirke rækkevidde, værdi og driftssikkerhed. Vi gør bilens data lette at forstå og bruge."
+          title="Et klart billede af højvoltsbatteriets sundhed"
+          description="Skjulte batteriproblemer kan påvirke rækkevidde, værdi og driftssikkerhed. Vi gør bilens data lette at forstå, så rapporten kan bruges før køb, salg eller service."
         />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => {
@@ -476,7 +488,7 @@ export function AboutSection() {
           <SectionHeading
             eyebrow="Din trygge partner"
             title="Uafhængig batterivurdering uden værkstedsbesøg"
-            description="Vi arbejder med professionelt diagnoseudstyr og tester digitalt via bilens systemer. Batteripakken åbnes ikke."
+            description="Vi arbejder med professionelt diagnoseudstyr og tester digitalt via bilens systemer. Højvoltsbatteriet åbnes ikke."
           />
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {[
@@ -500,7 +512,7 @@ export function AboutSection() {
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               Ville du købe en elbil uden at kende batteriets tilstand? En kort
-              test kan give dokumentation, ro og bedre beslutninger.
+              batteritest kan give dokumentation, ro og bedre beslutninger.
             </p>
           </div>
         </div>
@@ -536,6 +548,171 @@ export function BrandsAndCertificate() {
         Vi tester alle elbiler og tilpasser målingen efter model, systemdata og
         batteristyring.
       </p>
+    </section>
+  );
+}
+
+const batteryUseCases = [
+  {
+    title: "Før køb af brugt elbil",
+    text: "Få dokumentation for batteriets sundhed, før du skriver under. Det er især nyttigt ved Tesla, BYD, Polestar, Volkswagen ID, Kia og Hyundai.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Før salg eller bytte",
+    text: "En batterirapport gør det lettere at forklare bilens reelle stand og kan give køber mere tryghed.",
+    icon: FileText,
+  },
+  {
+    title: "Ved mistanke om lav rækkevidde",
+    text: "Hvis bilen mister rækkevidde, oplader mærkeligt eller viser advarsler, kan en diagnose give et klart næste skridt.",
+    icon: Gauge,
+  },
+];
+
+const diagnosticRows = [
+  {
+    label: "SoH / State of Health",
+    value:
+      "Indikation af hvor meget batterikapacitet bilen har tilbage i forhold til ny tilstand.",
+  },
+  {
+    label: "SoC og ladedata",
+    value:
+      "Kontrol af opladningsstatus, rækkeviddedata og relevante signaler fra bilen.",
+  },
+  {
+    label: "Cellebalance",
+    value:
+      "Gennemgang af ubalancer, som kan påvirke ydelse, rækkevidde og batteriets drift.",
+  },
+  {
+    label: "Temperaturer",
+    value:
+      "Tjek af batteriets temperaturdata for at se efter afvigelser eller unormale mønstre.",
+  },
+  {
+    label: "BMS og fejlkoder",
+    value:
+      "Aflæsning af batteristyringens data via bilens systemer, når modellen understøtter det.",
+  },
+  {
+    label: "PDF-rapport",
+    value:
+      "Samlet dokumentation med målinger, konklusion og praktisk vurdering samme dag.",
+  },
+];
+
+const serviceAreas = [
+  "København",
+  "Frederiksberg",
+  "Roskilde",
+  "Køge",
+  "Hillerød",
+  "Nordsjælland",
+  "Holbæk",
+  "Næstved",
+  "Sjælland",
+];
+
+export function BatteryUseCasesSection() {
+  return (
+    <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Hvornår"
+          title="Batteritest før køb, salg eller fejlfinding"
+          description="Brugte elbiler, SoH og dokumentation er kernebehov i markedet. EV-Check.dk fokuserer på en mobil batteritest med klar rapport på Sjælland."
+        />
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {batteryUseCases.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article
+                key={item.title}
+                className="glass-card rounded-lg p-5 transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/10"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h2 className="mt-5 text-xl font-bold text-slate-950">
+                  {item.title}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {item.text}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function DiagnosticDetailsSection() {
+  return (
+    <section className="py-16 sm:py-20">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.75fr_1.25fr] lg:px-8">
+        <div>
+          <SectionHeading
+            eyebrow="Målepunkter"
+            title="Hvad viser en batteritest af elbil?"
+            description="Rapporten samler de vigtigste batteridata i et format, der er nemt at bruge, når du skal vurdere en brugt elbil eller dokumentere bilens tilstand."
+          />
+          <ButtonLink href="/book-tid" className="mt-6">
+            <CalendarCheck className="h-4 w-4" />
+            Book batteritest
+          </ButtonLink>
+        </div>
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {diagnosticRows.map((row) => (
+            <div key={row.label} className="glass-card rounded-lg p-5">
+              <dt className="font-bold text-slate-950">{row.label}</dt>
+              <dd className="mt-2 text-sm leading-6 text-slate-600">
+                {row.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+export function ServiceAreaSection() {
+  return (
+    <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+        <div>
+          <SectionHeading
+            eyebrow="Område"
+            title="Mobil batteritest i København og på Sjælland"
+            description="Vi kommer ud til bilen, så du ikke behøver planlægge et værkstedsbesøg for at få en professionel batteridiagnose og rapport."
+          />
+          <div className="mt-6 flex flex-wrap gap-2">
+            {serviceAreas.map((area) => (
+              <span
+                key={area}
+                className="rounded-lg border border-teal-200/80 bg-white/70 px-3 py-2 text-sm font-semibold text-teal-800 shadow-sm shadow-teal-950/5"
+              >
+                {area}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="glass-shell rounded-lg p-5 sm:p-6">
+          <MapPin className="h-8 w-8 text-teal-700" />
+          <h2 className="mt-4 text-2xl font-bold text-slate-950">
+            Vi kommer til bilen
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Testen kan udføres hjemme, på arbejdspladsen eller dér, hvor bilen
+            står. Det gør batteritesten nem at bruge før en handel eller som
+            dokumentation, når rækkevidden føles forkert.
+          </p>
+        </div>
+      </div>
     </section>
   );
 }

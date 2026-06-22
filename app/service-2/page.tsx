@@ -1,1 +1,5 @@
-export { metadata, default } from "../service/page";
+import { permanentRedirect } from "next/navigation";
+
+export default function LegacyServiceRedirectPage() {
+  permanentRedirect("/batteritest-elbil");
+}

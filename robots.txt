@@ -1,6 +1,8 @@
-Sitemap: https://ev-check.dk/sitemap.xml
-
 User-agent: *
+Allow: /
 Disallow: /api
 Disallow: /admin
 Disallow: /agent
+Disallow: /kunde
+
+Sitemap: https://ev-check.dk/sitemap.xml

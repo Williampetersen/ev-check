@@ -3,7 +3,9 @@ import type { NextRequest } from "next/server";
 import { hasValidSiteAccess, SITE_ACCESS_COOKIE } from "@/lib/site-access";
 
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname !== "/") {
+  const siteAccessEnabled = process.env.SITE_ACCESS_ENABLED === "true";
+
+  if (!siteAccessEnabled || request.nextUrl.pathname !== "/") {
     return NextResponse.next();
   }
 

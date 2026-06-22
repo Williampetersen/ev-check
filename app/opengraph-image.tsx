@@ -2,7 +2,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "EV Check dashboard";
+export const alt = "EV-Check.dk batteritest af elbil";
 export const contentType = "image/png";
 
 export default async function OG() {
@@ -26,8 +26,10 @@ export default async function OG() {
         }}
       >
         <img
-          src={`https://${process.env.VERCEL_URL || "ev-check.dk"}/logo.png`}
-          alt="EV Check logo"
+          src={`https://${
+            process.env.VERCEL_URL || "ev-check.dk"
+          }/wp/ev-check-dk.png`}
+          alt="EV-Check.dk logo"
           tw="w-20 h-20 mb-4 opacity-95"
         />
         <h1
@@ -42,8 +44,18 @@ export default async function OG() {
             letterSpacing: "-0.02em",
           }}
         >
-          EV Check
+          EV-Check.dk
         </h1>
+        <p
+          style={{
+            marginTop: "28px",
+            fontSize: "34px",
+            fontFamily: "SF Pro",
+            color: "#0f766e",
+          }}
+        >
+          Batteritest af elbil på Sjælland
+        </p>
       </div>
     ),
     {

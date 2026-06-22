@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SitePage, siteUrl } from "@/components/site/public-site";
 
 export const metadata: Metadata = {
-  title: "Cookiepolitik | EV-Check.dk",
+  title: "Cookiepolitik",
   description: "Læs EV-Check.dk's cookiepolitik og information om nødvendige cookies, statistik og kontaktformularer.",
   alternates: { canonical: `${siteUrl}/cookiepolitik` },
 };

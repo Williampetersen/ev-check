@@ -9,7 +9,7 @@ import {
 } from "@/lib/server/sessions";
 
 export const metadata = {
-  title: "My account - EV Check",
+  title: "Min konto",
   robots: { index: false, follow: false },
 };
 
