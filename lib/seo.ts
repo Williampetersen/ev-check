@@ -1,4 +1,4 @@
-export const siteUrl = "https://ev-check.dk";
+export const siteUrl = "https://evcheck.dk";
 export const siteName = "EV-Check.dk";
 export const brandLogoPath = "/evfaviconlogo.png";
 export const brandLogoUrl = `${siteUrl}${brandLogoPath}`;

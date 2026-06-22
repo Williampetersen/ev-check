@@ -28,7 +28,7 @@ export async function POST(
       appointment,
       customer,
       settings: dashboard.settings,
-      portalUrl: `${process.env.APP_URL || "https://ev-check.dk"}/kunde/${
+      portalUrl: `${process.env.APP_URL || "https://evcheck.dk"}/kunde/${
         customer.portalToken || customer.id
       }`,
     });

@@ -27,7 +27,7 @@ export default async function OG() {
       >
         <img
           src={`https://${
-            process.env.VERCEL_URL || "ev-check.dk"
+            process.env.VERCEL_URL || "evcheck.dk"
           }/evfaviconlogo.png`}
           alt="EV-Check.dk logo"
           tw="w-20 h-20 mb-4 opacity-95"

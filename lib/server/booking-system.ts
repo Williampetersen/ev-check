@@ -740,7 +740,7 @@ export async function createBooking(input: BookingCreateInput) {
   try {
     if (config.settings.emailAutomation.customerOnCreate !== false) {
       const publicAppUrl = String(
-        process.env.APP_URL || "https://ev-check.dk",
+        process.env.APP_URL || "https://evcheck.dk",
       ).replace(/\/$/, "");
       await sendCustomerAppointmentEmail({
         customer,

@@ -5,4 +5,4 @@ Disallow: /admin
 Disallow: /agent
 Disallow: /kunde
 
-Sitemap: https://ev-check.dk/sitemap.xml
+Sitemap: https://evcheck.dk/sitemap.xml

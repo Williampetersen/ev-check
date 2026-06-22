@@ -48,7 +48,7 @@ const escapeHtml = (value: string) =>
     .replace(/'/g, "&#39;");
 
 const siteUrl = () =>
-  String(process.env.APP_URL || "https://ev-check.dk").replace(/\/$/, "");
+  String(process.env.APP_URL || "https://evcheck.dk").replace(/\/$/, "");
 const logoUrl = () => `${siteUrl()}${brandLogoPath}`;
 
 type MessageAction = {
