@@ -3,74 +3,66 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   CalendarCheck,
   Car,
   CheckCircle2,
-  Clock,
   FileText,
-  MapPin,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const steps = [
   {
-    number: "01",
-    title: "Book en tid",
-    text: "Vælg tidspunkt, bilmodel og testadresse. Bookingen er enkel og tager under ét minut.",
-    detail: "Under 1 minut",
-    action: "Book tid",
+    number: "1",
+    title: "Book",
+    detail: "Tid og adresse",
     href: "/book-tid",
     icon: CalendarCheck,
-    accent: "from-teal-500 to-sky-500",
-    iconClass: "border-teal-100 bg-teal-50 text-teal-700",
+    tone: "from-violet-700 to-fuchsia-600",
+    glow: "shadow-violet-900/20",
   },
   {
-    number: "02",
-    title: "Vi kommer til dig",
-    text: "Teknikeren udfører testen hjemme hos dig eller på arbejdspladsen. Du skal blot give adgang til bilen.",
-    detail: "Sjælland og København",
-    action: "Se kontakt",
-    href: "/kontakt",
-    icon: Car,
-    accent: "from-sky-500 to-cyan-400",
-    iconClass: "border-sky-100 bg-sky-50 text-sky-700",
+    number: "2",
+    title: "Test",
+    detail: "SoH og BMS",
+    href: "/batteritest-elbil",
+    icon: Gauge,
+    tone: "from-teal-600 to-sky-500",
+    glow: "shadow-teal-900/20",
   },
   {
-    number: "03",
-    title: "Rapport samme dag",
-    text: "Du får en overskuelig PDF-rapport med batteriets sundhed, målinger og en tydelig konklusion.",
-    detail: "Klar dokumentation",
-    action: "Se rapport",
+    number: "3",
+    title: "Rapport",
+    detail: "PDF samme dag",
     href: "/min-konto",
     icon: FileText,
-    accent: "from-emerald-500 to-teal-400",
-    iconClass: "border-emerald-100 bg-emerald-50 text-emerald-700",
+    tone: "from-slate-900 to-violet-700",
+    glow: "shadow-slate-900/20",
   },
 ];
 
 const facts = [
-  { label: "Fast pris", value: "1300 kr.", icon: CheckCircle2 },
-  { label: "Testtid", value: "15 min.", icon: Clock },
-  { label: "Område", value: "Sjælland", icon: MapPin },
+  { label: "Mobil test", icon: Car },
+  { label: "15 min.", icon: CheckCircle2 },
+  { label: "1300 kr.", icon: CheckCircle2 },
 ];
 
 const container = {
   hidden: {},
   show: {
     transition: {
-      staggerChildren: 0.16,
+      staggerChildren: 0.14,
     },
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 28, scale: 0.98 },
+const stepMotion = {
+  hidden: { opacity: 0, y: 22, scale: 0.96 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.58, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -78,64 +70,58 @@ export function HowItWorksSection() {
   return (
     <motion.section
       id="saadan-fungerer-det"
-      className="bg-white/55 relative isolate overflow-hidden py-16 backdrop-blur-sm sm:py-20"
-      initial={false}
+      className="relative isolate overflow-hidden bg-[linear-gradient(180deg,rgba(241,245,249,0.92),rgba(255,255,255,0.64)_48%,rgba(235,250,246,0.62))] py-14 text-slate-950 sm:py-16 lg:py-20"
+      initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.28 }}
+      viewport={{ once: true, amount: 0.3 }}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-200 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div variants={item} className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
+        <motion.div variants={stepMotion} className="text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-violet-700">
             Sådan fungerer det
           </p>
-          <h2 className="mt-2 text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">
-            Fra booking til batterirapport uden værkstedsbesøg
+          <h2 className="mt-2 text-3xl font-bold tracking-normal sm:text-4xl">
+            Book. Test. Rapport.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            En enkel proces med mobil test og dokumentation, du kan bruge ved
-            køb, salg eller service.
-          </p>
         </motion.div>
 
-        <div className="relative mt-10 lg:mt-14">
-          <div className="absolute left-[16.666%] right-[16.666%] top-16 hidden h-px overflow-hidden rounded-full bg-slate-200 lg:block">
+        <div className="relative mx-auto mt-10 max-w-6xl sm:mt-12">
+          <div className="absolute left-[10%] right-[10%] top-9 hidden h-1 rounded-full bg-slate-200/90 sm:block">
             <motion.div
-              className="h-full origin-left bg-gradient-to-r from-teal-500 via-sky-500 to-emerald-500"
+              className="h-full origin-left rounded-full bg-gradient-to-r from-violet-700 via-teal-500 to-violet-700"
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 1.05, delay: 0.25, ease: "easeOut" }}
+              viewport={{ once: true, amount: 0.65 }}
+              transition={{ duration: 1.1, delay: 0.2, ease: "easeOut" }}
             />
           </div>
 
           <motion.div
             variants={container}
-            className="grid gap-4 md:grid-cols-3 lg:gap-6"
+            className="grid gap-7 sm:grid-cols-3 sm:gap-5 lg:gap-8"
           >
             {steps.map((step, index) => {
               const Icon = step.icon;
+
               return (
-                <motion.article
+                <motion.div
                   key={step.title}
-                  variants={item}
-                  whileHover={{ y: -8 }}
-                  transition={{ duration: 0.22 }}
-                  className="bg-white/88 group relative overflow-hidden rounded-lg border border-slate-200/80 p-5 shadow-lg shadow-teal-950/5 backdrop-blur-2xl transition-colors hover:border-teal-200 sm:p-6"
+                  variants={stepMotion}
+                  className="relative flex justify-center"
                 >
-                  <div
-                    className={cn(
-                      "absolute inset-x-0 top-0 h-1 bg-gradient-to-r",
-                      step.accent,
-                    )}
-                  />
-                  <div className="flex items-start justify-between gap-4">
+                  <Link
+                    href={step.href}
+                    className="group grid justify-items-center outline-none"
+                    aria-label={`${step.title}: ${step.detail}`}
+                  >
                     <motion.span
                       className={cn(
-                        "flex h-14 w-14 items-center justify-center rounded-lg border shadow-sm",
-                        step.iconClass,
+                        "z-10 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br text-3xl font-bold text-white shadow-xl ring-4 ring-white/80 sm:h-[4.5rem] sm:w-[4.5rem]",
+                        step.tone,
+                        step.glow,
                       )}
-                      animate={{ y: [0, -6, 0] }}
+                      animate={{ y: [0, -5, 0] }}
                       transition={{
                         duration: 3.2,
                         repeat: Infinity,
@@ -143,34 +129,35 @@ export function HowItWorksSection() {
                         delay: index * 0.18,
                       }}
                     >
-                      <Icon className="h-7 w-7" />
-                    </motion.span>
-                    <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500 shadow-sm">
                       {step.number}
-                    </span>
-                  </div>
+                    </motion.span>
 
-                  <h3 className="mt-6 text-xl font-bold text-slate-950">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
-                    {step.text}
-                  </p>
-
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                      <CheckCircle2 className="h-4 w-4 text-teal-600" />
-                      {step.detail}
-                    </span>
-                    <Link
-                      href={step.href}
-                      className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 transition group-hover:text-teal-800"
+                    <motion.div
+                      whileHover={{ y: -8, scale: 1.035 }}
+                      whileTap={{ scale: 0.985 }}
+                      className="relative -mt-4 flex h-40 w-40 items-center justify-center rounded-full border border-white/80 bg-white/[0.58] p-4 text-center shadow-2xl shadow-slate-900/10 backdrop-blur-2xl transition group-hover:border-violet-200 group-focus-visible:border-violet-400 group-focus-visible:ring-4 group-focus-visible:ring-violet-500/20 sm:h-44 sm:w-44 lg:h-52 lg:w-52"
                     >
-                      {step.action}
-                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                    </Link>
-                  </div>
-                </motion.article>
+                      <div
+                        className={cn(
+                          "absolute inset-0 rounded-full bg-gradient-to-br opacity-[0.18] blur-[1px] transition group-hover:opacity-[0.28]",
+                          step.tone,
+                        )}
+                      />
+                      <div className="absolute inset-[1.15rem] rounded-full border border-white/60" />
+                      <div className="relative">
+                        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-violet-700 shadow-sm shadow-slate-900/5 backdrop-blur-xl">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <h3 className="mt-3 text-lg font-bold text-slate-950">
+                          {step.title}
+                        </h3>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                          {step.detail}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </Link>
+                </motion.div>
               );
             })}
           </motion.div>
@@ -178,27 +165,19 @@ export function HowItWorksSection() {
 
         <motion.div
           variants={container}
-          className="mt-5 grid gap-3 sm:grid-cols-3"
+          className="mx-auto mt-8 grid max-w-2xl gap-3 sm:grid-cols-3"
         >
           {facts.map((fact) => {
             const Icon = fact.icon;
+
             return (
               <motion.div
                 key={fact.label}
-                variants={item}
-                className="bg-white/78 flex items-center gap-3 rounded-lg border border-slate-200/80 px-4 py-3 shadow-sm shadow-teal-950/5 backdrop-blur-xl"
+                variants={stepMotion}
+                className="flex items-center justify-center gap-2 rounded-lg border border-white/80 bg-white/60 px-4 py-3 text-sm font-bold text-slate-800 shadow-sm shadow-slate-900/5 backdrop-blur-xl"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span>
-                  <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                    {fact.label}
-                  </span>
-                  <span className="text-sm font-bold text-slate-950">
-                    {fact.value}
-                  </span>
-                </span>
+                <Icon className="h-4 w-4 text-teal-700" />
+                {fact.label}
               </motion.div>
             );
           })}
