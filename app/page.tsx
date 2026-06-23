@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import {
+  BrandsAndCertificate,
+  ContactSection,
+  FaqSection,
   HeroSection,
   HowItWorks,
   JsonLd,
   SitePage,
+  TestimonialsSection,
   siteUrl,
 } from "@/components/site/public-site";
 import { HomeShowcaseSections } from "@/components/site/home-showcase-sections";
@@ -70,6 +74,12 @@ export default function Home() {
       <HeroSection />
       <HowItWorks />
       <HomeShowcaseSections />
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <BrandsAndCertificate />
+      </div>
+      <TestimonialsSection />
+      <FaqSection />
+      <ContactSection booking />
     </SitePage>
   );
 }

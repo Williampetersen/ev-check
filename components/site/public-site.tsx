@@ -23,6 +23,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
+import { MobileNav } from "@/components/site/mobile-nav";
 import { brandLogoPath, sameAsLinks, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -181,7 +182,7 @@ const heroFacts = [
 export function SiteHeader() {
   return (
     <header className="bg-white/78 sticky top-0 z-40 border-b border-white/75 shadow-sm shadow-teal-950/5 backdrop-blur-2xl">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <Image
             src={brandLogoPath}
@@ -219,6 +220,7 @@ export function SiteHeader() {
             <span className="hidden min-[380px]:inline">Book tid</span>
             <span className="min-[380px]:hidden">Book</span>
           </ButtonLink>
+          <MobileNav items={navItems} />
         </div>
       </div>
     </header>

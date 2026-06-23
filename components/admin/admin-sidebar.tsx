@@ -1,5 +1,6 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
 import {
   BarChart3,
   BatteryCharging,
@@ -37,10 +38,12 @@ export function AdminSidebar({
   dashboard,
   sessionEmail,
   view,
+  onSelectView,
 }: {
   dashboard: AdminDashboardData;
   sessionEmail: string;
   view: string;
+  onSelectView: (id: AdminView) => void;
 }) {
   return (
     <aside className="glass-shell overflow-hidden rounded-lg xl:sticky xl:top-5 xl:self-start">
@@ -70,9 +73,10 @@ export function AdminSidebar({
           const Icon = item.icon;
           const active = view === item.id;
           return (
-            <Link
+            <button
               key={item.id}
-              href={`/admin?view=${item.id}`}
+              type="button"
+              onClick={() => onSelectView(item.id)}
               className={cn(
                 "flex min-w-[8.5rem] items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition xl:min-w-0 xl:py-2.5",
                 active
@@ -82,7 +86,7 @@ export function AdminSidebar({
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
-            </Link>
+            </button>
           );
         })}
       </nav>

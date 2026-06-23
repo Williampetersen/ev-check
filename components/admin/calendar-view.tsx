@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import {
   statusLabels,
   type Appointment,
@@ -81,20 +82,22 @@ function minutesOf(time: string) {
   return hours * 60 + minutes;
 }
 
-function buildHref(date: string, mode: "day" | "week") {
-  return `/admin?view=calendar&date=${date}&mode=${mode}`;
-}
-
 export function CalendarView({
   appointments,
   settings,
   date,
   mode,
+  onDateChange,
+  onModeChange,
+  onSelectAppointment,
 }: {
   appointments: Appointment[];
   settings: DashboardSettings;
   date: string;
   mode: "day" | "week";
+  onDateChange: (date: string) => void;
+  onModeChange: (mode: "day" | "week") => void;
+  onSelectAppointment: (id: string) => void;
 }) {
   const todayKey = toKey(new Date());
   const anchor = date || todayKey;
@@ -142,39 +145,33 @@ export function CalendarView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <NavLink href={buildHref(todayKey, mode)}>Today</NavLink>
+          <NavButton onClick={() => onDateChange(todayKey)}>Today</NavButton>
           <div className="flex items-center gap-1">
-            <NavLink href={buildHref(prevDate, mode)} aria-label="Previous">
+            <NavButton onClick={() => onDateChange(prevDate)} aria-label="Previous">
               ‹
-            </NavLink>
-            <form
-              action="/admin"
-              method="GET"
-              className="flex items-center"
-            >
-              <input type="hidden" name="view" value="calendar" />
-              <input type="hidden" name="mode" value={mode} />
-              <input
-                type="date"
-                name="date"
-                defaultValue={anchor}
-                className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 outline-none backdrop-blur focus:border-teal-400"
-              />
-            </form>
-            <NavLink href={buildHref(nextDate, mode)} aria-label="Next">
+            </NavButton>
+            <input
+              type="date"
+              value={anchor}
+              onChange={(event) =>
+                event.target.value && onDateChange(event.target.value)
+              }
+              className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 outline-none backdrop-blur focus:border-teal-400"
+            />
+            <NavButton onClick={() => onDateChange(nextDate)} aria-label="Next">
               ›
-            </NavLink>
+            </NavButton>
           </div>
           <div className="flex rounded-lg border border-white/70 bg-white/55 p-1 backdrop-blur">
-            <ModeLink href={buildHref(anchor, "day")} active={mode === "day"}>
+            <ModeButton onClick={() => onModeChange("day")} active={mode === "day"}>
               Day
-            </ModeLink>
-            <ModeLink
-              href={buildHref(anchor, "week")}
+            </ModeButton>
+            <ModeButton
+              onClick={() => onModeChange("week")}
               active={mode === "week"}
             >
               Week
-            </ModeLink>
+            </ModeButton>
           </div>
         </div>
       </div>
@@ -262,11 +259,12 @@ export function CalendarView({
                   ((endMinutes - startMinutes) / 60) * ROW_HEIGHT,
                 );
                 return (
-                  <Link
+                  <button
                     key={appointment.id}
-                    href={`/admin?view=booking&id=${appointment.id}&from=calendar&date=${anchor}&mode=${mode}`}
+                    type="button"
+                    onClick={() => onSelectAppointment(appointment.id)}
                     className={cn(
-                      "absolute inset-x-1 overflow-hidden rounded-md border px-1.5 py-1 text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
+                      "absolute inset-x-1 overflow-hidden rounded-md border px-1.5 py-1 text-left text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
                       statusBlockStyles[appointment.status],
                     )}
                     style={{ top, height }}
@@ -275,7 +273,7 @@ export function CalendarView({
                       {appointment.appointmentTime} {appointment.customerName}
                     </p>
                     <p className="truncate">{appointment.serviceLabel}</p>
-                  </Link>
+                  </button>
                 );
               })}
             </div>
@@ -286,37 +284,35 @@ export function CalendarView({
   );
 }
 
-function NavLink({
-  href,
+function NavButton({
   children,
   ...props
 }: {
-  href: string;
   children: React.ReactNode;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
       {...props}
       className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:border-teal-300 hover:text-teal-700"
     >
       {children}
-    </Link>
+    </button>
   );
 }
 
-function ModeLink({
-  href,
+function ModeButton({
   active,
   children,
+  ...props
 }: {
-  href: string;
   active: boolean;
   children: React.ReactNode;
-}) {
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      {...props}
       className={cn(
         "flex h-7 items-center justify-center rounded-md px-3 text-xs font-bold transition",
         active
@@ -325,6 +321,6 @@ function ModeLink({
       )}
     >
       {children}
-    </Link>
+    </button>
   );
 }
