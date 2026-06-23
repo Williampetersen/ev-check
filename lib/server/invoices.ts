@@ -201,6 +201,45 @@ export async function saveInvoiceForAppointment(input: {
   return invoice;
 }
 
+// Creates the invoice number/row without rendering a PDF, so that viewing the
+// HTML invoice (and booking creation) never depends on pdfkit succeeding.
+// The PDF binary is rendered lazily, only when someone actually downloads it.
+export async function ensureInvoiceRecord(input: {
+  appointment: Appointment;
+  customer: Customer;
+}): Promise<{ invoiceNumber: string }> {
+  if (!isDatabaseConfigured()) {
+    return {
+      invoiceNumber:
+        input.appointment.invoiceNumber ||
+        `EV-${input.appointment.id.slice(-8).toUpperCase()}`,
+    };
+  }
+
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  const [existing] = await sql<Array<{ invoiceNumber: string }>>`
+    SELECT "invoiceNumber" FROM invoices WHERE "appointmentId" = ${input.appointment.id} LIMIT 1
+  `;
+  if (existing) return { invoiceNumber: existing.invoiceNumber };
+
+  const invoiceNumber = input.appointment.invoiceNumber || nextInvoiceNumber();
+  await sql`
+    INSERT INTO invoices (id, "appointmentId", "invoiceNumber", amount, currency)
+    VALUES (${invoiceId()}, ${input.appointment.id}, ${invoiceNumber}, ${input.appointment.total}, 'DKK')
+    ON CONFLICT ("appointmentId") DO NOTHING
+  `;
+  await sql`
+    UPDATE appointments
+    SET invoice_number = ${invoiceNumber},
+        invoice_status = CASE WHEN invoice_status = 'not_requested' THEN 'ready' ELSE invoice_status END,
+        updated_at = NOW()
+    WHERE id = ${input.appointment.id}
+  `;
+
+  return { invoiceNumber };
+}
+
 export async function ensureInvoiceForAppointment(
   appointmentId: string,
 ): Promise<InvoiceResult> {

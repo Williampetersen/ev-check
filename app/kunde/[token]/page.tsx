@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import {
   BatteryCharging,
   CalendarDays,
-  Download,
   FileText,
   LogOut,
+  Receipt,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
@@ -130,17 +130,13 @@ export default async function CustomerTokenPage({
                       value={formatPrice(appointment.total)}
                     />
                   </div>
-                  {appointment.invoiceNumber ? (
-                    <a
-                      href={`/api/customer/invoices/${appointment.id}?token=${token}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-teal-700/30 bg-teal-50 px-3 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download invoice
-                    </a>
-                  ) : null}
+                  <a
+                    href={`/kunde/${token}/faktura/${appointment.id}`}
+                    className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-teal-700/30 bg-teal-50 px-3 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    View invoice
+                  </a>
                 </article>
               ))
             ) : (

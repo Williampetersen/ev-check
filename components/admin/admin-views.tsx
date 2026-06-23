@@ -1077,15 +1077,12 @@ export function InvoicesView({
                   <td className="px-3 py-3">
                     <div className="flex justify-end gap-2">
                       <a
-                        className={cn(
-                          "inline-flex h-9 items-center justify-center rounded-lg border border-teal-200 bg-white/70 px-3 text-xs font-bold text-teal-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50",
-                          !databaseConfigured && "pointer-events-none opacity-45",
-                        )}
-                        href={`/api/admin/invoices/${appointment.id}`}
+                        className="inline-flex h-9 items-center justify-center rounded-lg border border-teal-200 bg-white/70 px-3 text-xs font-bold text-teal-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50"
+                        href={`/admin/invoice/${appointment.id}`}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        View PDF
+                        View invoice
                       </a>
                       <form
                         action={`/api/admin/bookings/${appointment.id}/resend-confirmation`}

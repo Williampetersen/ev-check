@@ -13,6 +13,13 @@ const nextConfig = {
       { protocol: "https", hostname: "evcheck.dk" },
     ],
   },
+  // pdfkit reads its standard-14 font metrics (.afm files) off disk at
+  // runtime; serverless file tracing can miss them unless explicitly
+  // included, which silently breaks invoice PDF downloads in production.
+  outputFileTracingIncludes: {
+    "/api/admin/invoices/[appointmentId]": ["./node_modules/pdfkit/js/data/**"],
+    "/api/customer/invoices/[appointmentId]": ["./node_modules/pdfkit/js/data/**"],
+  },
   async redirects() {
     return [
       {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerDashboardByToken } from "@/lib/server/dashboard";
 import { ensureInvoiceForAppointment } from "@/lib/server/invoices";
 
+export const runtime = "nodejs";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ appointmentId: string }> },
@@ -32,7 +34,8 @@ export async function GET(
         "cache-control": "no-store",
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Failed to render invoice PDF", error);
     return NextResponse.json(
       { error: "Fakturaen kunne ikke genereres." },
       { status: 500 },

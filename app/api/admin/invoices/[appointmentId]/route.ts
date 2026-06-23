@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { ensureInvoiceForAppointment } from "@/lib/server/invoices";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
+export const runtime = "nodejs";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ appointmentId: string }> },
@@ -25,7 +27,8 @@ export async function GET(
         "cache-control": "no-store",
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Failed to render invoice PDF", error);
     return NextResponse.redirect(new URL("/admin?view=invoices&error=1", request.url), 303);
   }
 }

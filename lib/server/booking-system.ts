@@ -9,7 +9,7 @@ import {
   type DashboardSettings,
 } from "@/lib/ev-domain";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
-import { saveInvoiceForAppointment } from "@/lib/server/invoices";
+import { ensureInvoiceRecord } from "@/lib/server/invoices";
 import {
   sendAdminBookingEmail,
   sendCustomerAppointmentEmail,
@@ -740,15 +740,13 @@ export async function createBooking(input: BookingCreateInput) {
   };
 
   try {
-    const invoice = await saveInvoiceForAppointment({
-      appointment,
-      customer,
-      settings: config.settings,
-    });
+    const invoice = await ensureInvoiceRecord({ appointment, customer });
     appointment.invoiceStatus = "ready";
     appointment.invoiceNumber = invoice.invoiceNumber;
-  } catch {
-    // Booking is saved; invoice can be generated again from the admin dashboard.
+  } catch (error) {
+    // Booking is saved either way; the invoice number/PDF can still be
+    // generated later from the admin dashboard or customer portal.
+    console.error("Failed to create invoice record for booking", appointment.id, error);
   }
 
   try {
