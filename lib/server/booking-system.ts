@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import {
   defaultSettings,
+  OTHER_MODEL_SUFFIX,
   type Appointment,
   type AppointmentStatus,
   type Customer,
@@ -401,7 +402,7 @@ const evBrandData: Array<{ id: string; label: string; models: string[] }> = [
 ];
 
 const OTHER_BRAND_ID = "other";
-export const OTHER_MODEL_SUFFIX = "-other";
+export { OTHER_MODEL_SUFFIX };
 
 function findBrandLogo(id: string): string {
   const dir = path.join(process.cwd(), "public", "bilbrands");

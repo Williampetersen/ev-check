@@ -27,8 +27,7 @@ import type {
   CarBrand,
   CarModelOption,
 } from "@/lib/server/booking-system";
-import { OTHER_MODEL_SUFFIX } from "@/lib/server/booking-system";
-import { formatPrice } from "@/lib/ev-domain";
+import { formatPrice, OTHER_MODEL_SUFFIX } from "@/lib/ev-domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

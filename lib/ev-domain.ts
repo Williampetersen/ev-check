@@ -347,3 +347,5 @@ export function buildStats(
       .reduce((sum, item) => sum + item.total, 0),
   };
 }
+
+export const OTHER_MODEL_SUFFIX = "-other";
