@@ -8,6 +8,7 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
+import { siteUrl } from "@/lib/seo";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { ensureInvoiceRecord } from "@/lib/server/invoices";
 import {
@@ -751,14 +752,11 @@ export async function createBooking(input: BookingCreateInput) {
 
   try {
     if (config.settings.emailAutomation.customerOnCreate !== false) {
-      const publicAppUrl = String(
-        process.env.APP_URL || "https://evcheck.dk",
-      ).replace(/\/$/, "");
       await sendCustomerAppointmentEmail({
         customer,
         appointment,
         settings: config.settings,
-        portalUrl: `${publicAppUrl}/kunde/${created.portalToken}`,
+        portalUrl: `${siteUrl}/kunde/${created.portalToken}`,
       });
     }
   } catch {

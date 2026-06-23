@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { siteUrl } from "@/lib/seo";
 import { getAdminDashboardData } from "@/lib/server/dashboard";
 import { sendCustomerAppointmentEmail } from "@/lib/server/mail";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
@@ -29,9 +30,7 @@ export async function POST(
       appointment,
       customer,
       settings: dashboard.settings,
-      portalUrl: `${process.env.APP_URL || "https://evcheck.dk"}/kunde/${
-        customer.portalToken || customer.id
-      }`,
+      portalUrl: `${siteUrl}/kunde/${customer.portalToken || customer.id}`,
     });
 
     return NextResponse.redirect(new URL("/admin?view=emails&saved=resent", request.url), 303);

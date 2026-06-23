@@ -5,7 +5,7 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
-import { brandLogoPath } from "@/lib/seo";
+import { brandLogoPath, siteUrl as canonicalSiteUrl } from "@/lib/seo";
 import { recordEmailLog } from "@/lib/server/dashboard";
 
 const getMailConfig = () => ({
@@ -47,8 +47,10 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const siteUrl = () =>
-  String(process.env.APP_URL || "https://evcheck.dk").replace(/\/$/, "");
+// Always use the canonical evcheck.dk domain for links/images in emails,
+// regardless of any (potentially misconfigured) APP_URL env var, so emails
+// never point to a stale or wrong domain (e.g. the old ev-check.dk).
+const siteUrl = () => canonicalSiteUrl;
 const logoUrl = () => `${siteUrl()}${brandLogoPath}`;
 
 type MessageAction = {

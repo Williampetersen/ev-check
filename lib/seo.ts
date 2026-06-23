@@ -4,6 +4,7 @@ export const brandLogoPath = "/evfaviconlogo.png";
 export const brandLogoUrl = `${siteUrl}${brandLogoPath}`;
 export const contactPhone = "+45 71 90 05 30";
 export const contactEmail = "info@ev-check.dk";
+export const companyCvr = "44022559";
 export const servicePrice = 1300;
 
 export const sameAsLinks = [

@@ -7,7 +7,7 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
-import { brandLogoPath, contactPhone } from "@/lib/seo";
+import { brandLogoPath, companyCvr, contactPhone } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export function InvoiceDocument({
@@ -42,13 +42,17 @@ export function InvoiceDocument({
             />
           </span>
           <div>
-            <p className="text-xl font-bold text-white">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
+              Faktura fra
+            </p>
+            <p className="mt-1 text-xl font-bold text-white">
               {settings.companyName || "EV-Check.dk"}
             </p>
             <p className="mt-1 text-sm text-teal-100">
               {settings.supportEmail || "info@ev-check.dk"}
             </p>
             <p className="text-sm text-teal-100">{contactPhone}</p>
+            <p className="text-sm text-teal-100">CVR-nummer {companyCvr}</p>
           </div>
         </div>
         <div className="text-right">
