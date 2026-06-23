@@ -25,7 +25,9 @@ import type {
   BookingConfig,
   BookingService,
   CarBrand,
+  CarModelOption,
 } from "@/lib/server/booking-system";
+import { OTHER_MODEL_SUFFIX } from "@/lib/server/booking-system";
 import { formatPrice } from "@/lib/ev-domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +55,9 @@ type CustomerForm = {
 
 type VehicleForm = {
   brand: string;
-  make: string;
+  model: string;
+  customBrand: string;
+  customModel: string;
 };
 
 type Confirmation = {
@@ -77,18 +81,24 @@ const initialCustomer: CustomerForm = {
   acceptsTerms: false,
 };
 
-const initialVehicle: VehicleForm = { brand: "", make: "" };
+const initialVehicle: VehicleForm = {
+  brand: "",
+  model: "",
+  customBrand: "",
+  customModel: "",
+};
 
 const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
 
 const steps = [
-  { id: 1 as const, label: "Bil & service" },
-  { id: 2 as const, label: "Tidspunkt" },
-  { id: 3 as const, label: "Dine oplysninger" },
-  { id: 4 as const, label: "Bekræft" },
+  { id: 1 as const, label: "Vælg bil" },
+  { id: 2 as const, label: "Service" },
+  { id: 3 as const, label: "Tidspunkt" },
+  { id: 4 as const, label: "Dine oplysninger" },
+  { id: 5 as const, label: "Bekræft" },
 ];
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 type CalendarDay = {
   key: string;
@@ -267,8 +277,28 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     return () => controller.abort();
   }, [appointmentDate, serviceId]);
 
-  const step1Valid = Boolean(serviceId) && hasValue(vehicle.brand);
-  const step2Valid = Boolean(appointmentDate && appointmentTime);
+  const selectedBrand = useMemo(
+    () => config.carBrands.find((item) => item.id === vehicle.brand),
+    [config.carBrands, vehicle.brand],
+  );
+  const isOtherBrand = vehicle.brand === "other";
+  const isOtherModel =
+    !isOtherBrand && vehicle.model.endsWith(OTHER_MODEL_SUFFIX);
+  const brandLabel = isOtherBrand
+    ? cleanValue(vehicle.customBrand)
+    : selectedBrand?.label || "";
+  const modelLabel = isOtherBrand || isOtherModel
+    ? cleanValue(vehicle.customModel)
+    : selectedBrand?.models.find((item) => item.id === vehicle.model)
+        ?.label || "";
+
+  const step1Valid = isOtherBrand
+    ? hasValue(vehicle.customBrand)
+    : Boolean(vehicle.brand) &&
+      Boolean(vehicle.model) &&
+      (!isOtherModel || hasValue(vehicle.customModel));
+  const step2Valid = Boolean(serviceId);
+  const step3Valid = Boolean(appointmentDate && appointmentTime);
   const missingDetails = useMemo(
     () =>
       [
@@ -285,11 +315,12 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
       ].filter(Boolean) as string[],
     [customer],
   );
-  const step3Valid = missingDetails.length === 0;
+  const step4Valid = missingDetails.length === 0;
   const canSubmit =
     step1Valid &&
     step2Valid &&
     step3Valid &&
+    step4Valid &&
     !slotsLoading &&
     config.databaseConfigured;
 
@@ -297,7 +328,8 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     1: step1Valid,
     2: step2Valid,
     3: step3Valid,
-    4: canSubmit,
+    4: step4Valid,
+    5: canSubmit,
   };
 
   const goToStep = (target: Step) => {
@@ -310,12 +342,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     }
     setStep(target);
   };
-
-  const selectedBrand = useMemo(
-    () => config.carBrands.find((item) => item.id === vehicle.brand),
-    [config.carBrands, vehicle.brand],
-  );
-  const brandLabel = selectedBrand?.label || "";
 
   const submitBooking = async () => {
     if (!canSubmit) return;
@@ -332,9 +358,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           appointmentTime,
           customer: { ...customer, email: cleanValue(customer.email) },
           vehicle: {
-            make: [brandLabel, cleanValue(vehicle.make)]
-              .filter(Boolean)
-              .join(" "),
+            make: [brandLabel, modelLabel].filter(Boolean).join(" "),
           },
         }),
       });
@@ -376,7 +400,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             Book din batteritest
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Fire enkle trin, og du har en bekræftet tid.
+            Fem enkle trin, og du har en bekræftet tid.
           </p>
         </div>
 
@@ -386,8 +410,9 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           <div className="order-2 lg:order-1">
             <SummaryCard
               service={selectedService}
-              vehicle={vehicle}
-              brand={selectedBrand}
+              brandLabel={brandLabel}
+              modelLabel={modelLabel}
+              brandLogo={selectedBrand?.logo}
               appointmentDate={appointmentDate}
               appointmentTime={appointmentTime}
               total={total}
@@ -396,12 +421,12 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             />
 
             {step === 1 ? (
-              <VehicleServiceStep
-                services={config.services}
+              <VehicleStep
                 carBrands={config.carBrands}
-                serviceId={serviceId}
                 vehicle={vehicle}
-                onServiceChange={setServiceId}
+                selectedBrand={selectedBrand}
+                isOtherBrand={isOtherBrand}
+                isOtherModel={isOtherModel}
                 onVehicleChange={setVehicle}
                 onContinue={() => goToStep(2)}
                 canContinue={step1Valid}
@@ -409,6 +434,17 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             ) : null}
 
             {step === 2 ? (
+              <ServiceStep
+                services={config.services}
+                serviceId={serviceId}
+                onServiceChange={setServiceId}
+                onBack={() => goToStep(1)}
+                onContinue={() => goToStep(3)}
+                canContinue={step2Valid}
+              />
+            ) : null}
+
+            {step === 3 ? (
               <TimeStep
                 appointmentDate={appointmentDate}
                 appointmentTime={appointmentTime}
@@ -425,17 +461,6 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                 }}
                 onMonthChange={setVisibleMonth}
                 onTimeChange={setAppointmentTime}
-                onBack={() => goToStep(1)}
-                onContinue={() => goToStep(3)}
-                canContinue={step2Valid}
-              />
-            ) : null}
-
-            {step === 3 ? (
-              <DetailsStep
-                customer={customer}
-                missingDetails={missingDetails}
-                onCustomerChange={setCustomer}
                 onBack={() => goToStep(2)}
                 onContinue={() => goToStep(4)}
                 canContinue={step3Valid}
@@ -443,19 +468,30 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
             ) : null}
 
             {step === 4 ? (
+              <DetailsStep
+                customer={customer}
+                missingDetails={missingDetails}
+                onCustomerChange={setCustomer}
+                onBack={() => goToStep(3)}
+                onContinue={() => goToStep(5)}
+                canContinue={step4Valid}
+              />
+            ) : null}
+
+            {step === 5 ? (
               <ReviewStep
                 appointmentDate={appointmentDate}
                 appointmentTime={appointmentTime}
                 customer={customer}
-                vehicle={vehicle}
                 brandLabel={brandLabel}
+                modelLabel={modelLabel}
                 service={selectedService}
                 total={total}
                 databaseConfigured={config.databaseConfigured}
                 isSubmitting={isSubmitting}
                 submitError={submitError}
                 canSubmit={canSubmit}
-                onBack={() => goToStep(3)}
+                onBack={() => goToStep(4)}
                 onSubmit={submitBooking}
               />
             ) : null}
@@ -463,8 +499,9 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
 
           <SummaryCard
             service={selectedService}
-            vehicle={vehicle}
-            brand={selectedBrand}
+            brandLabel={brandLabel}
+            modelLabel={modelLabel}
+            brandLogo={selectedBrand?.logo}
             appointmentDate={appointmentDate}
             appointmentTime={appointmentTime}
             total={total}
@@ -538,7 +575,7 @@ function Stepper({
         })}
       </div>
       <p className="mt-3 text-center text-sm font-semibold text-slate-900 sm:hidden">
-        Trin {activeStep} af 4 — {steps[activeStep - 1].label}
+        Trin {activeStep} af {steps.length} — {steps[activeStep - 1].label}
       </p>
     </div>
   );
@@ -645,30 +682,32 @@ function BrandDropdown({
         onClick={() => setOpen((current) => !current)}
         className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
       >
-        <span className="flex items-center gap-2">
-          {selected ? (
+        <span className="flex min-w-0 items-center gap-2">
+          {selected?.logo ? (
             <Image
               src={selected.logo}
               alt={selected.label}
               width={22}
               height={22}
-              className="h-5 w-5 object-contain"
+              className="h-5 w-5 shrink-0 object-contain"
             />
           ) : (
-            <Car className="h-4 w-4 text-slate-400" />
+            <Car className="h-4 w-4 shrink-0 text-slate-400" />
           )}
-          {selected ? selected.label : "Vælg bilmærke"}
+          <span className="truncate">
+            {selected ? selected.label : "Vælg bilmærke"}
+          </span>
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-slate-400 transition",
+            "h-4 w-4 shrink-0 text-slate-400 transition",
             open && "rotate-180",
           )}
         />
       </button>
 
       {open ? (
-        <div className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+        <div className="absolute z-20 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
           {brands.length === 0 ? (
             <p className="px-3 py-2 text-sm text-slate-500">
               Ingen bilmærker tilføjet endnu.
@@ -690,14 +729,18 @@ function BrandDropdown({
                       : "text-slate-700 hover:bg-slate-50",
                   )}
                 >
-                  <Image
-                    src={brand.logo}
-                    alt={brand.label}
-                    width={22}
-                    height={22}
-                    className="h-5 w-5 object-contain"
-                  />
-                  {brand.label}
+                  {brand.logo ? (
+                    <Image
+                      src={brand.logo}
+                      alt={brand.label}
+                      width={22}
+                      height={22}
+                      className="h-5 w-5 shrink-0 object-contain"
+                    />
+                  ) : (
+                    <Car className="h-5 w-5 shrink-0 text-slate-400" />
+                  )}
+                  <span className="truncate">{brand.label}</span>
                 </button>
               ))}
             </div>
@@ -708,21 +751,51 @@ function BrandDropdown({
   );
 }
 
-function VehicleServiceStep({
-  services,
+function ModelSelect({
+  models,
+  value,
+  disabled,
+  onChange,
+}: {
+  models: CarModelOption[];
+  value: string;
+  disabled?: boolean;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <select
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+    >
+      <option value="">
+        {disabled ? "Vælg bilmærke først" : "Vælg model"}
+      </option>
+      {models.map((model) => (
+        <option key={model.id} value={model.id}>
+          {model.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function VehicleStep({
   carBrands,
-  serviceId,
   vehicle,
-  onServiceChange,
+  selectedBrand,
+  isOtherBrand,
+  isOtherModel,
   onVehicleChange,
   onContinue,
   canContinue,
 }: {
-  services: BookingService[];
   carBrands: CarBrand[];
-  serviceId: string;
   vehicle: VehicleForm;
-  onServiceChange: (id: string) => void;
+  selectedBrand?: CarBrand;
+  isOtherBrand: boolean;
+  isOtherModel: boolean;
   onVehicleChange: Dispatch<SetStateAction<VehicleForm>>;
   onContinue: () => void;
   canContinue: boolean;
@@ -739,28 +812,102 @@ function VehicleServiceStep({
             brands={carBrands}
             value={vehicle.brand}
             onChange={(brand) =>
-              onVehicleChange((current) => ({ ...current, brand }))
-            }
-          />
-        </Field>
-        <Field label="Model">
-          <Input
-            value={vehicle.make}
-            onChange={(event) =>
               onVehicleChange((current) => ({
                 ...current,
-                make: event.target.value,
+                brand,
+                model: "",
+                customModel: "",
               }))
             }
-            placeholder="Fx Model 3"
           />
         </Field>
+        {!isOtherBrand ? (
+          <Field label="Model" required={Boolean(vehicle.brand)} plain>
+            <ModelSelect
+              models={selectedBrand?.models || []}
+              value={vehicle.model}
+              disabled={!vehicle.brand}
+              onChange={(model) =>
+                onVehicleChange((current) => ({
+                  ...current,
+                  model,
+                  customModel: "",
+                }))
+              }
+            />
+          </Field>
+        ) : null}
       </div>
 
+      {isOtherBrand ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Bilmærke (skriv selv)" required>
+            <Input
+              value={vehicle.customBrand}
+              onChange={(event) =>
+                onVehicleChange((current) => ({
+                  ...current,
+                  customBrand: event.target.value,
+                }))
+              }
+              placeholder="Fx Lucid"
+            />
+          </Field>
+          <Field label="Model">
+            <Input
+              value={vehicle.customModel}
+              onChange={(event) =>
+                onVehicleChange((current) => ({
+                  ...current,
+                  customModel: event.target.value,
+                }))
+              }
+              placeholder="Fx Air"
+            />
+          </Field>
+        </div>
+      ) : isOtherModel ? (
+        <div className="mt-4">
+          <Field label="Skriv din bilmodel" required>
+            <Input
+              value={vehicle.customModel}
+              onChange={(event) =>
+                onVehicleChange((current) => ({
+                  ...current,
+                  customModel: event.target.value,
+                }))
+              }
+              placeholder="Fx Model 3 Performance"
+            />
+          </Field>
+        </div>
+      ) : null}
+
+      <StepNav onContinue={onContinue} canContinue={canContinue} />
+    </Card>
+  );
+}
+
+function ServiceStep({
+  services,
+  serviceId,
+  onServiceChange,
+  onBack,
+  onContinue,
+  canContinue,
+}: {
+  services: BookingService[];
+  serviceId: string;
+  onServiceChange: (id: string) => void;
+  onBack: () => void;
+  onContinue: () => void;
+  canContinue: boolean;
+}) {
+  return (
+    <Card>
       <StepHeading
         title="Vælg service"
         description="Vælg den service, du ønsker."
-        className="mt-7"
       />
       <div className="grid gap-3">
         {services.map((service) => {
@@ -821,7 +968,7 @@ function VehicleServiceStep({
         })}
       </div>
 
-      <StepNav onContinue={onContinue} canContinue={canContinue} />
+      <StepNav onBack={onBack} onContinue={onContinue} canContinue={canContinue} />
     </Card>
   );
 }
@@ -1183,8 +1330,8 @@ function ReviewStep({
   appointmentDate,
   appointmentTime,
   customer,
-  vehicle,
   brandLabel,
+  modelLabel,
   service,
   total,
   databaseConfigured,
@@ -1197,8 +1344,8 @@ function ReviewStep({
   appointmentDate: string;
   appointmentTime: string;
   customer: CustomerForm;
-  vehicle: VehicleForm;
   brandLabel: string;
+  modelLabel: string;
   service?: BookingService;
   total: number;
   databaseConfigured: boolean;
@@ -1222,7 +1369,7 @@ function ReviewStep({
         />
         <ReviewRow
           label="Bil"
-          value={[brandLabel, vehicle.make].filter(Boolean).join(" ")}
+          value={[brandLabel, modelLabel].filter(Boolean).join(" ")}
         />
         <ReviewRow
           label="Kundetype"
@@ -1278,8 +1425,9 @@ function ReviewStep({
 
 function SummaryCard({
   service,
-  vehicle,
-  brand,
+  brandLabel,
+  modelLabel,
+  brandLogo,
   appointmentDate,
   appointmentTime,
   total,
@@ -1288,8 +1436,9 @@ function SummaryCard({
   sticky,
 }: {
   service?: BookingService;
-  vehicle: VehicleForm;
-  brand?: CarBrand;
+  brandLabel: string;
+  modelLabel: string;
+  brandLogo?: string;
   appointmentDate: string;
   appointmentTime: string;
   total: number;
@@ -1324,16 +1473,20 @@ function SummaryCard({
             <MapPin className="h-4 w-4 text-teal-700" />
             Hos dig på Sjælland
           </span>
-          {brand ? (
+          {brandLabel ? (
             <span className="flex items-center gap-2">
-              <Image
-                src={brand.logo}
-                alt={brand.label}
-                width={18}
-                height={18}
-                className="h-4 w-4 object-contain"
-              />
-              {[brand.label, vehicle.make].filter(Boolean).join(" ")}
+              {brandLogo ? (
+                <Image
+                  src={brandLogo}
+                  alt={brandLabel}
+                  width={18}
+                  height={18}
+                  className="h-4 w-4 object-contain"
+                />
+              ) : (
+                <Car className="h-4 w-4 text-teal-700" />
+              )}
+              {[brandLabel, modelLabel].filter(Boolean).join(" ")}
             </span>
           ) : null}
         </div>

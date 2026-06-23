@@ -42,10 +42,16 @@ export type BookingAddon = {
   imageUrl: string;
 };
 
+export type CarModelOption = {
+  id: string;
+  label: string;
+};
+
 export type CarBrand = {
   id: string;
   label: string;
   logo: string;
+  models: CarModelOption[];
 };
 
 export type BookingConfig = {
@@ -358,44 +364,86 @@ export async function deleteBookingServiceRecord(serviceId: string) {
   await sql`DELETE FROM booking_services WHERE id = ${serviceId}`;
 }
 
-const carBrandLabels: Record<string, string> = {
-  tesla: "Tesla",
-  vw: "Volkswagen",
-  bmw: "BMW",
-  audi: "Audi",
-  byd: "BYD",
-  kia: "Kia",
-  hyundai: "Hyundai",
-  polestar: "Polestar",
-  mercedes: "Mercedes-Benz",
-  skoda: "Skoda",
-  renault: "Renault",
-  nissan: "Nissan",
-  volvo: "Volvo",
-  porsche: "Porsche",
-  ford: "Ford",
-  toyota: "Toyota",
-};
+// The most popular EV brands sold in Denmark, with their current EV model
+// lineups. Logos are optional: any brand without a matching file in
+// public/bilbrands/ simply falls back to a generic car icon in the UI.
+const evBrandData: Array<{ id: string; label: string; models: string[] }> = [
+  { id: "tesla", label: "Tesla", models: ["Model 3", "Model Y", "Model S", "Model X", "Cybertruck"] },
+  { id: "vw", label: "Volkswagen", models: ["ID.3", "ID.4", "ID.5", "ID.7", "ID. Buzz"] },
+  { id: "bmw", label: "BMW", models: ["i3", "i4", "iX1", "iX2", "iX3", "iX", "i7"] },
+  { id: "audi", label: "Audi", models: ["Q4 e-tron", "Q6 e-tron", "A6 e-tron", "e-tron GT", "Q8 e-tron"] },
+  { id: "mercedes", label: "Mercedes-Benz", models: ["EQA", "EQB", "EQC", "EQE", "EQS"] },
+  { id: "skoda", label: "Skoda", models: ["Enyaq", "Enyaq Coupé", "Elroq"] },
+  { id: "volvo", label: "Volvo", models: ["EX30", "EX40", "EC40", "EX90"] },
+  { id: "polestar", label: "Polestar", models: ["Polestar 2", "Polestar 3", "Polestar 4"] },
+  { id: "kia", label: "Kia", models: ["Niro EV", "EV3", "EV6", "EV9", "Soul EV"] },
+  { id: "hyundai", label: "Hyundai", models: ["Kona Electric", "Ioniq 5", "Ioniq 6", "Ioniq 9"] },
+  { id: "byd", label: "BYD", models: ["Atto 3", "Dolphin", "Seal", "Tang", "Han"] },
+  { id: "renault", label: "Renault", models: ["Zoe", "Megane E-Tech", "Scenic E-Tech", "5 E-Tech"] },
+  { id: "peugeot", label: "Peugeot", models: ["e-208", "e-2008", "e-308", "e-3008"] },
+  { id: "citroen", label: "Citroën", models: ["ë-C4", "ë-C3", "ë-Berlingo"] },
+  { id: "cupra", label: "Cupra", models: ["Born", "Tavascan"] },
+  { id: "opel", label: "Opel", models: ["Corsa Electric", "Astra Electric", "Mokka Electric", "Grandland Electric"] },
+  { id: "ford", label: "Ford", models: ["Mustang Mach-E", "Explorer", "Puma Gen-E"] },
+  { id: "toyota", label: "Toyota", models: ["bZ4X", "Corolla Cross EV"] },
+  { id: "nissan", label: "Nissan", models: ["Leaf", "Ariya"] },
+  { id: "mg", label: "MG", models: ["MG4", "MG5", "ZS EV", "Marvel R"] },
+  { id: "porsche", label: "Porsche", models: ["Taycan", "Macan Electric"] },
+  { id: "fiat", label: "Fiat", models: ["500e", "Panda Electric"] },
+  { id: "mini", label: "MINI", models: ["Cooper Electric", "Aceman", "Countryman Electric"] },
+  { id: "honda", label: "Honda", models: ["e:Ny1"] },
+  { id: "mazda", label: "Mazda", models: ["MX-30"] },
+  { id: "jaguar", label: "Jaguar", models: ["I-Pace"] },
+  { id: "landrover", label: "Land Rover", models: ["Range Rover Electric"] },
+  { id: "smart", label: "Smart", models: ["#1", "#3"] },
+  { id: "dacia", label: "Dacia", models: ["Spring"] },
+  { id: "lexus", label: "Lexus", models: ["UX 300e", "RZ"] },
+];
+
+const OTHER_BRAND_ID = "other";
+export const OTHER_MODEL_SUFFIX = "-other";
+
+function findBrandLogo(id: string): string {
+  const dir = path.join(process.cwd(), "public", "bilbrands");
+  const extensions = ["png", "jpg", "jpeg", "svg", "webp"];
+  for (const ext of extensions) {
+    try {
+      if (fs.existsSync(path.join(dir, `${id}.${ext}`))) {
+        return `/bilbrands/${id}.${ext}`;
+      }
+    } catch {
+      // Filesystem not readable (e.g. some serverless environments); fall
+      // through to the next extension / generic icon fallback in the UI.
+    }
+  }
+  return "";
+}
 
 export function getCarBrands(): CarBrand[] {
-  const dir = path.join(process.cwd(), "public", "bilbrands");
-  let files: string[] = [];
-  try {
-    files = fs
-      .readdirSync(dir)
-      .filter((file) => /\.(png|jpg|jpeg|svg|webp)$/i.test(file));
-  } catch {
-    files = [];
-  }
-
-  return files
-    .map((file) => {
-      const slug = path.parse(file).name.toLowerCase();
-      const label =
-        carBrandLabels[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
-      return { id: slug, label, logo: `/bilbrands/${file}` };
-    })
+  const brands: CarBrand[] = evBrandData
+    .map((brand) => ({
+      id: brand.id,
+      label: brand.label,
+      logo: findBrandLogo(brand.id),
+      models: [
+        ...brand.models.map((label, index) => ({
+          id: `${brand.id}-${index}`,
+          label,
+        })),
+        { id: `${brand.id}${OTHER_MODEL_SUFFIX}`, label: "Andet model / ikke på listen" },
+      ],
+    }))
     .sort((a, b) => a.label.localeCompare(b.label));
+
+  return [
+    ...brands,
+    {
+      id: OTHER_BRAND_ID,
+      label: "Mit bilmærke er ikke på listen",
+      logo: "",
+      models: [],
+    },
+  ];
 }
 
 export async function getBookingConfig(): Promise<BookingConfig> {
