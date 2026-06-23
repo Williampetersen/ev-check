@@ -788,6 +788,20 @@ function VehicleServiceStep({
                 >
                   {selected ? <Check className="h-3 w-3" /> : null}
                 </span>
+                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  {service.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={service.imageUrl}
+                      alt={service.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-slate-300">
+                      <Car className="h-6 w-6" />
+                    </span>
+                  )}
+                </span>
                 <div>
                   <p className="font-bold text-slate-900">{service.title}</p>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
