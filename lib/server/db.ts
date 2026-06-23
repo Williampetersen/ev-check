@@ -6,9 +6,11 @@ declare global {
 }
 
 let cachedSql: Sql | null | undefined = globalThis.EvCheckSql;
-let schemaPromise: Promise<void> | null = globalThis.EvCheckSchemaPromise ?? null;
+let schemaPromise: Promise<void> | null =
+  globalThis.EvCheckSchemaPromise ?? null;
 
-export const getConnectionString = () => process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+export const getConnectionString = () =>
+  process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
 
 export const isDatabaseConfigured = () => Boolean(getConnectionString());
 
@@ -40,7 +42,10 @@ export const getSql = () => {
 };
 
 export async function ensureSchema(options: { force?: boolean } = {}) {
-  if (!isDatabaseConfigured() || (!options.force && !shouldRunDatabaseSetup())) {
+  if (
+    !isDatabaseConfigured() ||
+    (!options.force && !shouldRunDatabaseSetup())
+  ) {
     return;
   }
 
@@ -77,6 +82,11 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ADD COLUMN IF NOT EXISTS portal_token TEXT,
           ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS customers_email_idx
+        ON customers (LOWER(email));
       `;
 
       await sql`
@@ -179,6 +189,31 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           sent_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS customer_email_verifications (
+          id TEXT PRIMARY KEY,
+          email TEXT NOT NULL,
+          portal_token TEXT NOT NULL,
+          code_hash TEXT NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL,
+          used_at TIMESTAMPTZ,
+          attempts INTEGER NOT NULL DEFAULT 0,
+          last_attempt_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS customer_email_verifications_portal_token_idx
+        ON customer_email_verifications (portal_token, created_at DESC);
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS customer_email_verifications_active_idx
+        ON customer_email_verifications (expires_at)
+        WHERE used_at IS NULL;
       `;
 
       await sql`

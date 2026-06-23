@@ -36,14 +36,14 @@ model Service {
 }
 
 model Availability {
-  id                  String   @id @default(cuid())
+  id                  String  @id @default(cuid())
   serviceId           String
   weekday             Int
   startTime           String
   endTime             String
-  slotIntervalMinutes Int      @default(15)
-  isActive            Boolean  @default(true)
-  service             Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  slotIntervalMinutes Int     @default(15)
+  isActive            Boolean @default(true)
+  service             Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@index([serviceId, weekday])
   @@map("availability")
@@ -109,4 +109,20 @@ model EmailLog {
   @@index([bookingId])
   @@index([appointmentId])
   @@map("email_logs")
+}
+
+model CustomerEmailVerification {
+  id            String    @id
+  email         String
+  portalToken   String    @map("portal_token")
+  codeHash      String    @map("code_hash")
+  expiresAt     DateTime  @map("expires_at")
+  usedAt        DateTime? @map("used_at")
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime? @map("last_attempt_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([portalToken, createdAt])
+  @@index([expiresAt])
+  @@map("customer_email_verifications")
 }

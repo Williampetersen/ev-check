@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomerDashboardByToken } from "@/lib/server/dashboard";
 import { ensureInvoiceForAppointment } from "@/lib/server/invoices";
+import {
+  CUSTOMER_COOKIE_NAME,
+  verifySessionToken,
+} from "@/lib/server/sessions";
 
 export const runtime = "nodejs";
 
@@ -12,6 +16,19 @@ export async function GET(
   const token = request.nextUrl.searchParams.get("token") || "";
   const portal = token ? await getCustomerDashboardByToken(token) : null;
   if (!portal) {
+    return NextResponse.json({ error: "Ikke godkendt." }, { status: 401 });
+  }
+
+  const session = verifySessionToken(
+    request.cookies.get(CUSTOMER_COOKIE_NAME)?.value,
+    "customer",
+  );
+  const expectedToken = portal.customer.portalToken || portal.customer.id;
+  if (
+    !session ||
+    session.sub !== expectedToken ||
+    session.email.toLowerCase() !== portal.customer.email.toLowerCase()
+  ) {
     return NextResponse.json({ error: "Ikke godkendt." }, { status: 401 });
   }
 
@@ -30,7 +47,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(invoice.pdf), {
       headers: {
         "content-type": "application/pdf",
-        "content-disposition": `inline; filename="${invoice.invoiceNumber}.pdf"`,
+        "content-disposition": "inline",
         "cache-control": "no-store",
       },
     });

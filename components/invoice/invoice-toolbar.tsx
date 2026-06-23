@@ -10,13 +10,13 @@ export function InvoiceToolbar({
 }: {
   backHref: string;
   backLabel?: string;
-  downloadHref: string;
+  downloadHref?: string;
 }) {
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
       <Link
         href={backHref}
-        className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300 hover:text-teal-700"
+        className="inline-flex h-10 items-center gap-2 rounded-lg border border-sky-200 bg-white/75 px-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-xl transition hover:border-sky-300 hover:text-sky-700"
       >
         <ArrowLeft className="h-4 w-4" />
         {backLabel}
@@ -25,18 +25,20 @@ export function InvoiceToolbar({
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300 hover:text-teal-700"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-500/90 px-4 text-sm font-semibold text-white shadow-sm shadow-sky-700/20 transition hover:bg-sky-600"
         >
           <Printer className="h-4 w-4" />
           Print
         </button>
-        <a
-          href={downloadHref}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-700/70 bg-[#064E4B] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
-        >
-          <Download className="h-4 w-4" />
-          Download PDF
-        </a>
+        {downloadHref ? (
+          <a
+            href={downloadHref}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-500/90 px-4 text-sm font-semibold text-white shadow-sm shadow-sky-700/20 transition hover:bg-sky-600"
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </a>
+        ) : null}
       </div>
     </div>
   );

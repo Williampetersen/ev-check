@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS "customers" (
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS "customers_email_idx"
+  ON "customers" (LOWER("email"));
+
 CREATE TABLE IF NOT EXISTS "appointments" (
   "id" TEXT PRIMARY KEY,
   "customer_id" TEXT NOT NULL REFERENCES "customers"("id") ON DELETE CASCADE,
@@ -110,6 +113,25 @@ CREATE TABLE IF NOT EXISTS "appointments" (
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS "customer_email_verifications" (
+  "id" TEXT PRIMARY KEY,
+  "email" TEXT NOT NULL,
+  "portal_token" TEXT NOT NULL,
+  "code_hash" TEXT NOT NULL,
+  "expires_at" TIMESTAMPTZ NOT NULL,
+  "used_at" TIMESTAMPTZ,
+  "attempts" INTEGER NOT NULL DEFAULT 0,
+  "last_attempt_at" TIMESTAMPTZ,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "customer_email_verifications_portal_token_idx"
+  ON "customer_email_verifications" ("portal_token", "created_at" DESC);
+
+CREATE INDEX IF NOT EXISTS "customer_email_verifications_active_idx"
+  ON "customer_email_verifications" ("expires_at")
+  WHERE "used_at" IS NULL;
 
 CREATE TABLE IF NOT EXISTS "email_logs" (
   "id" TEXT PRIMARY KEY,

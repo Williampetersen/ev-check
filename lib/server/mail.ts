@@ -6,6 +6,7 @@ import {
   type DashboardSettings,
 } from "@/lib/ev-domain";
 import { brandLogoPath, siteUrl as canonicalSiteUrl } from "@/lib/seo";
+import { CODE_EXPIRY_MINUTES } from "@/lib/server/customer-auth";
 import { recordEmailLog } from "@/lib/server/dashboard";
 
 const getMailConfig = () => ({
@@ -169,8 +170,8 @@ function renderMessage({
                           <img class="email-logo" src="${escapeHtml(
                             logoUrl(),
                           )}" width="52" height="52" alt="${escapeHtml(
-    settings.companyName,
-  )}" style="display:block;width:52px;height:52px;border-radius:14px;background:#ffffff;" />
+                            settings.companyName,
+                          )}" style="display:block;width:52px;height:52px;border-radius:14px;background:#ffffff;" />
                         </td>
                         <td class="mobile-stack" style="vertical-align:middle;padding-left:14px;">
                           <div class="email-brand" style="font-size:20px;line-height:24px;font-weight:800;color:#ffffff;">${escapeHtml(
@@ -204,8 +205,8 @@ function renderMessage({
                     <a href="mailto:${escapeHtml(
                       supportEmail,
                     )}" style="color:#0f766e;font-weight:700;text-decoration:none;">${escapeHtml(
-    supportEmail,
-  )}</a>.
+                      supportEmail,
+                    )}</a>.
                   </td>
                 </tr>
               </table>
@@ -278,6 +279,80 @@ export async function sendTestEmail(to: string, settings: DashboardSettings) {
       success: false,
       error: error instanceof Error ? error.message : String(error),
     };
+  }
+}
+
+export async function sendCustomerVerificationCodeEmail(input: {
+  customerEmail: string;
+  code: string;
+  settings: DashboardSettings;
+}) {
+  const supportEmail =
+    input.settings.supportEmail || defaultSettings.supportEmail;
+  const subject = `${input.settings.companyName}: Din bekræftelseskode`;
+  const codeDigits = input.code.split("").join(" ");
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    await recordEmailLog({
+      recipient: input.customerEmail,
+      recipientRole: "customer",
+      templateKey: "customer_verification_code",
+      subject,
+      status: "not_configured",
+      errorMessage: "SMTP is not configured.",
+    });
+    throw new Error("SMTP is not configured.");
+  }
+
+  try {
+    await transporter.sendMail({
+      from: getMailConfig().from,
+      to: input.customerEmail,
+      replyTo: supportEmail,
+      subject,
+      text: [
+        subject,
+        "",
+        `Din bekræftelseskode: ${input.code}`,
+        `Koden udløber om ${CODE_EXPIRY_MINUTES} minutter.`,
+        "",
+        "Hvis du ikke har bedt om denne kode, kan du ignorere denne e-mail.",
+        `Support: ${supportEmail}`,
+      ].join("\n"),
+      html: renderMessage({
+        title: "Bekræft din e-mail",
+        eyebrow: "Engangskode",
+        intro:
+          "Brug koden herunder for at få adgang til din kundeportal hos EV-Check.dk.",
+        rows: [
+          ["Din kode", codeDigits],
+          ["Udløber", `${CODE_EXPIRY_MINUTES} minutter`],
+        ],
+        settings: input.settings,
+        notice:
+          "Hvis du ikke har bedt om denne kode, kan du ignorere denne e-mail.",
+        preheader: `Din bekræftelseskode er ${input.code}`,
+      }),
+    });
+
+    await recordEmailLog({
+      recipient: input.customerEmail,
+      recipientRole: "customer",
+      templateKey: "customer_verification_code",
+      subject,
+      status: "sent",
+    });
+  } catch (error) {
+    await recordEmailLog({
+      recipient: input.customerEmail,
+      recipientRole: "customer",
+      templateKey: "customer_verification_code",
+      subject,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
   }
 }
 

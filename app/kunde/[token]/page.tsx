@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import {
   BatteryCharging,
   CalendarDays,
@@ -12,6 +13,10 @@ import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
 import { formatPrice, formatShortDate } from "@/lib/ev-domain";
 import { brandLogoPath } from "@/lib/seo";
 import { getCustomerDashboardByToken } from "@/lib/server/dashboard";
+import {
+  CUSTOMER_COOKIE_NAME,
+  verifySessionToken,
+} from "@/lib/server/sessions";
 
 export const metadata = {
   title: "Customer portal - EV Check",
@@ -27,12 +32,25 @@ export default async function CustomerTokenPage({
   const portal = await getCustomerDashboardByToken(token);
   if (!portal) notFound();
 
+  const session = verifySessionToken(
+    (await cookies()).get(CUSTOMER_COOKIE_NAME)?.value,
+    "customer",
+  );
+  const expectedToken = portal.customer.portalToken || portal.customer.id;
+  if (
+    !session ||
+    session.sub !== expectedToken ||
+    session.email.toLowerCase() !== portal.customer.email.toLowerCase()
+  ) {
+    redirect("/min-konto");
+  }
+
   const upcoming = portal.appointments.filter(
     (item) => item.status !== "cancelled",
   );
 
   return (
-    <main className="min-h-screen bg-transparent px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:py-6">
+    <main className="min-h-screen bg-transparent px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-6">
       <div className="mx-auto max-w-6xl space-y-5">
         <header className="glass-dark rounded-lg p-5 text-white sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -45,10 +63,10 @@ export default async function CustomerTokenPage({
                 className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain shadow-sm shadow-black/10"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">
+                <p className="text-sm font-semibold tracking-[0.18em] text-sky-300 uppercase">
                   EV Check portal
                 </p>
-                <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">
+                <h1 className="mt-3 text-2xl leading-tight font-bold sm:text-3xl">
                   Welcome, {portal.customer.name}
                 </h1>
                 <p className="mt-2 max-w-2xl text-slate-300">
@@ -58,7 +76,7 @@ export default async function CustomerTokenPage({
               </div>
             </div>
             <form action="/api/customer/auth/logout" method="POST">
-              <button className="border-white/15 inline-flex h-11 items-center gap-2 rounded-lg border px-4 text-sm font-semibold text-white hover:bg-white/10 sm:h-10">
+              <button className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/10 sm:h-10">
                 <LogOut className="h-4 w-4" />
                 Log out
               </button>
@@ -132,15 +150,15 @@ export default async function CustomerTokenPage({
                   </div>
                   <a
                     href={`/kunde/${token}/faktura/${appointment.id}`}
-                    className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-teal-700/30 bg-teal-50 px-3 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+                    className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-50 px-3 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
                   >
                     <Receipt className="h-4 w-4" />
-                    View invoice
+                    Print invoice
                   </a>
                 </article>
               ))
             ) : (
-              <div className="bg-white/45 rounded-lg border border-dashed border-white/70 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
+              <div className="rounded-lg border border-dashed border-white/70 bg-white/45 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
                 No appointments yet.
               </div>
             )}
@@ -166,7 +184,7 @@ function Metric({
 }) {
   return (
     <section className="glass-card rounded-lg p-4">
-      <Icon className="h-5 w-5 text-teal-700" />
+      <Icon className="h-5 w-5 text-sky-700" />
       <p className="mt-3 text-sm font-semibold text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-slate-950">{value}</p>
     </section>
@@ -176,7 +194,7 @@ function Metric({
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-white/60 bg-white/50 px-3 py-2 backdrop-blur">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
         {label}
       </p>
       <p className="mt-1 font-semibold text-slate-800">{value || "-"}</p>
