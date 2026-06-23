@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   BatteryCharging,
+  CalendarCheck,
   CheckCircle2,
   FileText,
   Gauge,
@@ -14,6 +15,7 @@ import {
   ThermometerSun,
   Zap,
 } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const sections = [
@@ -25,6 +27,7 @@ const sections = [
     imageAlt: "Mobil batteritest af elbil med diagnoseudstyr",
     href: "/book-tid",
     cta: "Book tid",
+    stat: { value: "15 min.", label: "Testtid" },
     tone: "from-sky-500 to-cyan-300",
     points: [
       { label: "OBD/BMS", icon: Gauge },
@@ -40,6 +43,7 @@ const sections = [
     imageAlt: "Batteridata og energistrømme for elbil",
     href: "/batteritest-elbil",
     cta: "Se testen",
+    stat: { value: "100%", label: "Digitalt aflæst" },
     tone: "from-emerald-400 to-sky-500",
     points: [
       { label: "Celler", icon: Zap },
@@ -55,6 +59,7 @@ const sections = [
     imageAlt: "Batterirapport og målinger på tablet",
     href: "/kontakt",
     cta: "Kontakt os",
+    stat: { value: "Samme dag", label: "PDF-rapport" },
     tone: "from-blue-500 to-lime-300",
     points: [
       { label: "PDF", icon: FileText },
@@ -150,13 +155,21 @@ export function HomeShowcaseSections() {
                   })}
                 </div>
 
-                <Link
-                  href={section.href}
-                  className="bg-white/78 mt-7 inline-flex h-11 items-center gap-2 rounded-lg border border-sky-200 px-4 text-sm font-bold text-slate-900 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-white"
-                >
-                  {section.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <ButtonLink href="/book-tid" className="h-11 sm:h-10">
+                    <CalendarCheck className="h-4 w-4" />
+                    Book batteritest
+                  </ButtonLink>
+                  {section.href !== "/book-tid" ? (
+                    <Link
+                      href={section.href}
+                      className="bg-white/78 inline-flex h-11 items-center gap-2 rounded-lg border border-sky-200 px-4 text-sm font-bold text-slate-900 shadow-sm shadow-sky-950/5 backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-white sm:h-10"
+                    >
+                      {section.cta}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : null}
+                </div>
               </motion.div>
 
               <motion.div
@@ -176,6 +189,14 @@ export function HomeShowcaseSections() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/[0.62] via-slate-950/10 to-white/[0.08]" />
+                <div className="absolute top-4 left-4 rounded-lg border border-white/20 bg-white/[0.16] px-3 py-2 shadow-lg shadow-black/10 backdrop-blur-xl">
+                  <p className="text-lg font-bold text-white">
+                    {section.stat.value}
+                  </p>
+                  <p className="text-[10px] font-bold tracking-[0.1em] text-white/75 uppercase">
+                    {section.stat.label}
+                  </p>
+                </div>
                 <motion.div
                   aria-hidden
                   className={cn(

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -9,7 +10,14 @@ import {
   FileText,
   Gauge,
 } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const trustPoints = [
+  "Ingen værkstedsbesøg, vi kører ud til bilen",
+  "Højvoltsbatteriet åbnes ikke, og garantien påvirkes ikke",
+  "Professionelt diagnoseudstyr og certificeret metode",
+];
 
 const steps = [
   {
@@ -218,6 +226,41 @@ export function HowItWorksSection() {
               </motion.div>
             );
           })}
+        </motion.div>
+
+        <motion.div
+          variants={stepMotion}
+          className="glass-card mx-auto mt-10 grid max-w-5xl gap-0 overflow-hidden rounded-2xl sm:mt-12 lg:grid-cols-[0.9fr_1.1fr]"
+        >
+          <div className="relative min-h-[14rem] sm:min-h-[18rem]">
+            <Image
+              src="/wp/ev-bil-denmark-1.jpg"
+              alt="EV-Check tekniker udfører batteritest med diagnoseudstyr"
+              fill
+              sizes="(min-width: 1024px) 38vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="text-sm font-bold tracking-[0.14em] text-sky-700 uppercase">
+              Tryg proces
+            </p>
+            <h3 className="mt-2 text-xl font-bold text-slate-950 sm:text-2xl">
+              Sikker for bilen, klar for dig
+            </h3>
+            <div className="mt-4 grid gap-2.5">
+              {trustPoints.map((point) => (
+                <div key={point} className="flex gap-2.5 text-sm text-slate-700">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+            <ButtonLink href="/book-tid" className="mt-6 w-full sm:w-auto">
+              <CalendarCheck className="h-4 w-4" />
+              Book batteritest nu
+            </ButtonLink>
+          </div>
         </motion.div>
       </div>
     </motion.section>

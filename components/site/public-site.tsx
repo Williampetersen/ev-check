@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import {
   ArrowRight,
+  Award,
   BatteryCharging,
   CalendarCheck,
   CheckCircle2,
@@ -15,15 +16,15 @@ import {
   Mail,
   MapPin,
   Phone,
+  Quote,
   ShieldCheck,
   Star,
   Twitter,
+  Users,
   UserRound,
   Zap,
 } from "lucide-react";
-import { Button, ButtonLink } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { ButtonLink } from "@/components/ui/button";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { brandLogoPath, companyCvr, sameAsLinks, siteUrl } from "@/lib/seo";
@@ -172,18 +173,56 @@ export const testimonials = [
 ];
 
 const brandLogos = [
-  { src: "/wp/teslalogo.png", alt: "Tesla elbil batteritest" },
-  { src: "/wp/bydlogo.png", alt: "BYD elbil batteritest" },
-  { src: "/wp/polestarlogo.png", alt: "Polestar elbil batteritest" },
-  { src: "/wp/vwlogo.png", alt: "Volkswagen ID batteritest" },
-  { src: "/wp/kialogo.png", alt: "Kia elbil batteritest" },
-  { src: "/wp/hyundailogo.png", alt: "Hyundai elbil batteritest" },
+  { src: "/bilbrands/tesla.png", alt: "Tesla elbil batteritest" },
+  { src: "/bilbrands/byd.png", alt: "BYD elbil batteritest" },
+  { src: "/bilbrands/polestar.png", alt: "Polestar elbil batteritest" },
+  { src: "/bilbrands/vw.png", alt: "Volkswagen elbil batteritest" },
+  { src: "/bilbrands/kia.png", alt: "Kia elbil batteritest" },
+  { src: "/bilbrands/hyundai.png", alt: "Hyundai elbil batteritest" },
+  { src: "/bilbrands/audi.png", alt: "Audi elbil batteritest" },
+  { src: "/bilbrands/bmw.png", alt: "BMW elbil batteritest" },
+  { src: "/bilbrands/mercedes.png", alt: "Mercedes elbil batteritest" },
+  { src: "/bilbrands/skoda.png", alt: "Skoda elbil batteritest" },
+  { src: "/bilbrands/cupra.png", alt: "Cupra elbil batteritest" },
+  { src: "/bilbrands/volvo.png", alt: "Volvo elbil batteritest" },
+  { src: "/bilbrands/porsche.png", alt: "Porsche elbil batteritest" },
+  { src: "/bilbrands/jaguar.png", alt: "Jaguar elbil batteritest" },
+  { src: "/bilbrands/landrover.png", alt: "Land Rover elbil batteritest" },
+  { src: "/bilbrands/mini.png", alt: "Mini elbil batteritest" },
+  { src: "/bilbrands/genesis.png", alt: "Genesis elbil batteritest" },
+  { src: "/bilbrands/mg.png", alt: "MG elbil batteritest" },
+  { src: "/bilbrands/peugeot.png", alt: "Peugeot elbil batteritest" },
+  { src: "/bilbrands/citroen.png", alt: "Citroën elbil batteritest" },
+  { src: "/bilbrands/opel.png", alt: "Opel elbil batteritest" },
+  { src: "/bilbrands/renault.png", alt: "Renault elbil batteritest" },
+  { src: "/bilbrands/fiat.png", alt: "Fiat elbil batteritest" },
+  { src: "/bilbrands/ford.png", alt: "Ford elbil batteritest" },
+  { src: "/bilbrands/nissan.png", alt: "Nissan elbil batteritest" },
+  { src: "/bilbrands/honda.png", alt: "Honda elbil batteritest" },
+  { src: "/bilbrands/toyota.png", alt: "Toyota elbil batteritest" },
+  { src: "/bilbrands/mazda.png", alt: "Mazda elbil batteritest" },
+  { src: "/bilbrands/lexus.png", alt: "Lexus elbil batteritest" },
+  { src: "/bilbrands/suzuki.png", alt: "Suzuki elbil batteritest" },
+  { src: "/bilbrands/mitsubishi.png", alt: "Mitsubishi elbil batteritest" },
+  { src: "/bilbrands/jeep.png", alt: "Jeep elbil batteritest" },
+  { src: "/bilbrands/dacia.jpg", alt: "Dacia elbil batteritest" },
+  { src: "/bilbrands/smart.png", alt: "Smart elbil batteritest" },
+  { src: "/bilbrands/chevrolet.png", alt: "Chevrolet elbil batteritest" },
+  { src: "/bilbrands/alfaromeo.png", alt: "Alfa Romeo elbil batteritest" },
+];
+
+const brandStats = [
+  { label: "Bilmærker testet", value: "36+", icon: Award },
+  { label: "Udførte batteritests", value: "500+", icon: Users },
+  { label: "Kundetilfredshed", value: "4.9/5", icon: Star },
+  { label: "På Sjælland siden", value: "2021", icon: CalendarCheck },
 ];
 
 const heroFacts = [
   { label: "Fast pris", value: "1300 kr.", icon: CheckCircle2 },
   { label: "Testtid", value: "15 min.", icon: Clock },
   { label: "PDF-rapport", value: "Samme dag", icon: FileText },
+  { label: "Tilfredshed", value: "4.9/5", icon: Star },
 ];
 
 export function SiteHeader() {
@@ -429,6 +468,39 @@ export function HeroSection() {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/48 to-slate-950/16" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#fbfaf5] to-transparent" />
+
+      <div
+        aria-hidden
+        className="absolute right-8 top-28 z-20 hidden w-36 -rotate-3 overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-2.5 shadow-2xl shadow-black/30 backdrop-blur-xl lg:block xl:right-16 xl:w-40"
+      >
+        <Image
+          src="/wp/ev-check2026-2-2.jpg"
+          alt="EV-Check certificeret batteridiagnose badge"
+          width={160}
+          height={160}
+          className="rounded-xl"
+        />
+        <p className="mt-2 text-center text-[10px] font-bold tracking-[0.1em] text-white/85 uppercase">
+          Certificeret diagnose
+        </p>
+      </div>
+
+      <div
+        aria-hidden
+        className="absolute bottom-16 left-8 z-20 hidden max-w-[16rem] items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl lg:flex xl:left-16"
+      >
+        <Image
+          src="/wp/evcheck-dk.jpg"
+          alt="EV-Check tekniker hos kunde på Sjælland"
+          width={64}
+          height={64}
+          className="h-14 w-14 shrink-0 rounded-xl object-cover"
+        />
+        <p className="text-xs font-semibold leading-5 text-white/90">
+          Vi kører ud til kunder på Sjælland hver dag
+        </p>
+      </div>
+
       <div className="relative mx-auto w-full max-w-[100vw] overflow-hidden px-4 py-20 text-center sm:max-w-5xl sm:px-6 sm:py-24 lg:px-8">
         <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold tracking-[0.12em] text-sky-100 uppercase shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
           <ShieldCheck className="h-4 w-4" />
@@ -441,7 +513,17 @@ export function HeroSection() {
           Få målt SoH, BMS-status, cellebalance og relevante fejlkoder før køb,
           salg eller fejlfinding, uden at du skal på værksted.
         </p>
-        <div className="mx-auto mt-8 grid w-full max-w-[19.5rem] gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
+
+        <div className="mx-auto mt-5 flex max-w-[19.5rem] flex-wrap items-center justify-center gap-2 text-xs font-semibold text-white/85 sm:max-w-none sm:text-sm">
+          <span className="flex text-amber-300" aria-label="4.9 ud af 5 stjerner">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} className="h-3.5 w-3.5 fill-current sm:h-4 sm:w-4" />
+            ))}
+          </span>
+          <span>4.9/5 · Anbefalet af 120+ elbil-ejere på Sjælland</span>
+        </div>
+
+        <div className="mx-auto mt-7 grid w-full max-w-[19.5rem] gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
           <ButtonLink
             href="/book-tid"
             className="h-12 w-full px-5 shadow-xl shadow-black/30 sm:h-11 sm:w-auto"
@@ -458,7 +540,15 @@ export function HeroSection() {
             <ArrowRight className="h-4 w-4" />
           </ButtonLink>
         </div>
-        <div className="mx-auto mt-10 grid w-full max-w-[calc(100vw-2rem)] gap-3 sm:max-w-3xl sm:grid-cols-3">
+        <a
+          href="tel:+4571900530"
+          className="mx-auto mt-4 flex w-fit items-center gap-2 text-sm font-semibold text-white/80 underline-offset-4 transition hover:text-white hover:underline"
+        >
+          <Phone className="h-4 w-4" />
+          Eller ring direkte: +45 71 90 05 30
+        </a>
+
+        <div className="mx-auto mt-10 grid w-full max-w-[calc(100vw-2rem)] grid-cols-2 gap-3 sm:max-w-3xl sm:grid-cols-4">
           {heroFacts.map((fact) => {
             const Icon = fact.icon;
             return (
@@ -615,31 +705,69 @@ export function AboutSection() {
 
 export function BrandsAndCertificate() {
   return (
-    <section className="glass-card rounded-lg p-5 sm:p-6">
-      <p className="text-sm font-semibold tracking-[0.14em] text-sky-700 uppercase">
-        Mærker vi tester
-      </p>
-      <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+    <section className="glass-card rounded-lg p-5 sm:p-8">
+      <SectionHeading
+        eyebrow="Tillid og dækning"
+        title="Vi tester alle elbilmærker på markedet"
+        description="Fra Tesla og Polestar til Hyundai og BYD. Diagnoseudstyret tilpasses bilens systemer, så du altid får en rapport, der er relevant for din model."
+      />
+
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {brandStats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className="rounded-lg border border-sky-100/90 bg-white/70 px-4 py-4 text-center shadow-sm shadow-sky-950/5 backdrop-blur-xl"
+            >
+              <Icon className="mx-auto h-5 w-5 text-sky-700" />
+              <p className="mt-2 text-2xl font-bold text-slate-950">
+                {stat.value}
+              </p>
+              <p className="mt-1 text-xs font-semibold tracking-[0.1em] text-slate-500 uppercase">
+                {stat.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-7 grid grid-cols-4 gap-2.5 sm:grid-cols-6 lg:grid-cols-9">
         {brandLogos.map((brand) => (
           <div
             key={brand.src}
-            className="flex h-16 items-center justify-center rounded-lg border border-white/70 bg-white/68 p-3 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white"
+            className="flex h-14 items-center justify-center rounded-lg border border-white/70 bg-white/68 p-2 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white sm:h-16 sm:p-3"
           >
             <Image
               src={brand.src}
               alt={brand.alt}
-              width={90}
-              height={42}
-              sizes="90px"
-              className="max-h-10 w-auto object-contain"
+              width={64}
+              height={36}
+              sizes="64px"
+              className="max-h-8 w-auto object-contain sm:max-h-9"
             />
           </div>
         ))}
       </div>
-      <p className="mt-5 text-sm leading-6 text-slate-600">
-        Vi tester alle elbiler og tilpasser målingen efter model, systemdata og
-        batteristyring.
-      </p>
+
+      <div className="mt-7 flex flex-col gap-4 border-t border-sky-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-md text-sm leading-6 text-slate-600">
+          Kører din elbil ikke på listen? Vi tester stort set alle
+          elbilmodeller, kontakt os og hør mere.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href="/book-tid">
+            <CalendarCheck className="h-4 w-4" />
+            Book batteritest
+          </ButtonLink>
+          <Link
+            href="/kontakt"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-white/70 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:bg-sky-50 sm:h-10"
+          >
+            Kontakt os
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }
@@ -813,26 +941,56 @@ export function TestimonialsSection() {
   return (
     <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="Kunder"
-          title="Klar rapport, tryggere beslutning"
-          description="Kunder bruger EV-Check før køb, salg og fejlfinding, når batteriets reelle tilstand skal være dokumenteret."
-        />
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeading
+            eyebrow="Kunder"
+            title="Klar rapport, tryggere beslutning"
+            description="Kunder bruger EV-Check før køb, salg og fejlfinding, når batteriets reelle tilstand skal være dokumenteret."
+          />
+          <div className="glass-card flex shrink-0 items-center gap-4 rounded-lg px-5 py-4">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-slate-950">4.9</p>
+              <div className="mt-1 flex justify-center text-amber-400">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star key={star} className="h-3.5 w-3.5 fill-current" />
+                ))}
+              </div>
+            </div>
+            <div className="h-10 w-px bg-sky-100" />
+            <div>
+              <p className="text-sm font-bold text-slate-950">
+                120+ tilfredse kunder
+              </p>
+              <p className="text-xs font-semibold tracking-wide text-sky-700 uppercase">
+                På Sjælland
+              </p>
+            </div>
+          </div>
+        </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {testimonials.map((item) => (
             <article
               key={item.name}
-              className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-950/8"
+              className="glass-card relative overflow-hidden rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-950/8"
             >
-              <div className="flex gap-1 text-sky-600" aria-label="5 stjerner">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="h-4 w-4 fill-current" />
-                ))}
+              <Quote
+                aria-hidden
+                className="absolute top-4 right-4 h-8 w-8 text-sky-100"
+              />
+              <div className="relative flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-cyan-400 text-sm font-bold text-white shadow-sm shadow-sky-900/20">
+                  {item.name.charAt(0)}
+                </span>
+                <div className="flex gap-1 text-sky-600" aria-label="5 stjerner">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="h-4 w-4 fill-current" />
+                  ))}
+                </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-700">
+              <p className="relative mt-4 text-sm leading-6 text-slate-700">
                 “{item.quote}”
               </p>
-              <div className="mt-5 border-t border-sky-100 pt-4">
+              <div className="relative mt-5 border-t border-sky-100 pt-4">
                 <p className="font-bold text-slate-950">{item.name}</p>
                 <p className="text-sm text-slate-500">{item.detail}</p>
                 <p className="mt-1 text-xs font-semibold tracking-wide text-sky-700 uppercase">
@@ -841,6 +999,19 @@ export function TestimonialsSection() {
               </div>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <ButtonLink href="/book-tid">
+            <CalendarCheck className="h-4 w-4" />
+            Book din batteritest
+          </ButtonLink>
+          <Link
+            href="/hvad-vores-kunder-siger"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-white/70 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:bg-sky-50 sm:h-10"
+          >
+            Se alle anmeldelser
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </section>
@@ -882,17 +1053,46 @@ export function FaqSection() {
 }
 
 export function ContactSection({ booking = false }: { booking?: boolean }) {
+  const detailItems = [
+    {
+      icon: BatteryCharging,
+      title: "SoH og kapacitet",
+      text: "Vi vurderer batteriets State of Health og hvor meget brugbar kapacitet bilen reelt har tilbage.",
+    },
+    {
+      icon: Gauge,
+      title: "Rækkevidde og ladestatus",
+      text: "Bilens egne tal for rækkevidde, SoC og batteridata holdes op mod de målinger, vi kan aflæse.",
+    },
+    {
+      icon: Zap,
+      title: "Cellebalance",
+      text: "Vi kigger efter ubalance mellem celler eller moduler, som kan påvirke ydelse og bilens værdi.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "BMS og fejlkoder",
+      text: "Relevante signaler fra batteristyringen gennemgås, så du får et klart billede af bilens tilstand.",
+    },
+  ];
+
+  const reportItems = [
+    "Professionel PDF-rapport med konklusion",
+    "Fast pris på 1300 kr. inkl. moms",
+    "Mobil test hos dig på Sjælland",
+  ];
+
   return (
     <section className="py-16 sm:py-20">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.86fr_1.14fr] lg:px-8">
         <div>
           <SectionHeading
             eyebrow={booking ? "Book tid" : "Kontakt"}
             title={booking ? "Klar til batteritest?" : "Kontakt EV-Check.dk"}
             description={
               booking
-                ? "Book direkte online, eller skriv kort om bilen, så hjælper vi med næste ledige tid."
-                : "Skriv kort om bilen, så vender vi tilbage med praktisk information."
+                ? "Få en mobil batteridiagnose af din elbil med klare målinger, professionel vurdering og rapport samme dag."
+                : "Ring eller skriv, hvis du vil høre mere om batteritest, rapporten eller hvilken test der passer til bilen."
             }
           />
           <div className="mt-6 grid gap-3 text-sm text-slate-700">
@@ -909,67 +1109,62 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <ContactLine icon={MapPin} text="København og Sjælland" />
             <ContactLine icon={Clock} text="Svar samme dag på hverdage" />
           </div>
-        </div>
-        <form
-          action="/tak"
-          method="GET"
-          className="glass-panel rounded-lg p-5 sm:p-6"
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Fulde navn">
-              <Input name="navn" required />
-            </Field>
-            <Field label="Telefonnummer">
-              <Input name="telefon" type="tel" required />
-            </Field>
-            <Field label="E-mailadresse">
-              <Input name="email" type="email" required />
-            </Field>
-            <Field label="Bilmærke">
-              <select
-                name="maerke"
-                className="h-12 w-full rounded-lg border border-slate-200/90 bg-white/85 px-3 text-base backdrop-blur transition outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
-              >
-                {[
-                  "Tesla",
-                  "BYD",
-                  "Polestar",
-                  "Kia",
-                  "Volkswagen",
-                  "Hyundai",
-                  "Anden elbil",
-                ].map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Bilmodel">
-              <Input name="model" />
-            </Field>
-            <Field label="Adresse for test">
-              <Input name="adresse" placeholder="Gade, by" />
-            </Field>
-            <Field label="Besked" className="sm:col-span-2">
-              <Textarea
-                name="besked"
-                placeholder="Skriv gerne model, årgang og hvornår bilen ønskes testet."
-              />
-            </Field>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <ButtonLink href="/book-tid" className="sm:w-auto">
+              Book batteritest
+              <ArrowRight className="h-4 w-4" />
+            </ButtonLink>
+            <a
+              href="tel:+4571900530"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-300/70 bg-white/75 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-700/10 backdrop-blur transition hover:bg-sky-50"
+            >
+              <Phone className="h-4 w-4" />
+              Ring til EV-Check
+            </a>
           </div>
-          <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
-            <input
-              required
-              type="checkbox"
-              className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-            />
-            Jeg accepterer vilkår og betingelser og giver EV-Check lov til at
-            kontakte mig vedrørende min henvendelse.
-          </label>
-          <Button type="submit" className="mt-5 w-full sm:w-auto">
-            {booking ? "Send forespørgsel" : "Send besked"}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </form>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {detailItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article key={item.title} className="glass-card rounded-lg p-5">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 text-base font-bold text-slate-950">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {item.text}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+          <div className="rounded-lg border border-sky-200/80 bg-sky-50/70 p-5 shadow-sm shadow-sky-700/10 backdrop-blur">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-bold tracking-[0.14em] text-sky-700 uppercase">
+                  Det får du
+                </p>
+                <h3 className="mt-2 text-xl font-bold text-slate-950">
+                  En test, der gør bilens batteritilstand lettere at forstå.
+                </h3>
+              </div>
+              <FileText className="h-8 w-8 shrink-0 text-sky-700" />
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {reportItems.map((item) => (
+                <div key={item} className="flex gap-2 text-sm text-slate-700">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -991,28 +1186,6 @@ function ContactLine({
     </span>
   );
   return href ? <a href={href}>{content}</a> : content;
-}
-
-function Field({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <label
-      className={cn(
-        "grid gap-1.5 text-sm font-semibold text-slate-700",
-        className,
-      )}
-    >
-      {label}
-      {children}
-    </label>
-  );
 }
 
 export function SectionHeading({
