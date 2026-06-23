@@ -35,19 +35,18 @@ import { SUPPORTED_TIMEZONES, nowLabelInTimeZone } from "@/lib/server/timezone";
 import { cn } from "@/lib/utils";
 
 export const adminSelectClass =
-  "h-12 rounded-lg border border-white/70 bg-white/70 px-3 text-base font-medium text-slate-700 outline-none backdrop-blur focus:border-teal-400 focus:bg-white/85 focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm";
+  "h-12 rounded-lg border border-white/70 bg-white/70 px-3 text-base font-medium text-slate-700 outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm";
 
 export function Notice({
   children,
   tone,
 }: {
   children: React.ReactNode;
-  tone: "amber" | "rose" | "teal";
+  tone: "sky" | "rose";
 }) {
   const styles = {
-    amber: "border-amber-200/80 bg-amber-50/80 text-amber-800",
+    sky: "border-sky-200/80 bg-sky-50/80 text-sky-800",
     rose: "border-rose-200/80 bg-rose-50/80 text-rose-700",
-    teal: "border-teal-200/80 bg-teal-50/80 text-teal-700",
   };
   return (
     <div
@@ -78,7 +77,7 @@ export function Panel({
     <section className="glass-shell rounded-lg p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50/80 text-teal-700 backdrop-blur">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50/80 text-sky-700 backdrop-blur">
             <Icon className="h-5 w-5" />
           </span>
           <div>
@@ -139,7 +138,7 @@ export function Overview({
           value={String(dashboard.stats.pendingAppointments)}
           detail="Needs review"
           icon={BarChart3}
-          tone="amber"
+          tone="sky"
         />
         <KpiCard
           label="Revenue"
@@ -175,7 +174,7 @@ export function Overview({
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/55 backdrop-blur">
                   <div
-                    className="h-full rounded-full bg-teal-600"
+                    className="h-full rounded-full bg-sky-500"
                     style={{ width: `${(item.count / maxCount) * 100}%` }}
                   />
                 </div>
@@ -213,7 +212,7 @@ export function AppointmentsView({
       action={
         <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
@@ -311,7 +310,7 @@ export function AppointmentTable({
             ) : null}
             {editable ? (
               <details className="mt-3">
-                <summary className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-teal-300 hover:text-teal-700">
+                <summary className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-sky-300 hover:text-sky-700">
                   Quick status update
                 </summary>
                 <form
@@ -352,7 +351,7 @@ export function AppointmentTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="text-xs uppercase tracking-wide text-slate-500">
+          <thead className="text-xs tracking-wide text-slate-500 uppercase">
             <tr className="border-b border-white/60">
               <th className="px-3 py-3 font-semibold">Customer</th>
               <th className="px-3 py-3 font-semibold">Vehicle</th>
@@ -379,7 +378,7 @@ export function AppointmentTable({
                   <p className="font-semibold text-slate-800">
                     {appointment.vehicleLabel}
                   </p>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                  <p className="text-xs tracking-wide text-slate-500 uppercase">
                     {appointment.registrationNumber}
                   </p>
                 </td>
@@ -406,55 +405,55 @@ export function AppointmentTable({
                 {editable ? (
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => onOpenBooking?.(appointment.id)}
-                      className="h-9 text-xs"
-                    >
-                      View / edit
-                    </Button>
-                    <details className="group">
-                      <summary className="cursor-pointer rounded-lg border border-white/70 bg-white/55 px-3 py-2 text-xs font-semibold text-slate-700 backdrop-blur marker:content-[''] hover:border-teal-300 hover:text-teal-700">
-                        Quick update
-                      </summary>
-                      <form
-                        action={`/api/admin/bookings/${appointment.id}`}
-                        method="POST"
-                        className="glass-panel mt-2 grid w-64 gap-2 rounded-lg p-3"
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenBooking?.(appointment.id)}
+                        className="h-9 text-xs"
                       >
-                        <select
-                          name="status"
-                          defaultValue={appointment.status}
-                          className={adminSelectClass}
+                        View / edit
+                      </Button>
+                      <details className="group">
+                        <summary className="cursor-pointer rounded-lg border border-white/70 bg-white/55 px-3 py-2 text-xs font-semibold text-slate-700 backdrop-blur marker:content-[''] hover:border-sky-300 hover:text-sky-700">
+                          Quick update
+                        </summary>
+                        <form
+                          action={`/api/admin/bookings/${appointment.id}`}
+                          method="POST"
+                          className="glass-panel mt-2 grid w-64 gap-2 rounded-lg p-3"
                         >
-                          {Object.entries(statusLabels).map(
-                            ([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ),
-                          )}
-                        </select>
-                        <Textarea
-                          name="admin_notes"
-                          defaultValue={appointment.adminNotes}
-                          className="min-h-20 text-xs"
-                        />
-                        <input
-                          type="hidden"
-                          name="return_view"
-                          value="appointments"
-                        />
-                        <Button
-                          type="submit"
-                          disabled={!databaseConfigured}
-                          className="h-9 text-xs"
-                        >
-                          Save
-                        </Button>
-                      </form>
-                    </details>
+                          <select
+                            name="status"
+                            defaultValue={appointment.status}
+                            className={adminSelectClass}
+                          >
+                            {Object.entries(statusLabels).map(
+                              ([value, label]) => (
+                                <option key={value} value={value}>
+                                  {label}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                          <Textarea
+                            name="admin_notes"
+                            defaultValue={appointment.adminNotes}
+                            className="min-h-20 text-xs"
+                          />
+                          <input
+                            type="hidden"
+                            name="return_view"
+                            value="appointments"
+                          />
+                          <Button
+                            type="submit"
+                            disabled={!databaseConfigured}
+                            className="h-9 text-xs"
+                          >
+                            Save
+                          </Button>
+                        </form>
+                      </details>
                     </div>
                   </td>
                 ) : null}
@@ -740,7 +739,7 @@ export function ServicesView({
                   {service.features.map((feature) => (
                     <span
                       key={feature}
-                      className="rounded-full border border-teal-200/80 bg-teal-50/80 px-2.5 py-1 text-xs font-semibold text-teal-700 backdrop-blur"
+                      className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur"
                     >
                       {feature}
                     </span>
@@ -748,7 +747,7 @@ export function ServicesView({
                 </div>
 
                 <details className="mt-3">
-                  <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-teal-300 hover:text-teal-700">
+                  <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-sky-300 hover:text-sky-700">
                     <Pencil className="h-4 w-4" />
                     Edit service
                   </summary>
@@ -844,7 +843,7 @@ function ServiceFields({ service }: { service?: BookingService }) {
           name="image"
           type="file"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal-700 hover:file:bg-teal-100"
+          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
         />
       </Field>
       {service?.imageUrl ? (
@@ -861,7 +860,11 @@ function ServiceFields({ service }: { service?: BookingService }) {
   );
 }
 
-export function CustomersView({ dashboard }: { dashboard: AdminDashboardData }) {
+export function CustomersView({
+  dashboard,
+}: {
+  dashboard: AdminDashboardData;
+}) {
   const appointmentsByCustomer = new Map<string, Appointment[]>();
   for (const appointment of dashboard.appointments) {
     appointmentsByCustomer.set(appointment.customerId, [
@@ -889,7 +892,7 @@ export function CustomersView({ dashboard }: { dashboard: AdminDashboardData }) 
                     {customer.phone}
                   </p>
                 </div>
-                <span className="rounded-full border border-teal-200/80 bg-teal-50/80 px-2.5 py-1 text-xs font-semibold text-teal-700 backdrop-blur">
+                <span className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur">
                   {appointments.length} checks
                 </span>
               </div>
@@ -899,7 +902,7 @@ export function CustomersView({ dashboard }: { dashboard: AdminDashboardData }) 
                   .join(", ")}
               </p>
               <a
-                className="mt-4 inline-flex text-sm font-semibold text-teal-700 hover:text-teal-900"
+                className="mt-4 inline-flex text-sm font-semibold text-sky-700 hover:text-sky-900"
                 href={`/kunde/${customer.portalToken || customer.id}`}
               >
                 Open portal
@@ -927,7 +930,7 @@ export function UsersView({ dashboard }: { dashboard: AdminDashboardData }) {
                 <h3 className="font-bold text-slate-950">{user.fullName}</h3>
                 <p className="text-sm text-slate-500">{user.email}</p>
               </div>
-              <span className="rounded-full border border-white/70 bg-white/55 px-2.5 py-1 text-xs font-semibold capitalize text-slate-700 backdrop-blur">
+              <span className="rounded-full border border-white/70 bg-white/55 px-2.5 py-1 text-xs font-semibold text-slate-700 capitalize backdrop-blur">
                 {user.role}
               </span>
             </div>
@@ -936,7 +939,7 @@ export function UsersView({ dashboard }: { dashboard: AdminDashboardData }) {
               {user.assignedServices.map((service) => (
                 <span
                   key={service}
-                  className="rounded-full border border-teal-200/80 bg-teal-50/80 px-2.5 py-1 text-xs font-semibold text-teal-700 backdrop-blur"
+                  className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur"
                 >
                   {service}
                 </span>
@@ -1047,7 +1050,7 @@ export function InvoicesView({
       {invoiceAppointments.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-500">
+            <thead className="text-xs tracking-wide text-slate-500 uppercase">
               <tr className="border-b border-white/60">
                 <th className="px-3 py-3">Invoice</th>
                 <th className="px-3 py-3">Customer</th>
@@ -1077,7 +1080,7 @@ export function InvoicesView({
                   <td className="px-3 py-3">
                     <div className="flex justify-end gap-2">
                       <a
-                        className="inline-flex h-9 items-center justify-center rounded-lg border border-teal-200 bg-white/70 px-3 text-xs font-bold text-teal-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50"
+                        className="inline-flex h-9 items-center justify-center rounded-lg border border-sky-200 bg-white/70 px-3 text-xs font-bold text-sky-700 shadow-sm shadow-slate-900/5 transition hover:border-sky-400 hover:bg-sky-50"
                         href={`/admin/invoice/${appointment.id}`}
                         target="_blank"
                         rel="noreferrer"
@@ -1111,7 +1114,11 @@ export function InvoicesView({
   );
 }
 
-export function PaymentsView({ appointments }: { appointments: Appointment[] }) {
+export function PaymentsView({
+  appointments,
+}: {
+  appointments: Appointment[];
+}) {
   const unpaid = appointments.filter(
     (item) => item.paymentStatus !== "paid" && item.status !== "cancelled",
   );
@@ -1184,16 +1191,15 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
         <div className="glass-card rounded-lg p-4">
           <p className="font-semibold text-slate-950">New booking approval</p>
           <p className="mt-1 text-sm text-slate-500">
-            Choose whether bookings made on the website are confirmed
-            instantly, or held as &ldquo;Pending&rdquo; until an admin
-            reviews them.
+            Choose whether bookings made on the website are confirmed instantly,
+            or held as &ldquo;Pending&rdquo; until an admin reviews them.
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <label
               className={cn(
                 "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
                 settings.defaultAppointmentStatus === "approved"
-                  ? "border-teal-300 bg-teal-50/80 text-teal-800"
+                  ? "border-sky-300 bg-sky-50/80 text-sky-800"
                   : "border-white/60 bg-white/45 text-slate-700",
               )}
             >
@@ -1201,8 +1207,10 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
                 type="radio"
                 name="default_appointment_status"
                 value="approved"
-                defaultChecked={settings.defaultAppointmentStatus === "approved"}
-                className="mt-1 text-teal-600 focus:ring-teal-500"
+                defaultChecked={
+                  settings.defaultAppointmentStatus === "approved"
+                }
+                className="mt-1 text-sky-600 focus:ring-sky-500"
               />
               <span>
                 Auto-approve
@@ -1215,7 +1223,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
               className={cn(
                 "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
                 settings.defaultAppointmentStatus !== "approved"
-                  ? "border-teal-300 bg-teal-50/80 text-teal-800"
+                  ? "border-sky-300 bg-sky-50/80 text-sky-800"
                   : "border-white/60 bg-white/45 text-slate-700",
               )}
             >
@@ -1223,13 +1231,16 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
                 type="radio"
                 name="default_appointment_status"
                 value="pending"
-                defaultChecked={settings.defaultAppointmentStatus !== "approved"}
-                className="mt-1 text-teal-600 focus:ring-teal-500"
+                defaultChecked={
+                  settings.defaultAppointmentStatus !== "approved"
+                }
+                className="mt-1 text-sky-600 focus:ring-sky-500"
               />
               <span>
                 Manual approval
                 <span className="block text-xs font-normal text-slate-500">
-                  New bookings stay &ldquo;Pending&rdquo; until you approve them.
+                  New bookings stay &ldquo;Pending&rdquo; until you approve
+                  them.
                 </span>
               </span>
             </label>
@@ -1342,7 +1353,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
                   name={String(name)}
                   type="checkbox"
                   defaultChecked={Boolean(checked)}
-                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                 />
                 {String(label)}
               </label>
@@ -1355,7 +1366,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
             name="booking_enabled"
             type="checkbox"
             defaultChecked={settings.bookingEnabled}
-            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
           />
           Online appointments enabled
         </label>
@@ -1397,7 +1408,7 @@ export function Field({
 export function InfoLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-white/60 bg-white/45 px-3 py-2 backdrop-blur">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+      <p className="text-[11px] font-bold tracking-wide text-slate-500 uppercase">
         {label}
       </p>
       <p className="mt-1 font-semibold text-slate-800">{value || "-"}</p>

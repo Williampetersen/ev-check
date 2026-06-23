@@ -12,15 +12,15 @@ const ROW_HEIGHT = 56;
 const MIN_BLOCK_HEIGHT = 24;
 
 const statusBlockStyles: Record<AppointmentStatus, string> = {
-  pending: "border-amber-300 bg-amber-100/90 text-amber-900",
-  approved: "border-teal-300 bg-teal-100/90 text-teal-900",
+  pending: "border-sky-300 bg-sky-100/90 text-sky-900",
+  approved: "border-sky-300 bg-sky-100/90 text-sky-900",
   completed: "border-emerald-300 bg-emerald-100/90 text-emerald-900",
   cancelled: "border-rose-300 bg-rose-100/80 text-rose-900 line-through",
 };
 
 const statusDotStyles: Record<AppointmentStatus, string> = {
-  pending: "bg-amber-500",
-  approved: "bg-teal-500",
+  pending: "bg-sky-500",
+  approved: "bg-sky-500",
   completed: "bg-emerald-500",
   cancelled: "bg-rose-500",
 };
@@ -147,7 +147,10 @@ export function CalendarView({
         <div className="flex flex-wrap items-center gap-2">
           <NavButton onClick={() => onDateChange(todayKey)}>Today</NavButton>
           <div className="flex items-center gap-1">
-            <NavButton onClick={() => onDateChange(prevDate)} aria-label="Previous">
+            <NavButton
+              onClick={() => onDateChange(prevDate)}
+              aria-label="Previous"
+            >
               ‹
             </NavButton>
             <input
@@ -156,14 +159,17 @@ export function CalendarView({
               onChange={(event) =>
                 event.target.value && onDateChange(event.target.value)
               }
-              className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 outline-none backdrop-blur focus:border-teal-400"
+              className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 backdrop-blur outline-none focus:border-sky-400"
             />
             <NavButton onClick={() => onDateChange(nextDate)} aria-label="Next">
               ›
             </NavButton>
           </div>
           <div className="flex rounded-lg border border-white/70 bg-white/55 p-1 backdrop-blur">
-            <ModeButton onClick={() => onModeChange("day")} active={mode === "day"}>
+            <ModeButton
+              onClick={() => onModeChange("day")}
+              active={mode === "day"}
+            >
               Day
             </ModeButton>
             <ModeButton
@@ -200,13 +206,13 @@ export function CalendarView({
               key={day}
               className={cn(
                 "border-b border-l border-white/60 px-2 py-2 text-center",
-                day === todayKey && "bg-teal-50/70",
+                day === todayKey && "bg-sky-50/70",
               )}
             >
               <p
                 className={cn(
-                  "text-xs font-bold uppercase tracking-wide",
-                  day === todayKey ? "text-teal-700" : "text-slate-500",
+                  "text-xs font-bold tracking-wide uppercase",
+                  day === todayKey ? "text-sky-700" : "text-slate-500",
                 )}
               >
                 {formatDayHeader(day)}
@@ -214,10 +220,7 @@ export function CalendarView({
             </div>
           ))}
 
-          <div
-            className="relative bg-white/30"
-            style={{ height: gridHeight }}
-          >
+          <div className="relative bg-white/30" style={{ height: gridHeight }}>
             {hours.map((hour, index) => (
               <div
                 key={hour}
@@ -234,7 +237,7 @@ export function CalendarView({
               key={day}
               className={cn(
                 "relative border-l border-white/60",
-                day === todayKey && "bg-teal-50/30",
+                day === todayKey && "bg-sky-50/30",
               )}
               style={{ height: gridHeight }}
             >
@@ -294,7 +297,7 @@ function NavButton({
     <button
       type="button"
       {...props}
-      className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:border-teal-300 hover:text-teal-700"
+      className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:border-sky-300 hover:text-sky-700"
     >
       {children}
     </button>
@@ -316,7 +319,7 @@ function ModeButton({
       className={cn(
         "flex h-7 items-center justify-center rounded-md px-3 text-xs font-bold transition",
         active
-          ? "bg-teal-600 text-white shadow-sm shadow-teal-500/30"
+          ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
           : "text-slate-600 hover:text-slate-950",
       )}
     >

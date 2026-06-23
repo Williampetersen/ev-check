@@ -53,7 +53,7 @@ async function renderInvoicePdf(input: {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
   });
 
-  doc.rect(0, 0, 595, 132).fill("#064E4B");
+  doc.rect(0, 0, 595, 132).fill("#0369A1");
   doc
     .roundedRect(48, 30, 62, 62, 12)
     .fillOpacity(0.94)
@@ -65,7 +65,7 @@ async function renderInvoicePdf(input: {
     .fontSize(24)
     .text(input.settings.companyName || "EV-Check.dk", 128, 42);
   doc
-    .fillColor("#F6C65B")
+    .fillColor("#E0F2FE")
     .fontSize(10)
     .text("BOOKING RECEIPT", 128, 76, { characterSpacing: 1.2 });
   doc
@@ -134,12 +134,9 @@ async function renderInvoicePdf(input: {
   y += 22;
   drawRow(doc, `Moms (${vatPercent}%)`, formatPrice(vatAmount), y);
   y += 30;
+  doc.fillColor("#111827").fontSize(13).text("Total (inkl. moms)", 56, y);
   doc
-    .fillColor("#111827")
-    .fontSize(13)
-    .text("Total (inkl. moms)", 56, y);
-  doc
-    .fillColor("#064E4B")
+    .fillColor("#0369A1")
     .fontSize(22)
     .text(formatPrice(input.appointment.total), 360, y - 5, {
       width: 180,

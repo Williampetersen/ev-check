@@ -37,7 +37,7 @@ export function InvoiceDocument({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl [-webkit-print-color-adjust:exact] [print-color-adjust:exact] print:rounded-none print:border-0 print:shadow-none">
-      <div className="flex flex-wrap items-start justify-between gap-6 bg-[#064E4B] px-8 py-9 sm:px-10">
+      <div className="flex flex-wrap items-start justify-between gap-6 bg-sky-700 px-8 py-9 sm:px-10">
         <div className="flex items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
             <Image
@@ -50,25 +50,25 @@ export function InvoiceDocument({
             />
           </span>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">
+            <p className="text-xs font-bold tracking-[0.18em] text-sky-100 uppercase">
               Faktura fra
             </p>
             <p className="mt-1 text-xl font-bold text-white">
               {settings.companyName || "EV-Check.dk"}
             </p>
-            <p className="mt-1 text-sm text-teal-100">
+            <p className="mt-1 text-sm text-sky-100">
               {settings.supportEmail || "info@ev-check.dk"}
             </p>
-            <p className="text-sm text-teal-100">{contactPhone}</p>
-            <p className="text-sm text-teal-100">CVR-nummer {companyCvr}</p>
+            <p className="text-sm text-sky-100">{contactPhone}</p>
+            <p className="text-sm text-sky-100">CVR-nummer {companyCvr}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#F6C65B]">
+          <p className="text-xs font-bold tracking-[0.18em] text-sky-100 uppercase">
             Faktura / Kvittering
           </p>
           <p className="mt-2 text-2xl font-bold text-white">{invoiceNumber}</p>
-          <p className="mt-1 text-sm text-teal-100">
+          <p className="mt-1 text-sm text-sky-100">
             {formatShortDate(appointment.createdAt)}
           </p>
         </div>
@@ -76,7 +76,7 @@ export function InvoiceDocument({
 
       <div className="grid gap-6 px-8 py-8 sm:grid-cols-2 sm:px-10">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
             Faktureret til
           </p>
           <p className="mt-2 font-bold text-slate-950">
@@ -94,7 +94,7 @@ export function InvoiceDocument({
           <p className="text-sm text-slate-600">{customer.phone}</p>
         </div>
         <div className="sm:text-right">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
             Booking
           </p>
           <p className="mt-2 font-bold text-slate-950">
@@ -116,9 +116,11 @@ export function InvoiceDocument({
       <div className="px-8 sm:px-10">
         <table className="w-full border-t border-slate-200 text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+            <tr className="border-b border-slate-200 text-xs tracking-wide text-slate-400 uppercase">
               <th className="py-3 font-semibold">Beskrivelse</th>
-              <th className="py-3 text-right font-semibold">Pris (inkl. moms)</th>
+              <th className="py-3 text-right font-semibold">
+                Pris (inkl. moms)
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -150,7 +152,7 @@ export function InvoiceDocument({
             </div>
             <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-950">
               <span>Total (inkl. moms)</span>
-              <span className="text-[#064E4B]">
+              <span className="text-sky-700">
                 {formatPrice(appointment.total)}
               </span>
             </div>
@@ -164,15 +166,14 @@ export function InvoiceDocument({
             "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold",
             paid
               ? "bg-emerald-100 text-emerald-800"
-              : "bg-amber-100 text-amber-800",
+              : "bg-sky-100 text-sky-800",
           )}
         >
           {paymentLabels[appointment.paymentStatus]}
         </span>
         <p className="text-xs text-slate-500">
           Alle priser er i DKK og inkl. {Math.round(DANISH_VAT_RATE * 100)}%
-          moms. Tak for din booking hos{" "}
-          {settings.companyName || "EV-Check.dk"}.
+          moms. Tak for din booking hos {settings.companyName || "EV-Check.dk"}.
         </p>
       </div>
     </div>

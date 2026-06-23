@@ -57,7 +57,7 @@ export function AdminSidebar({
             className="h-11 w-11 rounded-lg bg-white object-contain shadow-sm shadow-slate-950/10"
           />
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+            <p className="text-xs font-bold tracking-[0.18em] text-sky-700 uppercase">
               EV Check
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-950">
@@ -68,7 +68,7 @@ export function AdminSidebar({
         </div>
       </div>
 
-      <nav className="flex gap-2 overflow-x-auto px-3 py-3 [-ms-overflow-style:none] [scrollbar-width:none] xl:grid xl:grid-cols-1 xl:overflow-visible [&::-webkit-scrollbar]:hidden">
+      <nav className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-3 py-3 [-ms-overflow-style:none] xl:grid xl:grid-cols-1 xl:overflow-visible [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
           const Icon = item.icon;
           const active = view === item.id;
@@ -80,7 +80,7 @@ export function AdminSidebar({
               className={cn(
                 "flex min-w-[8.5rem] items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition xl:min-w-0 xl:py-2.5",
                 active
-                  ? "bg-teal-600 text-white shadow-sm shadow-teal-500/30"
+                  ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
                   : "text-slate-600 hover:bg-white/60 hover:text-slate-950",
               )}
             >
@@ -122,7 +122,7 @@ export function AdminSidebar({
 
 function SidebarStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white/45 rounded-lg border border-white/60 px-2.5 py-2 backdrop-blur">
+    <div className="rounded-lg border border-white/60 bg-white/45 px-2.5 py-2 backdrop-blur">
       <span className="block truncate text-[11px] font-medium text-slate-500">
         {label}
       </span>

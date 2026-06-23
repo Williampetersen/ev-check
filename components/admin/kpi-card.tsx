@@ -2,9 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  teal: "bg-teal-50/80 text-teal-700 ring-teal-100",
+  sky: "bg-sky-50/80 text-sky-700 ring-sky-100",
   slate: "bg-slate-100/80 text-slate-700 ring-slate-200",
-  amber: "bg-amber-50/80 text-amber-700 ring-amber-100",
   emerald: "bg-emerald-50/80 text-emerald-700 ring-emerald-100",
 };
 
@@ -13,7 +12,7 @@ export function KpiCard({
   value,
   detail,
   icon: Icon,
-  tone = "teal",
+  tone = "sky",
 }: {
   label: string;
   value: string;
@@ -25,7 +24,7 @@ export function KpiCard({
     <section className="glass-card rounded-lg p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
             {label}
           </p>
           <p className="mt-2 truncate text-2xl font-bold text-slate-950 sm:text-2xl">

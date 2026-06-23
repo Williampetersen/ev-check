@@ -92,7 +92,9 @@ export function AdminDashboardClient({
     ? dashboard.appointments.find((item) => item.id === activeBookingId)
     : undefined;
   const activeCustomer = activeAppointment
-    ? dashboard.customers.find((item) => item.id === activeAppointment.customerId)
+    ? dashboard.customers.find(
+        (item) => item.id === activeAppointment.customerId,
+      )
     : undefined;
 
   const bookingBackHref = `/admin?view=${view}${
@@ -109,7 +111,7 @@ export function AdminDashboardClient({
       />
       <section className="min-w-0 space-y-4">
         {!dashboard.databaseConfigured ? (
-          <Notice tone="amber">
+          <Notice tone="sky">
             DATABASE_URL is not configured, so EV Check is showing demo
             dashboard data. Add the database env var to persist customers,
             appointments, settings, users, and emails.
@@ -118,7 +120,7 @@ export function AdminDashboardClient({
         {dashboard.databaseError ? (
           <Notice tone="rose">{dashboard.databaseError}</Notice>
         ) : null}
-        {savedNotice ? <Notice tone="teal">Changes saved.</Notice> : null}
+        {savedNotice ? <Notice tone="sky">Changes saved.</Notice> : null}
         {errorNotice ? (
           <Notice tone="rose">The action could not be completed.</Notice>
         ) : null}

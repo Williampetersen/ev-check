@@ -327,7 +327,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
         customer.customerType === "business" &&
           !hasValue(customer.company) &&
           "Firmanavn",
-        !customer.acceptsTerms && "Kontaktaccept",
+        !customer.acceptsTerms && "Vilkår og betingelser",
       ].filter(Boolean) as string[],
     [customer],
   );
@@ -403,13 +403,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   }
 
   return (
-    <section className="bg-gradient-to-b from-teal-50 via-slate-50 to-slate-50 px-4 pt-10 pb-32 sm:px-6 lg:px-8 lg:pb-10">
+    <section className="bg-gradient-to-b from-sky-50 via-slate-50 to-slate-50 px-4 pt-10 pb-32 sm:px-6 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 text-center">
-          <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 text-white shadow-sm">
+          <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm shadow-sky-700/20">
             <CalendarCheck className="h-5 w-5" />
           </span>
-          <p className="text-xs font-bold tracking-[0.18em] text-teal-700 uppercase">
+          <p className="text-xs font-bold tracking-[0.18em] text-sky-700 uppercase">
             Book tid
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -572,9 +572,9 @@ function Stepper({
                   className={cn(
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition",
                     isActive
-                      ? "border-teal-700 bg-teal-700 text-white"
+                      ? "border-sky-500 bg-sky-500 text-white shadow-sm shadow-sky-700/20"
                       : isDone
-                        ? "border-teal-700 bg-white text-teal-700"
+                        ? "border-sky-500 bg-white text-sky-700"
                         : "border-slate-200 bg-white text-slate-400",
                   )}
                 >
@@ -586,7 +586,7 @@ function Stepper({
                     isActive
                       ? "text-slate-900"
                       : isDone
-                        ? "text-teal-700"
+                        ? "text-sky-700"
                         : "text-slate-400",
                   )}
                 >
@@ -597,7 +597,7 @@ function Stepper({
                 <span
                   className={cn(
                     "mx-2 h-0.5 flex-1 rounded-full",
-                    item.id < activeStep ? "bg-teal-700" : "bg-slate-200",
+                    item.id < activeStep ? "bg-sky-500" : "bg-slate-200",
                   )}
                 />
               ) : null}
@@ -711,7 +711,7 @@ function BrandDropdown({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300"
       >
         <span className="flex min-w-0 items-center gap-2">
           {selected?.logo ? (
@@ -756,7 +756,7 @@ function BrandDropdown({
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
                     brand.id === value
-                      ? "bg-teal-50 text-teal-700"
+                      ? "bg-sky-50 text-sky-700"
                       : "text-slate-700 hover:bg-slate-50",
                   )}
                 >
@@ -798,7 +798,7 @@ function ModelSelect({
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
     >
       <option value="">
         {disabled ? "Vælg bilmærke først" : "Vælg model"}
@@ -951,8 +951,8 @@ function ServiceStep({
               className={cn(
                 "flex items-start justify-between gap-4 rounded-xl border-2 p-4 text-left transition",
                 selected
-                  ? "border-teal-700 bg-teal-50/60"
-                  : "border-slate-200 hover:border-teal-300",
+                  ? "border-sky-500 bg-sky-50/60"
+                  : "border-slate-200 hover:border-sky-300",
               )}
             >
               <div className="flex items-start gap-3">
@@ -960,7 +960,7 @@ function ServiceStep({
                   className={cn(
                     "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
                     selected
-                      ? "border-teal-700 bg-teal-700 text-white"
+                      ? "border-sky-500 bg-sky-500 text-white"
                       : "border-slate-300",
                   )}
                 >
@@ -991,7 +991,7 @@ function ServiceStep({
                   </p>
                 </div>
               </div>
-              <p className="shrink-0 font-bold text-teal-700">
+              <p className="shrink-0 font-bold text-sky-700">
                 {formatPrice(service.price)}
               </p>
             </button>
@@ -1062,7 +1062,7 @@ function TimeStep({
               aria-label="Forrige måned"
               disabled={!canGoPrevious}
               onClick={() => canGoPrevious && onMonthChange(previousMonth)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -1074,7 +1074,7 @@ function TimeStep({
               aria-label="Næste måned"
               disabled={!canGoNext}
               onClick={() => canGoNext && onMonthChange(nextMonth)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-teal-300 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -1097,8 +1097,8 @@ function TimeStep({
                   className={cn(
                     "flex aspect-square items-center justify-center rounded-lg text-sm font-semibold transition",
                     selected
-                      ? "bg-teal-700 text-white"
-                      : "text-slate-700 hover:bg-teal-50",
+                      ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
+                      : "text-slate-700 hover:bg-sky-50",
                     !day.inMonth && "text-slate-300",
                     day.disabled &&
                       "cursor-not-allowed text-slate-300 hover:bg-transparent",
@@ -1137,8 +1137,8 @@ function TimeStep({
                       className={cn(
                         "flex h-9 items-center justify-center rounded-lg border text-sm font-semibold transition",
                         selected
-                          ? "border-teal-700 bg-teal-700 text-white"
-                          : "border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700",
+                          ? "border-sky-500 bg-sky-500 text-white shadow-sm shadow-sky-700/20"
+                          : "border-slate-200 text-slate-700 hover:border-sky-300 hover:text-sky-700",
                       )}
                     >
                       {slot}
@@ -1207,7 +1207,7 @@ function DetailsStep({
               className={cn(
                 "flex-1 rounded-lg px-5 py-2 text-sm font-semibold transition sm:flex-none sm:px-8",
                 customer.customerType === option.value
-                  ? "bg-white text-teal-700 shadow-sm"
+                  ? "bg-white text-sky-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
@@ -1340,11 +1340,12 @@ function DetailsStep({
               acceptsTerms: event.target.checked,
             }))
           }
-          className="mt-1 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
+          className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
         />
         <span>
-          EV-Check må kontakte mig om bookingen.
-          <span className="font-semibold text-teal-700"> *</span>
+          Jeg accepterer vilkår og betingelser og giver EV-Check lov til at
+          kontakte mig om bookingen.
+          <span className="font-semibold text-sky-700"> *</span>
         </span>
       </label>
 
@@ -1435,7 +1436,7 @@ function ReviewStep({
         </p>
       ) : null}
       {!databaseConfigured ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 font-semibold text-amber-800">
+        <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm leading-6 font-semibold text-sky-800">
           Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
         </p>
       ) : null}
@@ -1491,13 +1492,13 @@ function SummaryCard({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-teal-700/20 bg-white shadow-md",
+        "overflow-hidden rounded-2xl border border-sky-300/70 bg-white shadow-md shadow-sky-700/10",
         sticky && "lg:sticky lg:top-20",
         className,
       )}
     >
-      <div className="flex items-center gap-2 bg-teal-700 px-5 py-3 sm:px-6">
-        <CalendarCheck className="h-4 w-4 text-teal-100" />
+      <div className="flex items-center gap-2 bg-sky-500 px-5 py-3 shadow-sm shadow-sky-700/20 sm:px-6">
+        <CalendarCheck className="h-4 w-4 text-sky-100" />
         <p className="text-xs font-bold tracking-[0.14em] text-white uppercase">
           Din booking
         </p>
@@ -1508,11 +1509,11 @@ function SummaryCard({
         </p>
         <div className="mt-3 grid gap-2 text-sm text-slate-600">
           <span className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-teal-700" />
+            <Clock className="h-4 w-4 text-sky-700" />
             {durationMinutes || 0} min.
           </span>
           <span className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-teal-700" />
+            <MapPin className="h-4 w-4 text-sky-700" />
             Hos dig på Sjælland
           </span>
           {brandLabel ? (
@@ -1526,24 +1527,24 @@ function SummaryCard({
                   className="h-4 w-4 object-contain"
                 />
               ) : (
-                <Car className="h-4 w-4 text-teal-700" />
+                <Car className="h-4 w-4 text-sky-700" />
               )}
               {[brandLabel, modelLabel].filter(Boolean).join(" ")}
             </span>
           ) : null}
         </div>
-        <div className="mt-4 rounded-xl border border-dashed border-teal-200 bg-teal-50/60 px-3 py-2.5 text-sm">
+        <div className="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-3 py-2.5 text-sm">
           {appointmentTime ? (
             <p className="font-semibold text-slate-900">
               {dateLabel(appointmentDate)} kl. {appointmentTime}
             </p>
           ) : (
-            <p className="font-semibold text-teal-700">Vælg dato og tid.</p>
+            <p className="font-semibold text-sky-700">Vælg dato og tid.</p>
           )}
         </div>
         <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
           <span className="text-sm font-semibold text-slate-500">Total</span>
-          <span className="text-xl font-bold text-teal-700">
+          <span className="text-xl font-bold text-sky-700">
             {formatPrice(total)}
           </span>
         </div>
@@ -1570,11 +1571,11 @@ function SummaryDetails({
       </p>
       <div className="mt-3 grid gap-2 text-sm text-slate-600">
         <span className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-teal-700" />
+          <Clock className="h-4 w-4 text-sky-700" />
           {durationMinutes || 0} min.
         </span>
         <span className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-teal-700" />
+          <MapPin className="h-4 w-4 text-sky-700" />
           Hos dig på Sjælland
         </span>
         {brandLabel ? (
@@ -1588,24 +1589,24 @@ function SummaryDetails({
                 className="h-4 w-4 object-contain"
               />
             ) : (
-              <Car className="h-4 w-4 text-teal-700" />
+              <Car className="h-4 w-4 text-sky-700" />
             )}
             {[brandLabel, modelLabel].filter(Boolean).join(" ")}
           </span>
         ) : null}
       </div>
-      <div className="mt-4 rounded-xl border border-dashed border-teal-200 bg-teal-50/60 px-3 py-2.5 text-sm">
+      <div className="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-3 py-2.5 text-sm">
         {appointmentTime ? (
           <p className="font-semibold text-slate-900">
             {dateLabel(appointmentDate)} kl. {appointmentTime}
           </p>
         ) : (
-          <p className="font-semibold text-teal-700">Vælg dato og tid.</p>
+          <p className="font-semibold text-sky-700">Vælg dato og tid.</p>
         )}
       </div>
       <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
         <span className="text-sm font-semibold text-slate-500">Total</span>
-        <span className="text-xl font-bold text-teal-700">
+        <span className="text-xl font-bold text-sky-700">
           {formatPrice(total)}
         </span>
       </div>
@@ -1639,7 +1640,7 @@ function MobileSummarySheet({
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
               <CalendarCheck className="h-5 w-5" />
             </span>
             <div className="min-w-0">
@@ -1670,7 +1671,7 @@ function MobileSummarySheet({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(15,118,110,0.22)] transition hover:bg-teal-800"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
           >
             Fortsæt booking
             <ArrowRight className="h-4 w-4" />
@@ -1702,11 +1703,11 @@ function MobileBookingBottomBar({
       )}
     >
       <div className="mx-auto flex max-w-xl items-center gap-3 overflow-hidden">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
           <CalendarCheck className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xl leading-none font-bold text-teal-700">
+          <p className="text-xl leading-none font-bold text-sky-700">
             {formatPrice(total)}
           </p>
           <p className="mt-1 truncate text-xs font-semibold text-slate-500">
@@ -1717,7 +1718,7 @@ function MobileBookingBottomBar({
           type="button"
           onClick={onOpen}
           aria-controls="mobile-booking-summary-title"
-          className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(245,158,11,0.26)] transition hover:bg-amber-600"
+          className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,116,184,0.26)] transition hover:bg-sky-600"
         >
           Se oversigt
         </button>
@@ -1749,7 +1750,7 @@ function Field({
     >
       <span>
         {label}
-        {required ? <span className="text-teal-700"> *</span> : null}
+        {required ? <span className="text-sky-700"> *</span> : null}
       </span>
       {children}
     </Wrapper>
@@ -1771,7 +1772,7 @@ function ReviewRow({
       <strong
         className={cn(
           "max-w-[60%] text-right text-sm text-slate-900",
-          highlight && "text-lg text-teal-700",
+          highlight && "text-lg text-sky-700",
         )}
       >
         {value || "-"}
@@ -1812,20 +1813,20 @@ function BookingConfirmation({
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href={confirmation.portalUrl}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Åbn kundeportal
           </Link>
           <a
             href={`mailto:${customerEmail}`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-sky-300"
           >
             <Mail className="h-4 w-4" />
             {customerEmail}
           </a>
           <a
             href="tel:+4571900530"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-sky-300"
           >
             <Phone className="h-4 w-4" />
             Ring til os

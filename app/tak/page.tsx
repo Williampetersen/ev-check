@@ -17,7 +17,7 @@ export default function ThanksPage() {
     <SitePage>
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-3xl border border-white/70 bg-white p-8 text-center shadow-sm shadow-slate-200/70">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-teal-600" />
+          <CheckCircle2 className="mx-auto h-14 w-14 text-sky-600" />
           <h1 className="mt-6 text-4xl font-bold text-slate-950">
             Tak for din henvendelse
           </h1>
@@ -30,14 +30,14 @@ export default function ThanksPage() {
               href="mailto:info@ev-check.dk"
               className="flex items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-3"
             >
-              <Mail className="h-4 w-4 text-teal-700" />
+              <Mail className="h-4 w-4 text-sky-700" />
               info@ev-check.dk
             </Link>
             <Link
               href="tel:+4571900530"
               className="flex items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-3"
             >
-              <Phone className="h-4 w-4 text-teal-700" />
+              <Phone className="h-4 w-4 text-sky-700" />
               +45 71 90 05 30
             </Link>
           </div>

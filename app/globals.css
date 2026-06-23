@@ -7,8 +7,8 @@
 :root {
   color-scheme: light;
   --ev-ink: #0f172a;
-  --ev-teal: #064e4b;
-  --ev-mint: #e8f7f3;
+  --ev-blue: #0369a1;
+  --ev-soft-blue: #e0f2fe;
   --ev-cream: #fbfaf5;
 }
 
@@ -28,9 +28,10 @@ body {
   overflow-x: hidden;
   color: var(--ev-ink);
   background-color: var(--ev-cream);
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       circle at 15% 0%,
-      rgba(20, 184, 166, 0.12),
+      rgba(14, 165, 233, 0.14),
       transparent 30rem
     ),
     radial-gradient(
@@ -42,7 +43,7 @@ body {
       135deg,
       rgba(255, 255, 255, 0.96),
       rgba(248, 250, 252, 0.9) 46%,
-      rgba(235, 250, 246, 0.72)
+      rgba(224, 242, 254, 0.72)
     );
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
@@ -57,8 +58,8 @@ textarea {
 }
 
 ::selection {
-  background: rgba(20, 184, 166, 0.22);
-  color: #042f2e;
+  background: rgba(14, 165, 233, 0.24);
+  color: #082f49;
 }
 
 a,
@@ -73,7 +74,7 @@ video {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(20, 184, 166, 0.35);
+  outline: 3px solid rgba(14, 165, 233, 0.36);
   outline-offset: 3px;
 }
 
@@ -94,11 +95,12 @@ video {
     background: linear-gradient(
       145deg,
       rgba(255, 255, 255, 0.94),
-      rgba(235, 250, 246, 0.58)
+      rgba(224, 242, 254, 0.58)
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
       inset 0 -18px 48px rgba(226, 232, 240, 0.22),
-      0 22px 70px rgba(6, 78, 75, 0.1);
+      0 22px 70px rgba(14, 116, 184, 0.1);
   }
 
   .glass-panel {
@@ -106,10 +108,11 @@ video {
     background: linear-gradient(
       145deg,
       rgba(255, 255, 255, 0.88),
-      rgba(235, 250, 246, 0.48)
+      rgba(224, 242, 254, 0.48)
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 14px 36px rgba(6, 78, 75, 0.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 14px 36px rgba(14, 116, 184, 0.08);
   }
 
   .glass-card {
@@ -119,8 +122,9 @@ video {
       rgba(255, 255, 255, 0.86),
       rgba(250, 250, 247, 0.62)
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86),
-      0 10px 28px rgba(6, 78, 75, 0.05);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.86),
+      0 10px 28px rgba(14, 116, 184, 0.05);
   }
 
   .glass-dark {
@@ -130,7 +134,8 @@ video {
       rgba(255, 255, 255, 0.72),
       rgba(255, 255, 255, 0.34)
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
       inset 0 -22px 54px rgba(255, 255, 255, 0.18),
       0 20px 60px rgba(15, 23, 42, 0.09);
   }

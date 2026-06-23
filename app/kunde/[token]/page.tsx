@@ -52,7 +52,7 @@ export default async function CustomerTokenPage({
   return (
     <main className="min-h-screen bg-transparent px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-6">
       <div className="mx-auto max-w-6xl space-y-5">
-        <header className="glass-dark rounded-lg p-5 text-white sm:p-6">
+        <header className="rounded-lg border border-sky-200/80 bg-white/72 p-5 text-slate-950 shadow-[0_18px_55px_rgba(14,116,184,0.12),inset_0_1px_0_rgba(255,255,255,0.90)] backdrop-blur-2xl sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex min-w-0 gap-3">
               <Image
@@ -63,20 +63,20 @@ export default async function CustomerTokenPage({
                 className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain shadow-sm shadow-black/10"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold tracking-[0.18em] text-sky-300 uppercase">
+                <p className="text-sm font-semibold tracking-[0.18em] text-slate-950 uppercase">
                   EV Check portal
                 </p>
-                <h1 className="mt-3 text-2xl leading-tight font-bold sm:text-3xl">
+                <h1 className="mt-3 text-2xl leading-tight font-bold text-slate-950 sm:text-3xl">
                   Welcome, {portal.customer.name}
                 </h1>
-                <p className="mt-2 max-w-2xl text-slate-300">
+                <p className="mt-2 max-w-2xl text-slate-950">
                   Follow your appointments, statuses, invoices, and reports in
                   one place.
                 </p>
               </div>
             </div>
             <form action="/api/customer/auth/logout" method="POST">
-              <button className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/10 sm:h-10">
+              <button className="inline-flex h-11 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-500/90 px-4 text-sm font-semibold text-white shadow-sm shadow-sky-700/20 transition hover:bg-sky-600 sm:h-10">
                 <LogOut className="h-4 w-4" />
                 Log out
               </button>

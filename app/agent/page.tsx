@@ -36,7 +36,7 @@ export default async function AgentDashboardPage() {
                 className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain shadow-sm shadow-black/10"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-300">
+                <p className="text-sm font-semibold tracking-[0.18em] text-sky-300 uppercase">
                   Service user
                 </p>
                 <h1 className="mt-3 text-3xl font-bold">
@@ -48,7 +48,7 @@ export default async function AgentDashboardPage() {
               </div>
             </div>
             <form action="/api/agent/logout" method="POST">
-              <button className="border-white/15 inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold text-white hover:bg-white/10">
+              <button className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/10">
                 <LogOut className="h-4 w-4" />
                 Log out
               </button>
@@ -78,7 +78,7 @@ export default async function AgentDashboardPage() {
           />
         </section>
 
-        <section className="bg-white/85 rounded-3xl border border-white/70 p-4 shadow-sm shadow-slate-200/70">
+        <section className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-sm shadow-slate-200/70">
           <h2 className="text-lg font-bold text-slate-950">Assigned checks</h2>
           <div className="mt-4 grid gap-3">
             {dashboard.appointments.length > 0 ? (
@@ -126,8 +126,8 @@ function Metric({
   value: string;
 }) {
   return (
-    <section className="bg-white/85 rounded-2xl border border-white/70 p-4 shadow-sm shadow-slate-200/70">
-      <Icon className="h-5 w-5 text-teal-700" />
+    <section className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm shadow-slate-200/70">
+      <Icon className="h-5 w-5 text-sky-700" />
       <p className="mt-3 text-sm font-semibold text-slate-500">{label}</p>
       <p className="mt-1 truncate text-2xl font-bold text-slate-950">{value}</p>
     </section>

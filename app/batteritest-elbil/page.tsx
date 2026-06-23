@@ -112,7 +112,7 @@ function BatteryTestHero() {
     <section className="relative isolate overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-white/70 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-teal-800 shadow-sm shadow-teal-950/5">
+          <p className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-white/70 px-3 py-2 text-xs font-bold tracking-[0.14em] text-sky-800 uppercase shadow-sm shadow-sky-950/5">
             <ShieldCheck className="h-4 w-4" />
             Mobil elbil-diagnose
           </p>
@@ -142,8 +142,8 @@ function BatteryTestHero() {
                   key={fact.label}
                   className="glass-card rounded-lg p-4 text-slate-950"
                 >
-                  <Icon className="h-5 w-5 text-teal-700" />
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  <Icon className="h-5 w-5 text-sky-700" />
+                  <p className="mt-3 text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
                     {fact.label}
                   </p>
                   <p className="mt-1 text-lg font-bold">{fact.value}</p>
@@ -152,7 +152,7 @@ function BatteryTestHero() {
             })}
           </div>
         </div>
-        <div className="shadow-teal-950/12 relative min-h-[22rem] overflow-hidden rounded-lg shadow-2xl sm:min-h-[30rem]">
+        <div className="relative min-h-[22rem] overflow-hidden rounded-lg shadow-2xl shadow-sky-950/12 sm:min-h-[30rem]">
           <Image
             src="/wp/ev-car-danmark-1.png"
             alt="Batteritest af elbil med EV-Check.dk"
@@ -161,9 +161,9 @@ function BatteryTestHero() {
             sizes="(min-width: 1024px) 48vw, 100vw"
             className="object-cover"
           />
-          <div className="from-slate-950/68 absolute inset-0 bg-gradient-to-t via-slate-950/10 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 text-white sm:p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-teal-100">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/68 via-slate-950/10 to-transparent" />
+          <div className="absolute right-0 bottom-0 left-0 p-5 text-white sm:p-6">
+            <p className="text-sm font-semibold tracking-[0.14em] text-sky-100 uppercase">
               SoH, BMS og rapport
             </p>
             <p className="mt-2 max-w-md text-2xl font-bold">

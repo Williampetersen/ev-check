@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { MobileNav } from "@/components/site/mobile-nav";
-import { brandLogoPath, sameAsLinks, siteUrl } from "@/lib/seo";
+import { brandLogoPath, companyCvr, sameAsLinks, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export { siteUrl };
@@ -190,7 +190,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/92 px-4 py-3 text-slate-950 shadow-[0_18px_60px_rgba(6,78,75,0.10)] backdrop-blur-xl sm:px-5 sm:py-4">
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/92 px-4 py-3 text-slate-950 shadow-[0_18px_60px_rgba(14,116,184,0.10)] backdrop-blur-xl sm:px-5 sm:py-4">
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="flex min-w-0 items-center gap-3">
               <Image
@@ -205,7 +205,7 @@ export function SiteHeader() {
                 <span className="font-display block truncate text-base font-bold text-slate-950 sm:text-lg">
                   EV-Check.dk
                 </span>
-                <span className="hidden text-xs font-semibold text-teal-700 min-[420px]:block">
+                <span className="hidden text-xs font-semibold text-sky-700 min-[420px]:block">
                   Mobil batteritest
                 </span>
               </div>
@@ -216,7 +216,7 @@ export function SiteHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-500 transition hover:bg-teal-50 hover:text-teal-900"
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-500 transition hover:bg-sky-50 hover:text-sky-900"
                 >
                   {item.label}
                 </Link>
@@ -226,14 +226,14 @@ export function SiteHeader() {
             <div className="hidden items-center gap-3 lg:flex">
               <Link
                 href="/min-konto"
-                className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-800"
+                className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-sky-300 hover:text-sky-800"
               >
                 <UserRound className="h-4 w-4" />
                 Min konto
               </Link>
               <Link
                 href="/book-tid"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
               >
                 <CalendarCheck className="h-4 w-4" />
                 Book tid
@@ -253,7 +253,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="px-4 pt-8 pb-8 sm:px-6">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 px-6 py-10 text-slate-900 shadow-[0_18px_60px_rgba(6,78,75,0.10)] backdrop-blur-xl sm:px-10">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 px-6 py-10 text-slate-900 shadow-[0_18px_60px_rgba(14,116,184,0.10)] backdrop-blur-xl sm:px-10">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_0.8fr_0.8fr]">
           <div className="max-w-xl">
             <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export function SiteFooter() {
               />
               <div>
                 <p className="font-display text-xl font-bold">EV-Check.dk</p>
-                <p className="text-xs font-semibold tracking-[0.16em] text-teal-700 uppercase">
+                <p className="text-xs font-semibold tracking-[0.16em] text-sky-700 uppercase">
                   Batteritest af elbiler
                 </p>
               </div>
@@ -290,23 +290,23 @@ export function SiteFooter() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="transition hover:text-teal-800"
+                  className="transition hover:text-sky-800"
                 >
                   {item.label}
                 </Link>
               ))}
-              <Link href="/book-tid" className="transition hover:text-teal-800">
+              <Link href="/book-tid" className="transition hover:text-sky-800">
                 Book batteritest
               </Link>
               <Link
                 href="/cookiepolitik"
-                className="transition hover:text-teal-800"
+                className="transition hover:text-sky-800"
               >
                 Cookiepolitik
               </Link>
               <a
                 href="mailto:info@ev-check.dk"
-                className="transition hover:text-teal-800"
+                className="transition hover:text-sky-800"
               >
                 Skriv til os
               </a>
@@ -320,22 +320,23 @@ export function SiteFooter() {
             <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
               <a
                 href="tel:+4571900530"
-                className="transition hover:text-teal-800"
+                className="transition hover:text-sky-800"
               >
                 +45 71 90 05 30
               </a>
               <a
                 href="mailto:info@ev-check.dk"
-                className="transition hover:text-teal-800"
+                className="transition hover:text-sky-800"
               >
                 info@ev-check.dk
               </a>
+              <p>CVR-nummer {companyCvr}</p>
               <p>Alle ugens dage kl. 08-17</p>
               Dækker København, Storkøbenhavn og store dele af Sjælland
             </div>
             <Link
               href="/book-tid"
-              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
+              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
             >
               <CalendarCheck className="h-4 w-4" />
               Book tid
@@ -379,12 +380,12 @@ export function SiteFooter() {
             forbeholdes.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/min-konto" className="transition hover:text-teal-800">
+            <Link href="/min-konto" className="transition hover:text-sky-800">
               Min konto
             </Link>
             <Link
               href="/cookiepolitik"
-              className="transition hover:text-teal-800"
+              className="transition hover:text-sky-800"
             >
               Cookiepolitik
             </Link>
@@ -429,7 +430,7 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/48 to-slate-950/16" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#fbfaf5] to-transparent" />
       <div className="relative mx-auto w-full max-w-[100vw] overflow-hidden px-4 py-20 text-center sm:max-w-5xl sm:px-6 sm:py-24 lg:px-8">
-        <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold tracking-[0.12em] text-teal-100 uppercase shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
+        <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold tracking-[0.12em] text-sky-100 uppercase shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
           <ShieldCheck className="h-4 w-4" />
           <span>Mobil batteritest af elbil på Sjælland</span>
         </p>
@@ -465,7 +466,7 @@ export function HeroSection() {
                 key={fact.label}
                 className="rounded-lg border border-white/16 bg-white/10 px-4 py-3 text-left shadow-lg shadow-black/10 backdrop-blur-xl"
               >
-                <Icon className="h-4 w-4 text-teal-200" />
+                <Icon className="h-4 w-4 text-sky-200" />
                 <p className="mt-2 text-xs font-semibold tracking-[0.12em] text-white/58 uppercase">
                   {fact.label}
                 </p>
@@ -492,19 +493,19 @@ export function PriceCard() {
 
   return (
     <aside className="glass-shell rounded-lg p-5 text-slate-950 sm:p-6">
-      <p className="inline-flex items-center gap-2 rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold tracking-[0.14em] text-teal-700 uppercase">
+      <p className="inline-flex items-center gap-2 rounded-lg bg-sky-50 px-3 py-1 text-xs font-bold tracking-[0.14em] text-sky-700 uppercase">
         <Star className="h-3.5 w-3.5" />
         Fast service
       </p>
       <h2 className="mt-4 text-2xl font-bold">Batteritest af elbil</h2>
       <div className="mt-4 flex items-end gap-2">
-        <p className="text-4xl font-bold text-teal-700">1300 kr.</p>
+        <p className="text-4xl font-bold text-sky-700">1300 kr.</p>
         <p className="pb-1 text-sm font-semibold text-slate-500">mobil test</p>
       </div>
       <div className="mt-5 grid gap-3">
         {points.map((point) => (
           <div key={point} className="flex gap-3 text-sm text-slate-700">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
             <span>{point}</span>
           </div>
         ))}
@@ -536,9 +537,9 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
             return (
               <article
                 key={service.title}
-                className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/8"
+                className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-950/8"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50/90 text-teal-700 backdrop-blur">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50/90 text-sky-700 backdrop-blur">
                   <Icon className="h-5 w-5" />
                 </span>
                 <h3 className="mt-5 text-lg font-bold text-slate-950">
@@ -566,7 +567,7 @@ export function AboutSection() {
   return (
     <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="relative min-h-[24rem] overflow-hidden rounded-lg shadow-xl shadow-teal-950/8">
+        <div className="relative min-h-[24rem] overflow-hidden rounded-lg shadow-xl shadow-sky-950/8">
           <Image
             src="/wp/teslacertificate.jpg"
             alt="EV-Check certificering og træning"
@@ -592,7 +593,7 @@ export function AboutSection() {
                 key={item}
                 className="glass-card flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-slate-700"
               >
-                <CheckCircle2 className="h-4 w-4 text-teal-600" />
+                <CheckCircle2 className="h-4 w-4 text-sky-600" />
                 {item}
               </div>
             ))}
@@ -615,14 +616,14 @@ export function AboutSection() {
 export function BrandsAndCertificate() {
   return (
     <section className="glass-card rounded-lg p-5 sm:p-6">
-      <p className="text-sm font-semibold tracking-[0.14em] text-teal-700 uppercase">
+      <p className="text-sm font-semibold tracking-[0.14em] text-sky-700 uppercase">
         Mærker vi tester
       </p>
       <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
         {brandLogos.map((brand) => (
           <div
             key={brand.src}
-            className="flex h-16 items-center justify-center rounded-lg border border-white/70 bg-white/68 p-3 shadow-sm shadow-teal-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white"
+            className="flex h-16 items-center justify-center rounded-lg border border-white/70 bg-white/68 p-3 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white"
           >
             <Image
               src={brand.src}
@@ -721,9 +722,9 @@ export function BatteryUseCasesSection() {
             return (
               <article
                 key={item.title}
-                className="glass-card rounded-lg p-5 transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/10"
+                className="glass-card rounded-lg p-5 transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-950/10"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
                   <Icon className="h-5 w-5" />
                 </span>
                 <h2 className="mt-5 text-xl font-bold text-slate-950">
@@ -785,7 +786,7 @@ export function ServiceAreaSection() {
             {serviceAreas.map((area) => (
               <span
                 key={area}
-                className="rounded-lg border border-teal-200/80 bg-white/70 px-3 py-2 text-sm font-semibold text-teal-800 shadow-sm shadow-teal-950/5"
+                className="rounded-lg border border-sky-200/80 bg-white/70 px-3 py-2 text-sm font-semibold text-sky-800 shadow-sm shadow-sky-950/5"
               >
                 {area}
               </span>
@@ -793,7 +794,7 @@ export function ServiceAreaSection() {
           </div>
         </div>
         <div className="glass-shell rounded-lg p-5 sm:p-6">
-          <MapPin className="h-8 w-8 text-teal-700" />
+          <MapPin className="h-8 w-8 text-sky-700" />
           <h2 className="mt-4 text-2xl font-bold text-slate-950">
             Vi kommer til bilen
           </h2>
@@ -821,9 +822,9 @@ export function TestimonialsSection() {
           {testimonials.map((item) => (
             <article
               key={item.name}
-              className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/8"
+              className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-950/8"
             >
-              <div className="flex gap-1 text-teal-600" aria-label="5 stjerner">
+              <div className="flex gap-1 text-sky-600" aria-label="5 stjerner">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} className="h-4 w-4 fill-current" />
                 ))}
@@ -834,7 +835,7 @@ export function TestimonialsSection() {
               <div className="mt-5 border-t border-sky-100 pt-4">
                 <p className="font-bold text-slate-950">{item.name}</p>
                 <p className="text-sm text-slate-500">{item.detail}</p>
-                <p className="mt-1 text-xs font-semibold tracking-wide text-teal-700 uppercase">
+                <p className="mt-1 text-xs font-semibold tracking-wide text-sky-700 uppercase">
                   {item.date}
                 </p>
               </div>
@@ -859,12 +860,12 @@ export function FaqSection() {
           {faqs.map((faq) => (
             <details
               key={faq.question}
-              className="glass-card group rounded-lg p-5 transition hover:border-teal-200 hover:bg-white/90"
+              className="glass-card group rounded-lg p-5 transition hover:border-sky-200 hover:bg-white/90"
             >
               <summary className="cursor-pointer list-none font-bold text-slate-950">
                 <span className="flex items-center justify-between gap-4">
                   {faq.question}
-                  <span className="text-teal-700 transition group-open:rotate-45">
+                  <span className="text-sky-700 transition group-open:rotate-45">
                     +
                   </span>
                 </span>
@@ -927,7 +928,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <Field label="Bilmærke">
               <select
                 name="maerke"
-                className="h-12 w-full rounded-lg border border-slate-200/90 bg-white/85 px-3 text-base backdrop-blur transition outline-none focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm"
+                className="h-12 w-full rounded-lg border border-slate-200/90 bg-white/85 px-3 text-base backdrop-blur transition outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm"
               >
                 {[
                   "Tesla",
@@ -959,10 +960,10 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <input
               required
               type="checkbox"
-              className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
             />
-            Jeg accepterer, at EV-Check må kontakte mig vedrørende min
-            henvendelse.
+            Jeg accepterer vilkår og betingelser og giver EV-Check lov til at
+            kontakte mig vedrørende min henvendelse.
           </label>
           <Button type="submit" className="mt-5 w-full sm:w-auto">
             {booking ? "Send forespørgsel" : "Send besked"}
@@ -984,8 +985,8 @@ function ContactLine({
   href?: string;
 }) {
   const content = (
-    <span className="glass-card flex items-center gap-3 rounded-lg px-4 py-3 transition hover:border-teal-200 hover:bg-white/90">
-      <Icon className="h-4 w-4 text-teal-700" />
+    <span className="glass-card flex items-center gap-3 rounded-lg px-4 py-3 transition hover:border-sky-200 hover:bg-white/90">
+      <Icon className="h-4 w-4 text-sky-700" />
       <span>{text}</span>
     </span>
   );
@@ -1025,7 +1026,7 @@ export function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-sm font-bold tracking-[0.14em] text-teal-700 uppercase">
+      <p className="text-sm font-bold tracking-[0.14em] text-sky-700 uppercase">
         {eyebrow}
       </p>
       <h2 className="mt-2 max-w-3xl text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">
