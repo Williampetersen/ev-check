@@ -7,7 +7,7 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
-import { brandLogoPath } from "@/lib/seo";
+import { brandLogoPath, companyCvr } from "@/lib/seo";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { getAdminDashboardData } from "@/lib/server/dashboard";
 
@@ -15,6 +15,8 @@ type InvoiceResult = {
   invoiceNumber: string;
   pdf: Buffer;
 };
+
+const DANISH_VAT_RATE = 0.25;
 
 const invoiceId = () => `inv_${randomBytes(8).toString("hex")}`;
 
@@ -88,6 +90,7 @@ async function renderInvoicePdf(input: {
   const rows: Array<[string, string]> = [
     ["Booking ID", input.appointment.id],
     ["Invoice number", input.invoiceNumber],
+    ["CVR-nummer", companyCvr],
     ["Customer", input.customer.name],
     ["Email", input.customer.email],
     ["Phone", input.customer.phone],
@@ -115,19 +118,30 @@ async function renderInvoicePdf(input: {
     y += 34;
   }
 
+  const amountExclVat = Math.round(
+    input.appointment.total / (1 + DANISH_VAT_RATE),
+  );
+  const vatAmount = input.appointment.total - amountExclVat;
+  const vatPercent = Math.round(DANISH_VAT_RATE * 100);
+
   doc
     .moveTo(48, y + 10)
     .lineTo(547, y + 10)
     .strokeColor("#E5E7EB")
     .stroke();
+  y += 28;
+  drawRow(doc, "Pris uden moms", formatPrice(amountExclVat), y);
+  y += 22;
+  drawRow(doc, `Moms (${vatPercent}%)`, formatPrice(vatAmount), y);
+  y += 30;
   doc
     .fillColor("#111827")
     .fontSize(13)
-    .text("Total", 56, y + 32);
+    .text("Total (inkl. moms)", 56, y);
   doc
     .fillColor("#064E4B")
     .fontSize(22)
-    .text(formatPrice(input.appointment.total), 360, y + 25, {
+    .text(formatPrice(input.appointment.total), 360, y - 5, {
       width: 180,
       align: "right",
     });
@@ -136,7 +150,7 @@ async function renderInvoicePdf(input: {
     .fillColor("#6B7280")
     .fontSize(9)
     .text(
-      "Tak for din booking. Denne PDF fungerer som bookingkvittering og fakturagrundlag.",
+      `Alle priser er i DKK og inkl. ${vatPercent}% moms. Denne PDF fungerer som bookingkvittering og fakturagrundlag.`,
       56,
       770,
       { width: 480, align: "center" },

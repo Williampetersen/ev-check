@@ -10,6 +10,8 @@ import {
 import { brandLogoPath, companyCvr, contactPhone } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
+const DANISH_VAT_RATE = 0.25;
+
 export function InvoiceDocument({
   invoiceNumber,
   appointment,
@@ -26,6 +28,12 @@ export function InvoiceDocument({
     [customer.postalCode, customer.city].filter(Boolean).join(" "),
   ].filter(Boolean);
   const paid = appointment.paymentStatus === "paid";
+
+  // appointment.total is the price including moms (Danish VAT). The excl.
+  // amount is rounded first so the three displayed figures always sum up
+  // exactly, even though formatPrice() itself rounds to whole kroner too.
+  const amountExclVat = Math.round(appointment.total / (1 + DANISH_VAT_RATE));
+  const vatAmount = appointment.total - amountExclVat;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl [-webkit-print-color-adjust:exact] [print-color-adjust:exact] print:rounded-none print:border-0 print:shadow-none">
@@ -110,7 +118,7 @@ export function InvoiceDocument({
           <thead>
             <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
               <th className="py-3 font-semibold">Beskrivelse</th>
-              <th className="py-3 text-right font-semibold">Pris</th>
+              <th className="py-3 text-right font-semibold">Pris (inkl. moms)</th>
             </tr>
           </thead>
           <tbody>
@@ -133,11 +141,15 @@ export function InvoiceDocument({
         <div className="flex justify-end py-6">
           <div className="w-full max-w-xs space-y-2">
             <div className="flex items-center justify-between text-sm text-slate-600">
-              <span>Subtotal</span>
-              <span>{formatPrice(appointment.total)}</span>
+              <span>Pris uden moms</span>
+              <span>{formatPrice(amountExclVat)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-slate-600">
+              <span>Moms ({Math.round(DANISH_VAT_RATE * 100)}%)</span>
+              <span>{formatPrice(vatAmount)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-950">
-              <span>Total</span>
+              <span>Total (inkl. moms)</span>
               <span className="text-[#064E4B]">
                 {formatPrice(appointment.total)}
               </span>
@@ -158,7 +170,9 @@ export function InvoiceDocument({
           {paymentLabels[appointment.paymentStatus]}
         </span>
         <p className="text-xs text-slate-500">
-          Tak for din booking hos {settings.companyName || "EV-Check.dk"}.
+          Alle priser er i DKK og inkl. {Math.round(DANISH_VAT_RATE * 100)}%
+          moms. Tak for din booking hos{" "}
+          {settings.companyName || "EV-Check.dk"}.
         </p>
       </div>
     </div>
