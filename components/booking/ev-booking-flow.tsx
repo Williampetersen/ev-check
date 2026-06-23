@@ -20,6 +20,7 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import type {
   BookingConfig,
@@ -216,6 +217,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   const selectedService = useMemo(
     () =>
@@ -276,6 +278,20 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     return () => controller.abort();
   }, [appointmentDate, serviceId]);
 
+  useEffect(() => {
+    if (!isMobileSummaryOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileSummaryOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileSummaryOpen]);
+
   const selectedBrand = useMemo(
     () => config.carBrands.find((item) => item.id === vehicle.brand),
     [config.carBrands, vehicle.brand],
@@ -286,10 +302,11 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   const brandLabel = isOtherBrand
     ? cleanValue(vehicle.customBrand)
     : selectedBrand?.label || "";
-  const modelLabel = isOtherBrand || isOtherModel
-    ? cleanValue(vehicle.customModel)
-    : selectedBrand?.models.find((item) => item.id === vehicle.model)
-        ?.label || "";
+  const modelLabel =
+    isOtherBrand || isOtherModel
+      ? cleanValue(vehicle.customModel)
+      : selectedBrand?.models.find((item) => item.id === vehicle.model)
+          ?.label || "";
 
   const step1Valid = isOtherBrand
     ? hasValue(vehicle.customBrand)
@@ -386,13 +403,13 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
   }
 
   return (
-    <section className="bg-gradient-to-b from-teal-50 via-slate-50 to-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+    <section className="bg-gradient-to-b from-teal-50 via-slate-50 to-slate-50 px-4 pt-10 pb-32 sm:px-6 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 text-white shadow-sm">
             <CalendarCheck className="h-5 w-5" />
           </span>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+          <p className="text-xs font-bold tracking-[0.18em] text-teal-700 uppercase">
             Book tid
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -403,22 +420,14 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           </p>
         </div>
 
-        <Stepper activeStep={step} stepValid={stepValid} onStepClick={goToStep} />
+        <Stepper
+          activeStep={step}
+          stepValid={stepValid}
+          onStepClick={goToStep}
+        />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
           <div className="order-2 lg:order-1">
-            <SummaryCard
-              service={selectedService}
-              brandLabel={brandLabel}
-              modelLabel={modelLabel}
-              brandLogo={selectedBrand?.logo}
-              appointmentDate={appointmentDate}
-              appointmentTime={appointmentTime}
-              total={total}
-              durationMinutes={durationMinutes}
-              className="mb-6 lg:hidden"
-            />
-
             {step === 1 ? (
               <VehicleStep
                 carBrands={config.carBrands}
@@ -510,6 +519,26 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
           />
         </div>
       </div>
+      <MobileSummarySheet
+        open={isMobileSummaryOpen}
+        onClose={() => setIsMobileSummaryOpen(false)}
+        service={selectedService}
+        brandLabel={brandLabel}
+        modelLabel={modelLabel}
+        brandLogo={selectedBrand?.logo}
+        appointmentDate={appointmentDate}
+        appointmentTime={appointmentTime}
+        total={total}
+        durationMinutes={durationMinutes}
+        step={step}
+      />
+      <MobileBookingBottomBar
+        service={selectedService}
+        total={total}
+        step={step}
+        hidden={isMobileSummaryOpen}
+        onOpen={() => setIsMobileSummaryOpen(true)}
+      />
     </section>
   );
 }
@@ -530,7 +559,10 @@ function Stepper({
           const isActive = item.id === activeStep;
           const isDone = item.id < activeStep;
           return (
-            <div key={item.id} className="flex flex-1 items-center last:flex-none">
+            <div
+              key={item.id}
+              className="flex flex-1 items-center last:flex-none"
+            >
               <button
                 type="button"
                 onClick={() => onStepClick(item.id)}
@@ -542,8 +574,8 @@ function Stepper({
                     isActive
                       ? "border-teal-700 bg-teal-700 text-white"
                       : isDone
-                      ? "border-teal-700 bg-white text-teal-700"
-                      : "border-slate-200 bg-white text-slate-400",
+                        ? "border-teal-700 bg-white text-teal-700"
+                        : "border-slate-200 bg-white text-slate-400",
                   )}
                 >
                   {isDone ? <Check className="h-4 w-4" /> : item.id}
@@ -554,8 +586,8 @@ function Stepper({
                     isActive
                       ? "text-slate-900"
                       : isDone
-                      ? "text-teal-700"
-                      : "text-slate-400",
+                        ? "text-teal-700"
+                        : "text-slate-400",
                   )}
                 >
                   {item.label}
@@ -766,7 +798,7 @@ function ModelSelect({
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
     >
       <option value="">
         {disabled ? "Vælg bilmærke først" : "Vælg model"}
@@ -967,7 +999,11 @@ function ServiceStep({
         })}
       </div>
 
-      <StepNav onBack={onBack} onContinue={onContinue} canContinue={canContinue} />
+      <StepNav
+        onBack={onBack}
+        onContinue={onContinue}
+        canContinue={canContinue}
+      />
     </Card>
   );
 }
@@ -1030,7 +1066,7 @@ function TimeStep({
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="text-sm font-bold capitalize text-slate-900">
+            <p className="text-sm font-bold text-slate-900 capitalize">
               {monthLabel(visibleMonth)}
             </p>
             <button
@@ -1044,7 +1080,7 @@ function TimeStep({
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold tracking-wide text-slate-400 uppercase">
             {weekdayLabels.map((day) => (
               <span key={day}>{day}</span>
             ))}
@@ -1076,7 +1112,7 @@ function TimeStep({
         </div>
 
         <div>
-          <p className="text-sm font-bold capitalize text-slate-900">
+          <p className="text-sm font-bold text-slate-900 capitalize">
             {fullDateLabel(appointmentDate)}
           </p>
           <div className="mt-3 min-h-[14rem]">
@@ -1119,7 +1155,11 @@ function TimeStep({
         </div>
       </div>
 
-      <StepNav onBack={onBack} onContinue={onContinue} canContinue={canContinue} />
+      <StepNav
+        onBack={onBack}
+        onContinue={onContinue}
+        canContinue={canContinue}
+      />
     </Card>
   );
 }
@@ -1395,7 +1435,7 @@ function ReviewStep({
         </p>
       ) : null}
       {!databaseConfigured ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold leading-6 text-amber-800">
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 font-semibold text-amber-800">
           Tilføj DATABASE_URL, før rigtige bookinger kan gemmes.
         </p>
       ) : null}
@@ -1422,6 +1462,17 @@ function ReviewStep({
   );
 }
 
+type BookingSummaryProps = {
+  service?: BookingService;
+  brandLabel: string;
+  modelLabel: string;
+  brandLogo?: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  total: number;
+  durationMinutes: number;
+};
+
 function SummaryCard({
   service,
   brandLabel,
@@ -1433,15 +1484,7 @@ function SummaryCard({
   durationMinutes,
   className,
   sticky,
-}: {
-  service?: BookingService;
-  brandLabel: string;
-  modelLabel: string;
-  brandLogo?: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  total: number;
-  durationMinutes: number;
+}: BookingSummaryProps & {
   className?: string;
   sticky?: boolean;
 }) {
@@ -1455,7 +1498,7 @@ function SummaryCard({
     >
       <div className="flex items-center gap-2 bg-teal-700 px-5 py-3 sm:px-6">
         <CalendarCheck className="h-4 w-4 text-teal-100" />
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-white">
+        <p className="text-xs font-bold tracking-[0.14em] text-white uppercase">
           Din booking
         </p>
       </div>
@@ -1504,6 +1547,180 @@ function SummaryCard({
             {formatPrice(total)}
           </span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryDetails({
+  service,
+  brandLabel,
+  modelLabel,
+  brandLogo,
+  appointmentDate,
+  appointmentTime,
+  total,
+  durationMinutes,
+  className,
+}: BookingSummaryProps & { className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-lg font-bold text-slate-900">
+        {service?.title || "Batteritest"}
+      </p>
+      <div className="mt-3 grid gap-2 text-sm text-slate-600">
+        <span className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-teal-700" />
+          {durationMinutes || 0} min.
+        </span>
+        <span className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-teal-700" />
+          Hos dig på Sjælland
+        </span>
+        {brandLabel ? (
+          <span className="flex items-center gap-2">
+            {brandLogo ? (
+              <Image
+                src={brandLogo}
+                alt={brandLabel}
+                width={18}
+                height={18}
+                className="h-4 w-4 object-contain"
+              />
+            ) : (
+              <Car className="h-4 w-4 text-teal-700" />
+            )}
+            {[brandLabel, modelLabel].filter(Boolean).join(" ")}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-4 rounded-xl border border-dashed border-teal-200 bg-teal-50/60 px-3 py-2.5 text-sm">
+        {appointmentTime ? (
+          <p className="font-semibold text-slate-900">
+            {dateLabel(appointmentDate)} kl. {appointmentTime}
+          </p>
+        ) : (
+          <p className="font-semibold text-teal-700">Vælg dato og tid.</p>
+        )}
+      </div>
+      <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-4">
+        <span className="text-sm font-semibold text-slate-500">Total</span>
+        <span className="text-xl font-bold text-teal-700">
+          {formatPrice(total)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MobileSummarySheet({
+  open,
+  onClose,
+  step,
+  ...summary
+}: BookingSummaryProps & {
+  open: boolean;
+  onClose: () => void;
+  step: Step;
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end bg-slate-950/50 px-3 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-booking-summary-title"
+        className="mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-white/70 bg-white shadow-[0_-22px_64px_rgba(15,23,42,0.24)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+              <CalendarCheck className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h3
+                id="mobile-booking-summary-title"
+                className="text-lg font-bold text-slate-900"
+              >
+                Din booking
+              </h3>
+              <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
+                Trin {step} af {steps.length}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Luk bookingoversigt"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="overflow-y-auto">
+          <SummaryDetails {...summary} className="px-5 py-4" />
+        </div>
+        <div className="border-t border-slate-100 bg-white px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(15,118,110,0.22)] transition hover:bg-teal-800"
+          >
+            Fortsæt booking
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileBookingBottomBar({
+  service,
+  total,
+  step,
+  hidden,
+  onOpen,
+}: {
+  service?: BookingService;
+  total: number;
+  step: Step;
+  hidden?: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl lg:hidden",
+        hidden && "hidden",
+      )}
+    >
+      <div className="mx-auto flex max-w-xl items-center gap-3 overflow-hidden">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+          <CalendarCheck className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xl leading-none font-bold text-teal-700">
+            {formatPrice(total)}
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+            {service?.title || "Batteritest"} · Trin {step} af {steps.length}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-controls="mobile-booking-summary-title"
+          className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(245,158,11,0.26)] transition hover:bg-amber-600"
+        >
+          Se oversigt
+        </button>
       </div>
     </div>
   );

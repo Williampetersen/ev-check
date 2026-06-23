@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
   BatteryCharging,
@@ -17,6 +18,7 @@ import {
   ShieldCheck,
   Star,
   Twitter,
+  UserRound,
   Zap,
 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -42,26 +44,31 @@ const socialLinks = [
     label: "Instagram",
     href: sameAsLinks[0],
     icon: Instagram,
+    hoverColor: "#E1306C",
   },
   {
     label: "Facebook",
     href: sameAsLinks[1],
     icon: Facebook,
+    hoverColor: "#1877F2",
   },
   {
     label: "LinkedIn",
     href: sameAsLinks[2],
     icon: Linkedin,
+    hoverColor: "#0A66C2",
   },
   {
     label: "X",
     href: sameAsLinks[3],
     icon: Twitter,
+    hoverColor: "#111827",
   },
   {
     label: "Trustpilot",
     href: sameAsLinks[4],
     icon: Star,
+    hoverColor: "#00B67A",
   },
 ];
 
@@ -181,46 +188,62 @@ const heroFacts = [
 
 export function SiteHeader() {
   return (
-    <header className="bg-white/78 sticky top-0 z-40 border-b border-white/75 shadow-sm shadow-teal-950/5 backdrop-blur-2xl">
-      <div className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 items-center gap-3">
-          <Image
-            src={brandLogoPath}
-            alt="EV-Check.dk logo"
-            width={42}
-            height={42}
-            className="h-9 w-9 rounded-lg bg-white object-contain sm:h-[42px] sm:w-[42px]"
-          />
-          <span className="truncate font-display text-base font-bold text-slate-950 sm:text-lg">
-            EV-Check.dk
-          </span>
-        </Link>
-        <nav className="hidden items-center gap-6 lg:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm font-semibold text-slate-600 transition hover:text-teal-700"
-            >
-              {item.label}
+    <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/92 px-4 py-3 text-slate-950 shadow-[0_18px_60px_rgba(6,78,75,0.10)] backdrop-blur-xl sm:px-5 sm:py-4">
+          <div className="flex items-center justify-between gap-4">
+            <Link href="/" className="flex min-w-0 items-center gap-3">
+              <Image
+                src={brandLogoPath}
+                alt="EV-Check.dk logo"
+                width={48}
+                height={48}
+                className="shrink-0 rounded-xl bg-white object-contain"
+                priority
+              />
+              <div className="min-w-0">
+                <span className="font-display block truncate text-base font-bold text-slate-950 sm:text-lg">
+                  EV-Check.dk
+                </span>
+                <span className="hidden text-xs font-semibold text-teal-700 min-[420px]:block">
+                  Mobil batteritest
+                </span>
+              </div>
             </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2">
-          <ButtonLink
-            href="/min-konto"
-            variant="outline"
-            className="hidden sm:inline-flex"
-          >
-            <FileText className="h-4 w-4" />
-            Rapport
-          </ButtonLink>
-          <ButtonLink href="/book-tid" className="h-10 px-3 sm:h-10 sm:px-4">
-            <CalendarCheck className="h-4 w-4" />
-            <span className="hidden min-[380px]:inline">Book tid</span>
-            <span className="min-[380px]:hidden">Book</span>
-          </ButtonLink>
-          <MobileNav items={navItems} />
+
+            <nav className="hidden items-center gap-2 lg:flex">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-500 transition hover:bg-teal-50 hover:text-teal-900"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="hidden items-center gap-3 lg:flex">
+              <Link
+                href="/min-konto"
+                className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-800"
+              >
+                <UserRound className="h-4 w-4" />
+                Min konto
+              </Link>
+              <Link
+                href="/book-tid"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
+              >
+                <CalendarCheck className="h-4 w-4" />
+                Book tid
+              </Link>
+            </div>
+
+            <div className="lg:hidden">
+              <MobileNav items={navItems} />
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -229,78 +252,144 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/75 bg-white/60 text-slate-800 shadow-[0_-18px_55px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <Image
-              src={brandLogoPath}
-              alt="EV-Check.dk logo"
-              width={42}
-              height={42}
-              className="rounded-lg bg-white object-contain"
-            />
-            <div>
-              <p className="font-display text-lg font-bold">EV-Check.dk</p>
-              <p className="text-xs font-semibold text-sky-700">
-                Batteritest af elbiler
-              </p>
+    <footer className="px-4 pt-8 pb-8 sm:px-6">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 px-6 py-10 text-slate-900 shadow-[0_18px_60px_rgba(6,78,75,0.10)] backdrop-blur-xl sm:px-10">
+        <div className="grid gap-10 lg:grid-cols-[1.3fr_0.8fr_0.8fr]">
+          <div className="max-w-xl">
+            <div className="flex items-center gap-3">
+              <Image
+                src={brandLogoPath}
+                alt="EV-Check.dk logo"
+                width={52}
+                height={52}
+                className="rounded-xl bg-white object-contain"
+              />
+              <div>
+                <p className="font-display text-xl font-bold">EV-Check.dk</p>
+                <p className="text-xs font-semibold tracking-[0.16em] text-teal-700 uppercase">
+                  Batteritest af elbiler
+                </p>
+              </div>
+            </div>
+            <h2 className="font-display mt-5 text-3xl leading-tight font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Mobil batteritest på Sjælland med klar rapport.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+              EV-Check kommer ud til dig privat, på jobbet eller der hvor bilen
+              holder. Book online på få minutter og få professionel
+              batteridiagnose uden værkstedsbesøg.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold tracking-[0.18em] text-slate-500 uppercase">
+              Hurtige links
+            </h3>
+            <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="transition hover:text-teal-800"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Link href="/book-tid" className="transition hover:text-teal-800">
+                Book batteritest
+              </Link>
+              <Link
+                href="/cookiepolitik"
+                className="transition hover:text-teal-800"
+              >
+                Cookiepolitik
+              </Link>
+              <a
+                href="mailto:info@ev-check.dk"
+                className="transition hover:text-teal-800"
+              >
+                Skriv til os
+              </a>
             </div>
           </div>
-          <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-            Professionel og uafhængig batteridiagnose på Sjælland. Fast pris,
-            klar rapport og booking direkte online.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {socialLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={item.label}
-                  className="bg-white/55 hover:bg-white/85 flex h-10 w-10 items-center justify-center rounded-lg border border-white/75 text-sky-700 shadow-sm shadow-sky-950/5 backdrop-blur-xl hover:border-sky-300"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              );
-            })}
-          </div>
-        </div>
-        <div>
-          <p className="font-semibold">Kontakt</p>
-          <div className="mt-3 grid gap-2 text-sm text-slate-600">
-            <a href="tel:+4571900530" className="hover:text-sky-700">
-              +45 71 90 05 30
-            </a>
-            <a href="mailto:info@ev-check.dk" className="hover:text-sky-700">
-              info@ev-check.dk
-            </a>
-            <span>København og Sjælland</span>
-          </div>
-        </div>
-        <div>
-          <p className="font-semibold">Sider</p>
-          <div className="mt-3 grid gap-2 text-sm text-slate-600">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="hover:text-sky-700"
+
+          <div>
+            <h3 className="text-sm font-bold tracking-[0.18em] text-slate-500 uppercase">
+              Kontakt
+            </h3>
+            <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
+              <a
+                href="tel:+4571900530"
+                className="transition hover:text-teal-800"
               >
-                {item.label}
-              </Link>
-            ))}
-            <Link href="/cookiepolitik" className="hover:text-sky-700">
+                +45 71 90 05 30
+              </a>
+              <a
+                href="mailto:info@ev-check.dk"
+                className="transition hover:text-teal-800"
+              >
+                info@ev-check.dk
+              </a>
+              <p>Alle ugens dage kl. 08-17</p>
+              Dækker København, Storkøbenhavn og store dele af Sjælland
+            </div>
+            <Link
+              href="/book-tid"
+              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              Book tid
+            </Link>
+
+            <div className="mt-6">
+              <p className="text-xs font-bold tracking-[0.18em] text-slate-500 uppercase">
+                Følg os
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                {socialLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={item.label}
+                      className="social-btn flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-transparent hover:text-white hover:shadow-md"
+                      style={
+                        { "--ev-social": item.hoverColor } as CSSProperties
+                      }
+                    >
+                      <Icon className="h-4 w-4" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          .social-btn:hover { background: var(--ev-social); }
+        `}</style>
+
+        <div className="mt-10 flex flex-col gap-4 border-t border-slate-200 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} EV-Check.dk. Alle rettigheder
+            forbeholdes.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/min-konto" className="transition hover:text-teal-800">
+              Min konto
+            </Link>
+            <Link
+              href="/cookiepolitik"
+              className="transition hover:text-teal-800"
+            >
               Cookiepolitik
             </Link>
           </div>
         </div>
-      </div>
-      <div className="border-t border-white/70 px-4 py-4 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} EV-Check.dk. Alle rettigheder forbeholdes.
       </div>
     </footer>
   );
@@ -337,17 +426,17 @@ export function HeroSection() {
         playsInline
         preload="auto"
       />
-      <div className="from-slate-950/92 via-slate-950/48 to-slate-950/16 absolute inset-0 bg-gradient-to-t" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/48 to-slate-950/16" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#fbfaf5] to-transparent" />
       <div className="relative mx-auto w-full max-w-[100vw] overflow-hidden px-4 py-20 text-center sm:max-w-5xl sm:px-6 sm:py-24 lg:px-8">
-        <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-teal-100 shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
+        <p className="mx-auto inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-[11px] font-bold tracking-[0.12em] text-teal-100 uppercase shadow-lg shadow-black/10 backdrop-blur-xl sm:max-w-full sm:text-xs sm:tracking-[0.16em]">
           <ShieldCheck className="h-4 w-4" />
           <span>Mobil batteritest af elbil på Sjælland</span>
         </p>
         <h1 className="mx-auto mt-5 w-full max-w-[22rem] text-3xl font-bold tracking-normal [text-wrap:balance] sm:max-w-4xl sm:text-6xl lg:text-7xl">
           Batteritest af elbil med klar rapport samme dag
         </h1>
-        <p className="text-white/84 mx-auto mt-5 max-w-[19.5rem] text-sm leading-7 sm:max-w-2xl sm:text-lg">
+        <p className="mx-auto mt-5 max-w-[19.5rem] text-sm leading-7 text-white/84 sm:max-w-2xl sm:text-lg">
           Få målt SoH, BMS-status, cellebalance og relevante fejlkoder før køb,
           salg eller fejlfinding, uden at du skal på værksted.
         </p>
@@ -362,7 +451,7 @@ export function HeroSection() {
           <ButtonLink
             href="/batteritest-elbil"
             variant="secondary"
-            className="bg-white/14 shadow-black/15 hover:bg-white/22 h-12 w-full border-white/25 px-5 text-white shadow-xl hover:text-white sm:h-11 sm:w-auto"
+            className="h-12 w-full border-white/25 bg-white/14 px-5 text-white shadow-xl shadow-black/15 hover:bg-white/22 hover:text-white sm:h-11 sm:w-auto"
           >
             Se hvad vi tester
             <ArrowRight className="h-4 w-4" />
@@ -374,10 +463,10 @@ export function HeroSection() {
             return (
               <div
                 key={fact.label}
-                className="border-white/16 rounded-lg border bg-white/10 px-4 py-3 text-left shadow-lg shadow-black/10 backdrop-blur-xl"
+                className="rounded-lg border border-white/16 bg-white/10 px-4 py-3 text-left shadow-lg shadow-black/10 backdrop-blur-xl"
               >
                 <Icon className="h-4 w-4 text-teal-200" />
-                <p className="text-white/58 mt-2 text-xs font-semibold uppercase tracking-[0.12em]">
+                <p className="mt-2 text-xs font-semibold tracking-[0.12em] text-white/58 uppercase">
                   {fact.label}
                 </p>
                 <p className="mt-1 text-lg font-bold text-white">
@@ -403,7 +492,7 @@ export function PriceCard() {
 
   return (
     <aside className="glass-shell rounded-lg p-5 text-slate-950 sm:p-6">
-      <p className="inline-flex items-center gap-2 rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
+      <p className="inline-flex items-center gap-2 rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold tracking-[0.14em] text-teal-700 uppercase">
         <Star className="h-3.5 w-3.5" />
         Fast service
       </p>
@@ -447,7 +536,7 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
             return (
               <article
                 key={service.title}
-                className="glass-card hover:shadow-teal-950/8 rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
+                className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/8"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50/90 text-teal-700 backdrop-blur">
                   <Icon className="h-5 w-5" />
@@ -477,7 +566,7 @@ export function AboutSection() {
   return (
     <section className="bg-white/36 py-16 backdrop-blur-sm sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="shadow-teal-950/8 relative min-h-[24rem] overflow-hidden rounded-lg shadow-xl">
+        <div className="relative min-h-[24rem] overflow-hidden rounded-lg shadow-xl shadow-teal-950/8">
           <Image
             src="/wp/teslacertificate.jpg"
             alt="EV-Check certificering og træning"
@@ -526,14 +615,14 @@ export function AboutSection() {
 export function BrandsAndCertificate() {
   return (
     <section className="glass-card rounded-lg p-5 sm:p-6">
-      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">
+      <p className="text-sm font-semibold tracking-[0.14em] text-teal-700 uppercase">
         Mærker vi tester
       </p>
       <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
         {brandLogos.map((brand) => (
           <div
             key={brand.src}
-            className="bg-white/68 flex h-16 items-center justify-center rounded-lg border border-white/70 p-3 shadow-sm shadow-teal-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white"
+            className="flex h-16 items-center justify-center rounded-lg border border-white/70 bg-white/68 p-3 shadow-sm shadow-teal-950/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white"
           >
             <Image
               src={brand.src}
@@ -732,7 +821,7 @@ export function TestimonialsSection() {
           {testimonials.map((item) => (
             <article
               key={item.name}
-              className="glass-card hover:shadow-teal-950/8 rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
+              className="glass-card rounded-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-950/8"
             >
               <div className="flex gap-1 text-teal-600" aria-label="5 stjerner">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -745,7 +834,7 @@ export function TestimonialsSection() {
               <div className="mt-5 border-t border-sky-100 pt-4">
                 <p className="font-bold text-slate-950">{item.name}</p>
                 <p className="text-sm text-slate-500">{item.detail}</p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-teal-700">
+                <p className="mt-1 text-xs font-semibold tracking-wide text-teal-700 uppercase">
                   {item.date}
                 </p>
               </div>
@@ -838,7 +927,7 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <Field label="Bilmærke">
               <select
                 name="maerke"
-                className="bg-white/85 h-12 w-full rounded-lg border border-slate-200/90 px-3 text-base outline-none backdrop-blur transition focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm"
+                className="h-12 w-full rounded-lg border border-slate-200/90 bg-white/85 px-3 text-base backdrop-blur transition outline-none focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 sm:h-10 sm:text-sm"
               >
                 {[
                   "Tesla",
@@ -936,7 +1025,7 @@ export function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-700">
+      <p className="text-sm font-bold tracking-[0.14em] text-teal-700 uppercase">
         {eyebrow}
       </p>
       <h2 className="mt-2 max-w-3xl text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">
