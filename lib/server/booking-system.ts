@@ -6,6 +6,7 @@ import {
   OTHER_MODEL_SUFFIX,
   type Appointment,
   type AppointmentStatus,
+  type BookingUnavailablePeriod,
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
@@ -28,6 +29,8 @@ export type BookingService = {
   description: string;
   duration: string;
   durationMinutes: number;
+  bufferBeforeMinutes: number;
+  bufferAfterMinutes: number;
   badge: string;
   price: number;
   imageUrl: string;
@@ -60,6 +63,7 @@ export type BookingConfig = {
   services: BookingService[];
   addons: BookingAddon[];
   carBrands: CarBrand[];
+  unavailablePeriods: BookingUnavailablePeriod[];
   minDate: string;
   maxDate: string;
   databaseConfigured: boolean;
@@ -99,11 +103,6 @@ const toDateKey = (date: Date) =>
   `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
     date.getUTCDate(),
   ).padStart(2, "0")}`;
-
-const addDays = (dateKey: string, days: number) => {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return toDateKey(new Date(Date.UTC(year, month - 1, day + days)));
-};
 
 const addMonths = (dateKey: string, months: number) => {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -235,6 +234,8 @@ export const bookingServices: BookingService[] = [
       "Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.",
     duration: "15 min.",
     durationMinutes: 15,
+    bufferBeforeMinutes: 60,
+    bufferAfterMinutes: 0,
     badge: "Fast service",
     price: 1300,
     imageUrl: "/wp/ev-car-danmark-1.png",
@@ -258,6 +259,8 @@ function mapServiceRow(row: any): BookingService {
     description: row.description || "",
     durationMinutes: Number(row.duration_minutes || 0),
     duration: formatDuration(Number(row.duration_minutes || 0)),
+    bufferBeforeMinutes: Math.max(0, Number(row.buffer_before_minutes ?? 60)),
+    bufferAfterMinutes: Math.max(0, Number(row.buffer_after_minutes ?? 0)),
     badge: row.badge || "",
     price: Number(row.price || 0),
     imageUrl: row.image_data || "",
@@ -287,6 +290,8 @@ export async function createBookingServiceRecord(input: {
   description: string;
   badge: string;
   durationMinutes: number;
+  bufferBeforeMinutes: number;
+  bufferAfterMinutes: number;
   price: number;
   imageData: string;
   features: string[];
@@ -302,11 +307,13 @@ export async function createBookingServiceRecord(input: {
   const serviceId = id("svc");
   await sql`
     INSERT INTO booking_services (
-      id, title, description, badge, duration_minutes, price, image_data, features_json, sort_order
+      id, title, description, badge, duration_minutes, buffer_before_minutes,
+      buffer_after_minutes, price, image_data, features_json, sort_order
     )
     VALUES (
       ${serviceId}, ${input.title}, ${input.description}, ${input.badge},
-      ${input.durationMinutes}, ${input.price}, ${input.imageData},
+      ${input.durationMinutes}, ${Math.max(0, input.bufferBeforeMinutes)},
+      ${Math.max(0, input.bufferAfterMinutes)}, ${input.price}, ${input.imageData},
       ${sql.json(input.features)}, ${next_order}
     )
   `;
@@ -320,6 +327,8 @@ export async function updateBookingServiceRecord(
     description: string;
     badge: string;
     durationMinutes: number;
+    bufferBeforeMinutes: number;
+    bufferAfterMinutes: number;
     price: number;
     imageData: string | null;
     features: string[];
@@ -336,7 +345,10 @@ export async function updateBookingServiceRecord(
       SET title = ${input.title}, description = ${input.description}, badge = ${
       input.badge
     },
-          duration_minutes = ${input.durationMinutes}, price = ${input.price},
+          duration_minutes = ${input.durationMinutes},
+          buffer_before_minutes = ${Math.max(0, input.bufferBeforeMinutes)},
+          buffer_after_minutes = ${Math.max(0, input.bufferAfterMinutes)},
+          price = ${input.price},
           features_json = ${sql.json(input.features)}, updated_at = NOW()
       WHERE id = ${serviceId}
     `;
@@ -346,7 +358,10 @@ export async function updateBookingServiceRecord(
       SET title = ${input.title}, description = ${input.description}, badge = ${
       input.badge
     },
-          duration_minutes = ${input.durationMinutes}, price = ${input.price},
+          duration_minutes = ${input.durationMinutes},
+          buffer_before_minutes = ${Math.max(0, input.bufferBeforeMinutes)},
+          buffer_after_minutes = ${Math.max(0, input.bufferAfterMinutes)},
+          price = ${input.price},
           image_data = ${input.imageData}, features_json = ${sql.json(
       input.features,
     )},
@@ -363,6 +378,103 @@ export async function deleteBookingServiceRecord(serviceId: string) {
   await ensureSchema({ force: true });
   const sql = getSql();
   await sql`DELETE FROM booking_services WHERE id = ${serviceId}`;
+}
+
+function rowDateKey(value: unknown) {
+  if (value instanceof Date) return toDateKey(value);
+  return sanitize(value).slice(0, 10);
+}
+
+function mapUnavailablePeriodRow(row: any): BookingUnavailablePeriod {
+  const startDate = rowDateKey(row.start_date);
+  const endDate = rowDateKey(row.end_date) || startDate;
+  return {
+    id: row.id,
+    title: sanitize(row.title) || "Closed",
+    startDate,
+    endDate,
+    startTime: sanitize(row.start_time).slice(0, 5) || "00:00",
+    endTime: sanitize(row.end_time).slice(0, 5) || "23:59",
+    isFullDay: Boolean(row.is_full_day),
+  };
+}
+
+export async function getUnavailablePeriods(): Promise<
+  BookingUnavailablePeriod[]
+> {
+  if (!isDatabaseConfigured()) return [];
+
+  try {
+    await ensureSchema({ force: true });
+    const sql = getSql();
+    const rows = await sql<any[]>`
+      SELECT id, title, start_date, end_date, start_time, end_time, is_full_day
+      FROM booking_unavailable_periods
+      ORDER BY start_date ASC, start_time ASC, created_at ASC
+    `;
+    return rows.map(mapUnavailablePeriodRow);
+  } catch {
+    return [];
+  }
+}
+
+export async function createUnavailablePeriodRecord(input: {
+  title: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  isFullDay: boolean;
+}) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("Bookingsystemet mangler databaseopsÃ¦tning.");
+  }
+
+  let startDate = sanitize(input.startDate).slice(0, 10);
+  let endDate = sanitize(input.endDate).slice(0, 10) || startDate;
+  if (!validateDate(startDate) || !validateDate(endDate)) {
+    throw new Error("VÃ¦lg en gyldig lukket dato.");
+  }
+  if (endDate < startDate) {
+    [startDate, endDate] = [endDate, startDate];
+  }
+
+  const isFullDay = Boolean(input.isFullDay);
+  const startTime = isFullDay
+    ? "00:00"
+    : sanitize(input.startTime).slice(0, 5) || "00:00";
+  const endTime = isFullDay
+    ? "23:59"
+    : sanitize(input.endTime).slice(0, 5) || "23:59";
+  if (!validateTime(startTime) || !validateTime(endTime)) {
+    throw new Error("VÃ¦lg et gyldigt lukket tidsrum.");
+  }
+  if (!isFullDay && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+    throw new Error("Sluttidspunktet skal vÃ¦re efter starttidspunktet.");
+  }
+
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  const periodId = id("off");
+  await sql`
+    INSERT INTO booking_unavailable_periods (
+      id, title, start_date, end_date, start_time, end_time, is_full_day
+    )
+    VALUES (
+      ${periodId}, ${sanitize(input.title) || "Closed"}, ${startDate},
+      ${endDate}, ${startTime}, ${endTime}, ${isFullDay}
+    )
+  `;
+  return periodId;
+}
+
+export async function deleteUnavailablePeriodRecord(periodId: string) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("Bookingsystemet mangler databaseopsÃ¦tning.");
+  }
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  await sql`DELETE FROM booking_unavailable_periods WHERE id = ${periodId}`;
 }
 
 // The most popular EV brands sold in Denmark, with their current EV model
@@ -455,12 +567,17 @@ export function getCarBrands(): CarBrand[] {
 
 export async function getBookingConfig(): Promise<BookingConfig> {
   const settings = await getBookingSettings();
-  const minDate = addDays(todayKeyInTimeZone(settings.timezone), 1);
+  const minDate = todayKeyInTimeZone(settings.timezone);
+  const [services, unavailablePeriods] = await Promise.all([
+    getAllBookingServices(),
+    getUnavailablePeriods(),
+  ]);
   return {
     settings,
-    services: await getAllBookingServices(),
+    services,
     addons: [],
     carBrands: getCarBrands(),
+    unavailablePeriods,
     minDate,
     maxDate: addMonths(minDate, 6),
     databaseConfigured: isDatabaseConfigured(),
@@ -521,6 +638,40 @@ function validatePhone(phone: string) {
   return /^\+?\d{8,12}$/.test(digits);
 }
 
+function minutesValue(value: unknown, fallback = 0) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
+}
+
+function rangesOverlap(
+  start: number,
+  end: number,
+  otherStart: number,
+  otherEnd: number,
+) {
+  return start < otherEnd && end > otherStart;
+}
+
+function unavailableIntervalsForDate(
+  periods: BookingUnavailablePeriod[],
+  date: string,
+) {
+  return periods
+    .filter((period) => {
+      const startDate = period.startDate;
+      const endDate = period.endDate || period.startDate;
+      return date >= startDate && date <= endDate;
+    })
+    .map((period) => {
+      if (period.isFullDay) return { start: 0, end: 24 * 60, period };
+      const start = Math.max(0, Math.min(24 * 60, timeToMinutes(period.startTime)));
+      const end = Math.max(0, Math.min(24 * 60, timeToMinutes(period.endTime)));
+      return { start, end, period };
+    })
+    .filter((interval) => interval.end > interval.start);
+}
+
 export async function getAvailableSlots(input: {
   date: string;
   serviceId: string;
@@ -530,9 +681,15 @@ export async function getAvailableSlots(input: {
 
   const config = await getBookingConfig();
   if (!config.settings.bookingEnabled) return [];
-  if (!getBookingService(input.serviceId, config.services)) return [];
+  const selectedService = getBookingService(input.serviceId, config.services);
+  if (!selectedService) return [];
 
   const pricing = calculateBooking(input, config.services, config.addons);
+  const requestedBufferBefore = minutesValue(
+    selectedService.bufferBeforeMinutes,
+    60,
+  );
+  const requestedBufferAfter = minutesValue(selectedService.bufferAfterMinutes);
   const start = config.settings.startHour * 60;
   const end = config.settings.endHour * 60;
   const interval = Math.max(15, config.settings.slotMinutes);
@@ -547,26 +704,50 @@ export async function getAvailableSlots(input: {
   if (input.date < config.minDate || input.date > config.maxDate) return [];
 
   // Live cutoff: a slot today must still be in the future in the configured
-  // timezone (Copenhagen handles its own summer/winter time switch).
+  // timezone, with the selected service's notice buffer included.
   const timezone = config.settings.timezone;
   const isToday = input.date === todayKeyInTimeZone(timezone);
-  const cutoffMinutes = isToday ? nowMinutesInTimeZone(timezone) : -1;
+  const cutoffMinutes = isToday
+    ? nowMinutesInTimeZone(timezone) + requestedBufferBefore
+    : -1;
+  const unavailableIntervals = unavailableIntervalsForDate(
+    config.unavailablePeriods,
+    input.date,
+  );
 
   let existing: Array<{
     appointment_time: string;
     appointment_end_time: string;
+    service_id: string | null;
+    duration_minutes: number | null;
+    buffer_before_minutes: number | null;
+    buffer_after_minutes: number | null;
   }> = [];
   if (isDatabaseConfigured()) {
     try {
       await ensureSchema({ force: true });
       const sql = getSql();
       existing = await sql<
-        Array<{ appointment_time: string; appointment_end_time: string }>
+        Array<{
+          appointment_time: string;
+          appointment_end_time: string;
+          service_id: string | null;
+          duration_minutes: number | null;
+          buffer_before_minutes: number | null;
+          buffer_after_minutes: number | null;
+        }>
       >`
-        SELECT appointment_time, appointment_end_time
-        FROM appointments
-        WHERE appointment_date = ${input.date}
-          AND status <> 'cancelled'
+        SELECT
+          a.appointment_time,
+          a.appointment_end_time,
+          a.service_id,
+          bs.duration_minutes,
+          bs.buffer_before_minutes,
+          bs.buffer_after_minutes
+        FROM appointments a
+        LEFT JOIN booking_services bs ON bs.id = a.service_id
+        WHERE a.appointment_date = ${input.date}
+          AND a.status <> 'cancelled'
       `;
     } catch {
       existing = [];
@@ -579,9 +760,21 @@ export async function getAvailableSlots(input: {
     minutes + pricing.durationMinutes <= end;
     minutes += interval
   ) {
-    if (minutes <= cutoffMinutes) continue;
+    if (minutes < cutoffMinutes) continue;
     const slot = minutesToTime(minutes);
     const slotEnd = minutes + pricing.durationMinutes;
+    const protectedStart = minutes - requestedBufferBefore;
+    const protectedEnd = slotEnd + requestedBufferAfter;
+    const isUnavailable = unavailableIntervals.some((interval) =>
+      rangesOverlap(
+        protectedStart,
+        protectedEnd,
+        interval.start,
+        interval.end,
+      ),
+    );
+    if (isUnavailable) continue;
+
     const hasConflict = existing.some((item) => {
       const existingStart = timeToMinutes(
         String(item.appointment_time || "00:00").slice(0, 5),
@@ -590,10 +783,20 @@ export async function getAvailableSlots(input: {
         String(item.appointment_end_time || "").slice(0, 5) ||
           addMinutesToTime(
             String(item.appointment_time || "00:00").slice(0, 5),
-            pricing.durationMinutes,
+            Number(item.duration_minutes || pricing.durationMinutes),
           ),
       );
-      return minutes < existingEnd && slotEnd > existingStart;
+      const existingBufferBefore = minutesValue(
+        item.buffer_before_minutes,
+        requestedBufferBefore,
+      );
+      const existingBufferAfter = minutesValue(item.buffer_after_minutes);
+      return rangesOverlap(
+        protectedStart,
+        protectedEnd,
+        existingStart - existingBufferBefore,
+        existingEnd + existingBufferAfter,
+      );
     });
     if (!hasConflict) slots.push(slot);
   }
@@ -725,14 +928,14 @@ export async function createBooking(input: BookingCreateInput) {
 
     const [appointment] = await tx<Array<{ id: string }>>`
       INSERT INTO appointments (
-        id, customer_id, vehicle_label, registration_number, service_label, report_label,
+        id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
         appointment_date, appointment_time, appointment_end_time, status, payment_status,
         invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
         booking_payload_json, source
       )
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
-        ${vehicleRegistrationNumber}, ${pricing.service.title},
+        ${vehicleRegistrationNumber}, ${pricing.service.title}, ${pricing.service.id},
         'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${
       bookingInput.appointmentTime
     },

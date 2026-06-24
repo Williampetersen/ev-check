@@ -3,6 +3,7 @@
 import {
   CalendarCheck2,
   CalendarDays,
+  CalendarX2,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -15,6 +16,7 @@ import {
   statusLabels,
   type Appointment,
   type AppointmentStatus,
+  type BookingUnavailablePeriod,
   type DashboardSettings,
 } from "@/lib/ev-domain";
 import { cn } from "@/lib/utils";
@@ -99,6 +101,7 @@ function minutesOf(time: string) {
 
 export function CalendarView({
   appointments,
+  unavailablePeriods = [],
   settings,
   date,
   mode,
@@ -107,6 +110,7 @@ export function CalendarView({
   onSelectAppointment,
 }: {
   appointments: Appointment[];
+  unavailablePeriods?: BookingUnavailablePeriod[];
   settings: DashboardSettings;
   date: string;
   mode: CalendarMode;
@@ -154,6 +158,12 @@ export function CalendarView({
     );
   const activePeriodAppointments = periodAppointments.filter(
     (item) => item.status !== "cancelled",
+  );
+  const periodClosedItems = days.flatMap((day) =>
+    unavailablePeriodsForDay(day, unavailablePeriods).map((period) => ({
+      day,
+      period,
+    })),
   );
   const modeTabs: AdminTabItem<CalendarMode>[] = [
     { id: "day", label: "Day", icon: CalendarDays },
@@ -243,11 +253,16 @@ export function CalendarView({
             {statusLabels[status]}
           </span>
         ))}
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-rose-500" />
+          Closed time
+        </span>
       </div>
 
       {mode === "agenda" ? (
         <AgendaList
           appointments={periodAppointments}
+          closedPeriods={periodClosedItems}
           onSelectAppointment={onSelectAppointment}
         />
       ) : (
@@ -262,6 +277,10 @@ export function CalendarView({
             {days.map((day) => {
               const dayAppointments = (appointmentsByDay.get(day) || []).filter(
                 (item) => item.status !== "cancelled",
+              );
+              const dayClosedPeriods = unavailablePeriodsForDay(
+                day,
+                unavailablePeriods,
               );
               return (
                 <div
@@ -281,6 +300,9 @@ export function CalendarView({
                   </p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-400">
                     {dayAppointments.length} booked
+                    {dayClosedPeriods.length > 0
+                      ? ` - ${dayClosedPeriods.length} closed`
+                      : ""}
                   </p>
                 </div>
               );
@@ -316,6 +338,27 @@ export function CalendarView({
                     className="absolute inset-x-0 border-t border-white/45"
                     style={{ top: index * ROW_HEIGHT }}
                   />
+                ))}
+                {layoutUnavailablePeriods(
+                  unavailablePeriodsForDay(day, unavailablePeriods),
+                  startHour,
+                  endHour,
+                ).map((layout) => (
+                  <div
+                    key={`${layout.period.id}-${layout.top}`}
+                    className="pointer-events-none absolute inset-x-1 overflow-hidden rounded-md border border-rose-200 bg-rose-100/80 px-2 py-1 text-[11px] leading-tight font-semibold text-rose-800 shadow-sm"
+                    style={{
+                      top: layout.top,
+                      height: layout.height,
+                    }}
+                  >
+                    <p className="truncate font-bold">
+                      {layout.period.title}
+                    </p>
+                    <p className="truncate text-[10px] opacity-80">
+                      {layout.label}
+                    </p>
+                  </div>
                 ))}
                 {layoutAppointments(
                   appointmentsByDay.get(day) || [],
@@ -390,12 +433,27 @@ function CalendarMetric({
 
 function AgendaList({
   appointments,
+  closedPeriods,
   onSelectAppointment,
 }: {
   appointments: Appointment[];
+  closedPeriods: Array<{ day: string; period: BookingUnavailablePeriod }>;
   onSelectAppointment: (id: string) => void;
 }) {
-  if (appointments.length === 0) {
+  const items = [
+    ...appointments.map((appointment) => ({
+      kind: "appointment" as const,
+      sort: `${appointment.appointmentDate}T${appointment.appointmentTime}`,
+      appointment,
+    })),
+    ...closedPeriods.map((item) => ({
+      kind: "closed" as const,
+      sort: `${item.day}T${item.period.isFullDay ? "00:00" : item.period.startTime}`,
+      ...item,
+    })),
+  ].sort((a, b) => a.sort.localeCompare(b.sort));
+
+  if (items.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-white/70 bg-white/40 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
         No bookings in this period.
@@ -405,41 +463,110 @@ function AgendaList({
 
   return (
     <div className="grid gap-2">
-      {appointments.map((appointment) => (
-        <button
-          key={appointment.id}
-          type="button"
-          onClick={() => onSelectAppointment(appointment.id)}
-          className="glass-card grid gap-3 rounded-lg p-4 text-left transition hover:border-sky-300 sm:grid-cols-[9rem_1fr_auto] sm:items-center"
-        >
-          <div>
-            <p className="text-xs font-bold tracking-wide text-slate-500 uppercase">
-              {formatShortDate(appointment.appointmentDate)}
-            </p>
-            <p className="mt-1 font-bold text-slate-950">
-              {appointment.appointmentTime}
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="truncate font-bold text-slate-950">
-              {appointment.customerName}
-            </p>
-            <p className="truncate text-sm text-slate-500">
-              {appointment.serviceLabel} - {appointment.vehicleLabel}
-            </p>
-          </div>
-          <span
-            className={cn(
-              "w-fit rounded-full border px-2.5 py-1 text-xs font-bold",
-              statusBlockStyles[appointment.status],
-            )}
+      {items.map((item) => {
+        if (item.kind === "closed") {
+          return (
+            <div
+              key={`${item.period.id}-${item.day}`}
+              className="grid gap-3 rounded-lg border border-rose-200/80 bg-rose-50/80 p-4 text-left text-rose-950 backdrop-blur sm:grid-cols-[9rem_1fr_auto] sm:items-center"
+            >
+              <div>
+                <p className="text-xs font-bold tracking-wide text-rose-500 uppercase">
+                  {formatShortDate(item.day)}
+                </p>
+                <p className="mt-1 font-bold">
+                  {item.period.isFullDay
+                    ? "All day"
+                    : `${item.period.startTime} - ${item.period.endTime}`}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-bold">{item.period.title}</p>
+                <p className="truncate text-sm text-rose-700">
+                  Closed for website booking
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-rose-200 bg-white/65 px-2.5 py-1 text-xs font-bold text-rose-700">
+                <CalendarX2 className="h-3.5 w-3.5" />
+                Closed
+              </span>
+            </div>
+          );
+        }
+
+        const { appointment } = item;
+        return (
+          <button
+            key={appointment.id}
+            type="button"
+            onClick={() => onSelectAppointment(appointment.id)}
+            className="glass-card grid gap-3 rounded-lg p-4 text-left transition hover:border-sky-300 sm:grid-cols-[9rem_1fr_auto] sm:items-center"
           >
-            {statusLabels[appointment.status]}
-          </span>
-        </button>
-      ))}
+            <div>
+              <p className="text-xs font-bold tracking-wide text-slate-500 uppercase">
+                {formatShortDate(appointment.appointmentDate)}
+              </p>
+              <p className="mt-1 font-bold text-slate-950">
+                {appointment.appointmentTime}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-bold text-slate-950">
+                {appointment.customerName}
+              </p>
+              <p className="truncate text-sm text-slate-500">
+                {appointment.serviceLabel} - {appointment.vehicleLabel}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "w-fit rounded-full border px-2.5 py-1 text-xs font-bold",
+                statusBlockStyles[appointment.status],
+              )}
+            >
+              {statusLabels[appointment.status]}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
+}
+
+function unavailablePeriodsForDay(
+  day: string,
+  periods: BookingUnavailablePeriod[],
+) {
+  return periods.filter((period) => {
+    const endDate = period.endDate || period.startDate;
+    return day >= period.startDate && day <= endDate;
+  });
+}
+
+function layoutUnavailablePeriods(
+  periods: BookingUnavailablePeriod[],
+  startHour: number,
+  endHour: number,
+) {
+  const startBoundary = startHour * 60;
+  const endBoundary = endHour * 60;
+  return periods
+    .flatMap((period) => {
+      const start = period.isFullDay ? startBoundary : minutesOf(period.startTime);
+      const end = period.isFullDay ? endBoundary : minutesOf(period.endTime);
+      const clampedStart = Math.max(start, startBoundary);
+      const clampedEnd = Math.min(end, endBoundary);
+      if (clampedEnd <= clampedStart) return [];
+      return [{
+        period,
+        label: period.isFullDay ? "All day" : `${period.startTime} - ${period.endTime}`,
+        top: ((clampedStart - startBoundary) / 60) * ROW_HEIGHT,
+        height: Math.max(
+          MIN_BLOCK_HEIGHT,
+          ((clampedEnd - clampedStart) / 60) * ROW_HEIGHT,
+        ),
+      }];
+    });
 }
 
 function layoutAppointments(

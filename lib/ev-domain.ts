@@ -54,6 +54,16 @@ export type EmailLog = {
   createdAt: string;
 };
 
+export type BookingUnavailablePeriod = {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  isFullDay: boolean;
+};
+
 export type DashboardUser = {
   id: string;
   fullName: string;
@@ -100,6 +110,7 @@ export type AdminDashboardData = {
   customers: Customer[];
   users: DashboardUser[];
   emailLogs: EmailLog[];
+  unavailablePeriods: BookingUnavailablePeriod[];
   settings: DashboardSettings;
   databaseConfigured: boolean;
   databaseError?: string;

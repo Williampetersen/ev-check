@@ -149,6 +149,7 @@ export function AdminDashboardClient({
           >
             <CalendarView
               appointments={dashboard.appointments}
+              unavailablePeriods={dashboard.unavailablePeriods}
               settings={dashboard.settings}
               date={calendarDate}
               mode={calendarMode}

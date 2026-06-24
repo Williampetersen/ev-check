@@ -9,6 +9,7 @@ import {
   type AdminDashboardData,
   type Appointment,
   type AppointmentStatus,
+  type BookingUnavailablePeriod,
   type Customer,
   type DashboardSettings,
   type DashboardUser,
@@ -25,6 +26,10 @@ const text = (value: unknown, fallback = "") => String(value ?? fallback).trim()
 const numberValue = (value: unknown, fallback: number) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+const dateKey = (value: unknown) => {
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return text(value).slice(0, 10);
 };
 
 function normalizeStatus(value: string): AppointmentStatus {
@@ -67,6 +72,7 @@ const demoDashboard = (databaseError?: string): AdminDashboardData => ({
   customers: demoCustomers,
   users: demoUsers,
   emailLogs: demoEmailLogs,
+  unavailablePeriods: [],
   settings: defaultSettings,
   databaseConfigured: isDatabaseConfigured(),
   databaseError,
@@ -80,7 +86,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   try {
     await ensureSchema({ force: true });
     const sql = getSql();
-    const [customers, appointments, users, logs, settingsRows] = await Promise.all([
+    const [customers, appointments, users, logs, unavailablePeriods, settingsRows] = await Promise.all([
       sql<any[]>`
         SELECT id, name, email, phone, address, postal_code, city, company, notes, portal_token, created_at
         FROM customers
@@ -103,6 +109,11 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         FROM email_logs
         ORDER BY created_at DESC
         LIMIT 80
+      `,
+      sql<any[]>`
+        SELECT id, title, start_date, end_date, start_time, end_time, is_full_day
+        FROM booking_unavailable_periods
+        ORDER BY start_date ASC, start_time ASC, created_at ASC
       `,
       sql<any[]>`
         SELECT *
@@ -180,6 +191,20 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
     }));
 
+    const mappedUnavailablePeriods: BookingUnavailablePeriod[] =
+      unavailablePeriods.map((row) => {
+        const startDate = dateKey(row.start_date);
+        return {
+          id: row.id,
+          title: row.title || "Closed",
+          startDate,
+          endDate: dateKey(row.end_date) || startDate,
+          startTime: String(row.start_time || "00:00").slice(0, 5),
+          endTime: String(row.end_time || "23:59").slice(0, 5),
+          isFullDay: Boolean(row.is_full_day),
+        };
+      });
+
     const settings = normalizeSettings(settingsRows[0]);
     return {
       stats: buildStats(
@@ -191,6 +216,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       customers: mappedCustomers,
       users: mappedUsers.length > 0 ? mappedUsers : demoUsers,
       emailLogs: mappedLogs,
+      unavailablePeriods: mappedUnavailablePeriods,
       settings,
       databaseConfigured: true,
     };

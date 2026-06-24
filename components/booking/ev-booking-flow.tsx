@@ -105,6 +105,7 @@ type CalendarDay = {
   day: number;
   inMonth: boolean;
   disabled: boolean;
+  blocked: boolean;
 };
 
 function dateFromKey(date: string) {
@@ -125,6 +126,49 @@ function addMonths(date: string, months: number) {
   const next = dateFromKey(monthKey(date));
   next.setMonth(next.getMonth() + months);
   return dateKey(next);
+}
+
+function addDays(date: string, amount: number) {
+  const next = dateFromKey(date);
+  next.setDate(next.getDate() + amount);
+  return dateKey(next);
+}
+
+function isSunday(date: string) {
+  return dateFromKey(date).getDay() === 0;
+}
+
+function isDateFullyBlocked(
+  date: string,
+  periods: BookingConfig["unavailablePeriods"],
+) {
+  return periods.some((period) => {
+    const endDate = period.endDate || period.startDate;
+    return period.isFullDay && date >= period.startDate && date <= endDate;
+  });
+}
+
+function unavailablePeriodsForDate(
+  date: string,
+  periods: BookingConfig["unavailablePeriods"],
+) {
+  return periods.filter((period) => {
+    const endDate = period.endDate || period.startDate;
+    return date >= period.startDate && date <= endDate;
+  });
+}
+
+function firstSelectableDate(config: BookingConfig) {
+  for (
+    let current = config.minDate;
+    current <= config.maxDate;
+    current = addDays(current, 1)
+  ) {
+    if (!isSunday(current) && !isDateFullyBlocked(current, config.unavailablePeriods)) {
+      return current;
+    }
+  }
+  return config.minDate;
 }
 
 function dateLabel(date: string) {
@@ -166,6 +210,7 @@ function calendarDaysForMonth(
   visibleMonth: string,
   minDate: string,
   maxDate: string,
+  unavailablePeriods: BookingConfig["unavailablePeriods"],
 ): CalendarDay[] {
   const first = dateFromKey(monthKey(visibleMonth));
   const start = new Date(first);
@@ -176,12 +221,13 @@ function calendarDaysForMonth(
     const day = new Date(start);
     day.setDate(start.getDate() + index);
     const key = dateKey(day);
-    const isSunday = day.getDay() === 0;
+    const blocked = isDateFullyBlocked(key, unavailablePeriods);
     return {
       key,
       day: day.getDate(),
       inMonth: day.getMonth() === first.getMonth(),
-      disabled: key < minDate || key > maxDate || isSunday,
+      disabled: key < minDate || key > maxDate || isSunday(key) || blocked,
+      blocked,
     };
   });
 }
@@ -204,12 +250,15 @@ function isValidPhone(value: string) {
 }
 
 export function EvBookingFlow({ config }: BookingFlowProps) {
+  const initialAppointmentDate = firstSelectableDate(config);
   const [step, setStep] = useState<Step>(1);
   const [serviceId, setServiceId] = useState(config.services[0]?.id || "");
   const [vehicle, setVehicle] = useState<VehicleForm>(initialVehicle);
-  const [appointmentDate, setAppointmentDate] = useState(config.minDate);
+  const [appointmentDate, setAppointmentDate] = useState(initialAppointmentDate);
   const [appointmentTime, setAppointmentTime] = useState("");
-  const [visibleMonth, setVisibleMonth] = useState(monthKey(config.minDate));
+  const [visibleMonth, setVisibleMonth] = useState(
+    monthKey(initialAppointmentDate),
+  );
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState("");
@@ -234,8 +283,14 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
     [selectedService?.durationMinutes],
   );
   const calendarDays = useMemo(
-    () => calendarDaysForMonth(visibleMonth, config.minDate, config.maxDate),
-    [config.maxDate, config.minDate, visibleMonth],
+    () =>
+      calendarDaysForMonth(
+        visibleMonth,
+        config.minDate,
+        config.maxDate,
+        config.unavailablePeriods,
+      ),
+    [config.maxDate, config.minDate, config.unavailablePeriods, visibleMonth],
   );
 
   useEffect(() => {
@@ -459,6 +514,7 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
                 calendarDays={calendarDays}
                 maxDate={config.maxDate}
                 minDate={config.minDate}
+                unavailablePeriods={config.unavailablePeriods}
                 visibleMonth={visibleMonth}
                 slots={slots}
                 slotsError={slotsError}
@@ -1014,6 +1070,7 @@ function TimeStep({
   calendarDays,
   maxDate,
   minDate,
+  unavailablePeriods,
   visibleMonth,
   slots,
   slotsError,
@@ -1030,6 +1087,7 @@ function TimeStep({
   calendarDays: CalendarDay[];
   maxDate: string;
   minDate: string;
+  unavailablePeriods: BookingConfig["unavailablePeriods"];
   visibleMonth: string;
   slots: string[];
   slotsError: string;
@@ -1047,6 +1105,10 @@ function TimeStep({
   const nextMonth = addMonths(visibleMonth, 1);
   const canGoPrevious = previousMonth >= minMonth;
   const canGoNext = nextMonth <= maxMonth;
+  const selectedClosedPeriods = unavailablePeriodsForDate(
+    appointmentDate,
+    unavailablePeriods,
+  );
 
   return (
     <Card>
@@ -1093,6 +1155,7 @@ function TimeStep({
                   key={day.key}
                   type="button"
                   disabled={day.disabled}
+                  title={day.blocked ? "Lukket for booking" : undefined}
                   onClick={() => onDateChange(day.key)}
                   className={cn(
                     "flex aspect-square items-center justify-center rounded-lg text-sm font-semibold transition",
@@ -1102,6 +1165,8 @@ function TimeStep({
                     !day.inMonth && "text-slate-300",
                     day.disabled &&
                       "cursor-not-allowed text-slate-300 hover:bg-transparent",
+                    day.blocked &&
+                      "border border-rose-200 bg-rose-50 text-rose-400 hover:bg-rose-50",
                   )}
                 >
                   {day.day}
@@ -1115,6 +1180,24 @@ function TimeStep({
           <p className="text-sm font-bold text-slate-900 capitalize">
             {fullDateLabel(appointmentDate)}
           </p>
+          {selectedClosedPeriods.length > 0 ? (
+            <div className="mt-3 grid gap-1.5">
+              {selectedClosedPeriods.map((period) => (
+                <div
+                  key={`${period.id}-${period.startDate}-${period.startTime}`}
+                  className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  <span className="truncate">
+                    {period.title}:{" "}
+                    {period.isFullDay
+                      ? "Lukket hele dagen"
+                      : `Lukket ${period.startTime} - ${period.endTime}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="mt-3 min-h-[14rem]">
             {slotsLoading ? (
               <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm font-semibold text-slate-500">

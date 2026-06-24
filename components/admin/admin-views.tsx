@@ -9,6 +9,7 @@ import {
   CalendarCheck2,
   CalendarClock,
   CalendarDays,
+  CalendarX2,
   CheckCircle2,
   CreditCard,
   FileText,
@@ -952,6 +953,10 @@ function ServiceCardHeader({ service }: { service: BookingService }) {
         <p className="text-sm text-slate-500">
           {formatPrice(service.price)} - {service.duration}
         </p>
+        <p className="mt-1 text-xs font-semibold text-slate-400">
+          Buffer {service.bufferBeforeMinutes} min before /{" "}
+          {service.bufferAfterMinutes} min after
+        </p>
       </div>
     </div>
   );
@@ -991,6 +996,26 @@ function ServiceFields({ service }: { service?: BookingService }) {
             type="number"
             min={0}
             defaultValue={service?.price ?? 0}
+          />
+        </Field>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Notice / before buffer (minutes)">
+          <Input
+            name="buffer_before_minutes"
+            type="number"
+            min={0}
+            step={5}
+            defaultValue={service?.bufferBeforeMinutes ?? 60}
+          />
+        </Field>
+        <Field label="After buffer (minutes)">
+          <Input
+            name="buffer_after_minutes"
+            type="number"
+            min={0}
+            step={5}
+            defaultValue={service?.bufferAfterMinutes ?? 0}
           />
         </Field>
       </div>
@@ -1593,13 +1618,19 @@ export function PaymentsView({
 }
 
 export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
-  type SettingsTab = "company" | "booking" | "schedule" | "areas" | "email";
+  type SettingsTab =
+    | "company"
+    | "booking"
+    | "schedule"
+    | "blocks"
+    | "areas"
+    | "email";
   const [activeTab, setActiveTab] = useState<SettingsTab>("company");
   const settings = dashboard.settings;
   return (
     <Panel
       title="Settings"
-      description="Company, appointment, service area, and email automation settings."
+      description="Company, appointment, closed time, service area, and email automation settings."
       icon={Settings2}
     >
       <div className="mb-4">
@@ -1609,6 +1640,12 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
             { id: "company", label: "Company", icon: Building2 },
             { id: "booking", label: "Booking", icon: CalendarCheck2 },
             { id: "schedule", label: "Schedule", icon: CalendarClock },
+            {
+              id: "blocks",
+              label: "Closed times",
+              icon: CalendarX2,
+              badge: dashboard.unavailablePeriods.length,
+            },
             { id: "areas", label: "Areas", icon: Users },
             { id: "email", label: "Email", icon: Mail },
           ]}
@@ -1616,7 +1653,10 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
         />
       </div>
 
-      <form action="/api/admin/settings" method="POST" className="grid gap-5">
+      {activeTab === "blocks" ? (
+        <ClosedTimesSettings dashboard={dashboard} />
+      ) : (
+        <form action="/api/admin/settings" method="POST" className="grid gap-5">
         <FormTabPanel active={activeTab === "company"}>
           <div className="grid gap-3 md:grid-cols-3">
             <Field label="Company name">
@@ -1836,8 +1876,104 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
         >
           Save settings
         </Button>
-      </form>
+        </form>
+      )}
     </Panel>
+  );
+}
+
+function ClosedTimesSettings({ dashboard }: { dashboard: AdminDashboardData }) {
+  const periods = dashboard.unavailablePeriods;
+
+  return (
+    <div className="grid gap-4">
+      <form
+        action="/api/admin/unavailable-periods"
+        method="POST"
+        className="glass-card grid gap-4 rounded-lg p-4"
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Title">
+            <Input name="title" placeholder="Fx Closed for workshop day" />
+          </Field>
+          <Field label="Start date">
+            <Input name="start_date" type="date" required />
+          </Field>
+          <Field label="End date">
+            <Input name="end_date" type="date" />
+          </Field>
+          <Field label="Start time">
+            <Input name="start_time" type="time" defaultValue="09:00" />
+          </Field>
+          <Field label="End time">
+            <Input name="end_time" type="time" defaultValue="17:00" />
+          </Field>
+          <label className="flex min-h-12 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur">
+            <input
+              name="is_full_day"
+              type="checkbox"
+              className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+            />
+            Full day closed
+          </label>
+        </div>
+        <Button
+          type="submit"
+          disabled={!dashboard.databaseConfigured}
+          className="w-full sm:w-fit"
+        >
+          <CalendarX2 className="h-4 w-4" />
+          Add closed time
+        </Button>
+      </form>
+
+      {periods.length > 0 ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {periods.map((period) => (
+            <article
+              key={period.id}
+              className="rounded-lg border border-rose-200/80 bg-rose-50/70 p-4 text-rose-950 backdrop-blur"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-bold">{period.title}</p>
+                  <p className="mt-1 text-sm font-semibold text-rose-800">
+                    {period.startDate === period.endDate
+                      ? formatShortDate(period.startDate)
+                      : `${formatShortDate(period.startDate)} - ${formatShortDate(
+                          period.endDate,
+                        )}`}
+                  </p>
+                  <p className="mt-1 text-sm text-rose-700">
+                    {period.isFullDay
+                      ? "Closed all day"
+                      : `${period.startTime} - ${period.endTime}`}
+                  </p>
+                </div>
+                <CalendarX2 className="h-5 w-5 shrink-0 text-rose-500" />
+              </div>
+              <form
+                action={`/api/admin/unavailable-periods/${period.id}/delete`}
+                method="POST"
+                className="mt-3"
+              >
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={!dashboard.databaseConfigured}
+                  className="w-full border-rose-200 text-rose-700 hover:border-rose-300 hover:text-rose-800"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove closed time
+                </Button>
+              </form>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState text="No closed times yet." />
+      )}
+    </div>
   );
 }
 

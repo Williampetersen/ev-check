@@ -4,6 +4,11 @@ import { updateBookingServiceRecord } from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 import { fileToDataUrl } from "@/lib/server/uploads";
 
+const minutesValue = (value: FormDataEntryValue | null, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
+};
+
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = verifySessionToken((await cookies()).get(ADMIN_COOKIE_NAME)?.value, "admin");
   if (!session) {
@@ -22,6 +27,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       description: String(formData.get("description") || ""),
       badge: String(formData.get("badge") || ""),
       durationMinutes: Number(formData.get("duration_minutes") || 15),
+      bufferBeforeMinutes: minutesValue(formData.get("buffer_before_minutes"), 60),
+      bufferAfterMinutes: minutesValue(formData.get("buffer_after_minutes"), 0),
       price: Number(formData.get("price") || 0),
       imageData,
       features: String(formData.get("features") || "")
