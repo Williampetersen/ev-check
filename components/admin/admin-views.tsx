@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { BookingTrendChart } from "@/components/admin/booking-trend-chart";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
 import {
@@ -148,6 +149,17 @@ export function Overview({
           tone="emerald"
         />
       </div>
+
+      <Panel
+        title="Booking activity"
+        description="Responsive booking line with totals, status counts, and revenue for the selected period."
+        icon={BarChart3}
+      >
+        <BookingTrendChart
+          appointments={appointments}
+          timeZone={dashboard.settings.timezone}
+        />
+      </Panel>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Panel
