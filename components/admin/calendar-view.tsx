@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  CalendarCheck2,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  ListChecks,
+} from "lucide-react";
+import { AdminTabs, type AdminTabItem } from "@/components/admin/admin-tabs";
+import {
+  formatPrice,
+  formatShortDate,
   statusLabels,
   type Appointment,
   type AppointmentStatus,
@@ -8,31 +19,35 @@ import {
 } from "@/lib/ev-domain";
 import { cn } from "@/lib/utils";
 
-const ROW_HEIGHT = 56;
-const MIN_BLOCK_HEIGHT = 24;
+export type CalendarMode = "day" | "week" | "agenda";
+
+const ROW_HEIGHT = 64;
+const MIN_BLOCK_HEIGHT = 34;
 
 const statusBlockStyles: Record<AppointmentStatus, string> = {
-  pending: "border-sky-300 bg-sky-100/90 text-sky-900",
-  approved: "border-sky-300 bg-sky-100/90 text-sky-900",
-  completed: "border-emerald-300 bg-emerald-100/90 text-emerald-900",
-  cancelled: "border-rose-300 bg-rose-100/80 text-rose-900 line-through",
+  pending: "border-amber-200 bg-amber-50/95 text-amber-900",
+  approved: "border-sky-200 bg-sky-50/95 text-sky-900",
+  completed: "border-emerald-200 bg-emerald-50/95 text-emerald-900",
+  cancelled: "border-rose-200 bg-rose-50/90 text-rose-900 line-through",
 };
 
 const statusDotStyles: Record<AppointmentStatus, string> = {
-  pending: "bg-sky-500",
+  pending: "bg-amber-500",
   approved: "bg-sky-500",
   completed: "bg-emerald-500",
   cancelled: "bg-rose-500",
 };
 
 function toDate(key: string) {
-  return new Date(`${key}T00:00:00`);
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year || 1970, (month || 1) - 1, day || 1, 12);
 }
 
 function toKey(date: Date) {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy.toISOString().slice(0, 10);
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function addDays(key: string, amount: number) {
@@ -94,9 +109,9 @@ export function CalendarView({
   appointments: Appointment[];
   settings: DashboardSettings;
   date: string;
-  mode: "day" | "week";
+  mode: CalendarMode;
   onDateChange: (date: string) => void;
-  onModeChange: (mode: "day" | "week") => void;
+  onModeChange: (mode: CalendarMode) => void;
   onSelectAppointment: (id: string) => void;
 }) {
   const todayKey = toKey(new Date());
@@ -123,61 +138,98 @@ export function CalendarView({
     ]);
   }
 
-  const prevDate = addDays(anchor, mode === "day" ? -1 : -7);
-  const nextDate = addDays(anchor, mode === "day" ? 1 : 7);
+  const shift = mode === "day" ? 1 : 7;
+  const prevDate = addDays(anchor, -shift);
+  const nextDate = addDays(anchor, shift);
   const periodLabel =
     mode === "day"
       ? formatDayHeader(anchor)
       : formatWeekRange(weekStart, addDays(weekStart, 6));
   const periodAppointments = days
     .flatMap((day) => appointmentsByDay.get(day) || [])
-    .filter((item) => item.status !== "cancelled");
+    .sort((a, b) =>
+      `${a.appointmentDate}T${a.appointmentTime}`.localeCompare(
+        `${b.appointmentDate}T${b.appointmentTime}`,
+      ),
+    );
+  const activePeriodAppointments = periodAppointments.filter(
+    (item) => item.status !== "cancelled",
+  );
+  const modeTabs: AdminTabItem<CalendarMode>[] = [
+    { id: "day", label: "Day", icon: CalendarDays },
+    { id: "week", label: "Week", icon: CalendarCheck2 },
+    { id: "agenda", label: "Agenda", icon: ListChecks },
+  ];
 
   return (
     <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <CalendarMetric
+          label="This period"
+          value={String(activePeriodAppointments.length)}
+          detail="Active bookings"
+        />
+        <CalendarMetric
+          label="Pending"
+          value={String(
+            periodAppointments.filter((item) => item.status === "pending")
+              .length,
+          )}
+          detail="Needs review"
+        />
+        <CalendarMetric
+          label="Completed"
+          value={String(
+            periodAppointments.filter((item) => item.status === "completed")
+              .length,
+          )}
+          detail="Done checks"
+        />
+        <CalendarMetric
+          label="Revenue"
+          value={formatPrice(
+            activePeriodAppointments.reduce((sum, item) => sum + item.total, 0),
+          )}
+          detail="Booked value"
+        />
+      </div>
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-bold text-slate-950">{periodLabel}</p>
           <p className="text-sm text-slate-500">
-            {periodAppointments.length}{" "}
-            {periodAppointments.length === 1 ? "booking" : "bookings"} shown
+            {activePeriodAppointments.length}{" "}
+            {activePeriodAppointments.length === 1 ? "booking" : "bookings"}{" "}
+            shown
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <NavButton onClick={() => onDateChange(todayKey)}>Today</NavButton>
-          <div className="flex items-center gap-1">
-            <NavButton
-              onClick={() => onDateChange(prevDate)}
-              aria-label="Previous"
-            >
-              ‹
-            </NavButton>
-            <input
-              type="date"
-              value={anchor}
-              onChange={(event) =>
-                event.target.value && onDateChange(event.target.value)
-              }
-              className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 backdrop-blur outline-none focus:border-sky-400"
-            />
-            <NavButton onClick={() => onDateChange(nextDate)} aria-label="Next">
-              ›
-            </NavButton>
-          </div>
-          <div className="flex rounded-lg border border-white/70 bg-white/55 p-1 backdrop-blur">
-            <ModeButton
-              onClick={() => onModeChange("day")}
-              active={mode === "day"}
-            >
-              Day
-            </ModeButton>
-            <ModeButton
-              onClick={() => onModeChange("week")}
-              active={mode === "week"}
-            >
-              Week
-            </ModeButton>
+        <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[auto_auto] sm:items-center xl:flex">
+          <AdminTabs active={mode} items={modeTabs} onSelect={onModeChange} />
+          <div className="flex flex-wrap items-center gap-2">
+            <NavButton onClick={() => onDateChange(todayKey)}>Today</NavButton>
+            <div className="flex items-center gap-1">
+              <NavButton
+                onClick={() => onDateChange(prevDate)}
+                aria-label="Previous"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </NavButton>
+              <input
+                type="date"
+                value={anchor}
+                onChange={(event) =>
+                  event.target.value && onDateChange(event.target.value)
+                }
+                className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm font-medium text-slate-700 backdrop-blur outline-none focus:border-sky-400"
+              />
+              <NavButton
+                onClick={() => onDateChange(nextDate)}
+                aria-label="Next"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </NavButton>
+            </div>
           </div>
         </div>
       </div>
@@ -193,98 +245,244 @@ export function CalendarView({
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-white/60">
-        <div
-          className="grid min-w-[640px]"
-          style={{
-            gridTemplateColumns: `4rem repeat(${days.length}, minmax(0,1fr))`,
-          }}
-        >
-          <div className="border-b border-white/60 bg-white/40" />
-          {days.map((day) => (
-            <div
-              key={day}
-              className={cn(
-                "border-b border-l border-white/60 px-2 py-2 text-center",
-                day === todayKey && "bg-sky-50/70",
-              )}
-            >
-              <p
-                className={cn(
-                  "text-xs font-bold tracking-wide uppercase",
-                  day === todayKey ? "text-sky-700" : "text-slate-500",
-                )}
-              >
-                {formatDayHeader(day)}
-              </p>
-            </div>
-          ))}
+      {mode === "agenda" ? (
+        <AgendaList
+          appointments={periodAppointments}
+          onSelectAppointment={onSelectAppointment}
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-white/60">
+          <div
+            className="grid min-w-[760px]"
+            style={{
+              gridTemplateColumns: `4rem repeat(${days.length}, minmax(10rem,1fr))`,
+            }}
+          >
+            <div className="border-b border-white/60 bg-white/40" />
+            {days.map((day) => {
+              const dayAppointments = (appointmentsByDay.get(day) || []).filter(
+                (item) => item.status !== "cancelled",
+              );
+              return (
+                <div
+                  key={day}
+                  className={cn(
+                    "border-b border-l border-white/60 px-2 py-2 text-center",
+                    day === todayKey && "bg-sky-50/70",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-xs font-bold tracking-wide uppercase",
+                      day === todayKey ? "text-sky-700" : "text-slate-500",
+                    )}
+                  >
+                    {formatDayHeader(day)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    {dayAppointments.length} booked
+                  </p>
+                </div>
+              );
+            })}
 
-          <div className="relative bg-white/30" style={{ height: gridHeight }}>
-            {hours.map((hour, index) => (
-              <div
-                key={hour}
-                className="absolute inset-x-0 -translate-y-1/2 pr-2 text-right text-[11px] font-semibold text-slate-400"
-                style={{ top: index * ROW_HEIGHT }}
-              >
-                {String(hour).padStart(2, "0")}:00
-              </div>
-            ))}
-          </div>
-
-          {days.map((day) => (
             <div
-              key={day}
-              className={cn(
-                "relative border-l border-white/60",
-                day === todayKey && "bg-sky-50/30",
-              )}
+              className="relative bg-white/30"
               style={{ height: gridHeight }}
             >
               {hours.map((hour, index) => (
                 <div
                   key={hour}
-                  className="absolute inset-x-0 border-t border-white/45"
+                  className="absolute inset-x-0 -translate-y-1/2 pr-2 text-right text-[11px] font-semibold text-slate-400"
                   style={{ top: index * ROW_HEIGHT }}
-                />
+                >
+                  {String(hour).padStart(2, "0")}:00
+                </div>
               ))}
-              {(appointmentsByDay.get(day) || []).map((appointment) => {
-                const startMinutes = minutesOf(appointment.appointmentTime);
-                const endMinutes = appointment.appointmentEndTime
-                  ? minutesOf(appointment.appointmentEndTime)
-                  : startMinutes + (settings.slotMinutes || 30);
-                const top = Math.max(
-                  0,
-                  ((startMinutes - startHour * 60) / 60) * ROW_HEIGHT,
-                );
-                const height = Math.max(
-                  MIN_BLOCK_HEIGHT,
-                  ((endMinutes - startMinutes) / 60) * ROW_HEIGHT,
-                );
-                return (
+            </div>
+
+            {days.map((day) => (
+              <div
+                key={day}
+                className={cn(
+                  "relative border-l border-white/60",
+                  day === todayKey && "bg-sky-50/30",
+                )}
+                style={{ height: gridHeight }}
+              >
+                {hours.map((hour, index) => (
+                  <div
+                    key={hour}
+                    className="absolute inset-x-0 border-t border-white/45"
+                    style={{ top: index * ROW_HEIGHT }}
+                  />
+                ))}
+                {layoutAppointments(
+                  appointmentsByDay.get(day) || [],
+                  settings,
+                  startHour,
+                  endHour,
+                ).map((layout) => (
                   <button
-                    key={appointment.id}
+                    key={layout.appointment.id}
                     type="button"
-                    onClick={() => onSelectAppointment(appointment.id)}
+                    onClick={() => onSelectAppointment(layout.appointment.id)}
                     className={cn(
-                      "absolute inset-x-1 overflow-hidden rounded-md border px-1.5 py-1 text-left text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
-                      statusBlockStyles[appointment.status],
+                      "absolute overflow-hidden rounded-md border px-1.5 py-1 text-left text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
+                      statusBlockStyles[layout.appointment.status],
                     )}
-                    style={{ top, height }}
+                    style={{
+                      top: layout.top,
+                      height: layout.height,
+                      left: `calc(${(layout.lane / layout.laneCount) * 100}% + 0.25rem)`,
+                      width: `calc(${100 / layout.laneCount}% - 0.5rem)`,
+                    }}
                   >
                     <p className="truncate font-bold">
-                      {appointment.appointmentTime} {appointment.customerName}
+                      {layout.appointment.appointmentTime}{" "}
+                      {layout.appointment.customerName}
                     </p>
-                    <p className="truncate">{appointment.serviceLabel}</p>
+                    <p className="truncate">
+                      {layout.appointment.serviceLabel}
+                    </p>
+                    <p className="truncate text-[10px] opacity-80">
+                      {formatPrice(layout.appointment.total)}
+                    </p>
                   </button>
-                );
-              })}
-            </div>
-          ))}
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function CalendarMetric({
+  detail,
+  label,
+  value,
+}: {
+  detail: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="glass-card rounded-lg p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            {label}
+          </p>
+          <p className="mt-2 truncate text-2xl font-bold text-slate-950">
+            {value}
+          </p>
+          <p className="mt-1 truncate text-sm text-slate-500">{detail}</p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50/80 text-sky-700 ring-1 ring-sky-100 backdrop-blur">
+          <Clock3 className="h-5 w-5" />
+        </span>
       </div>
     </div>
   );
+}
+
+function AgendaList({
+  appointments,
+  onSelectAppointment,
+}: {
+  appointments: Appointment[];
+  onSelectAppointment: (id: string) => void;
+}) {
+  if (appointments.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-white/70 bg-white/40 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
+        No bookings in this period.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-2">
+      {appointments.map((appointment) => (
+        <button
+          key={appointment.id}
+          type="button"
+          onClick={() => onSelectAppointment(appointment.id)}
+          className="glass-card grid gap-3 rounded-lg p-4 text-left transition hover:border-sky-300 sm:grid-cols-[9rem_1fr_auto] sm:items-center"
+        >
+          <div>
+            <p className="text-xs font-bold tracking-wide text-slate-500 uppercase">
+              {formatShortDate(appointment.appointmentDate)}
+            </p>
+            <p className="mt-1 font-bold text-slate-950">
+              {appointment.appointmentTime}
+            </p>
+          </div>
+          <div className="min-w-0">
+            <p className="truncate font-bold text-slate-950">
+              {appointment.customerName}
+            </p>
+            <p className="truncate text-sm text-slate-500">
+              {appointment.serviceLabel} - {appointment.vehicleLabel}
+            </p>
+          </div>
+          <span
+            className={cn(
+              "w-fit rounded-full border px-2.5 py-1 text-xs font-bold",
+              statusBlockStyles[appointment.status],
+            )}
+          >
+            {statusLabels[appointment.status]}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function layoutAppointments(
+  appointments: Appointment[],
+  settings: DashboardSettings,
+  startHour: number,
+  endHour: number,
+) {
+  const startBoundary = startHour * 60;
+  const endBoundary = endHour * 60;
+  const events = appointments
+    .map((appointment) => {
+      const start = minutesOf(appointment.appointmentTime);
+      const end = appointment.appointmentEndTime
+        ? minutesOf(appointment.appointmentEndTime)
+        : start + (settings.slotMinutes || 30);
+      return { appointment, start, end: Math.max(end, start + 15) };
+    })
+    .filter((event) => event.end > startBoundary && event.start < endBoundary)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const laneEnds: number[] = [];
+  const laidOut = events.map((event) => {
+    const laneIndex = laneEnds.findIndex((end) => end <= event.start);
+    const lane = laneIndex >= 0 ? laneIndex : laneEnds.length;
+    laneEnds[lane] = event.end;
+
+    const clampedStart = Math.max(event.start, startBoundary);
+    const clampedEnd = Math.min(event.end, endBoundary);
+    return {
+      appointment: event.appointment,
+      lane,
+      laneCount: 1,
+      top: ((clampedStart - startBoundary) / 60) * ROW_HEIGHT,
+      height: Math.max(
+        MIN_BLOCK_HEIGHT,
+        ((clampedEnd - clampedStart) / 60) * ROW_HEIGHT,
+      ),
+    };
+  });
+
+  const laneCount = Math.max(1, ...laidOut.map((item) => item.lane + 1));
+  return laidOut.map((item) => ({ ...item, laneCount }));
 }
 
 function NavButton({
@@ -298,30 +496,6 @@ function NavButton({
       type="button"
       {...props}
       className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:border-sky-300 hover:text-sky-700"
-    >
-      {children}
-    </button>
-  );
-}
-
-function ModeButton({
-  active,
-  children,
-  ...props
-}: {
-  active: boolean;
-  children: React.ReactNode;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={cn(
-        "flex h-7 items-center justify-center rounded-md px-3 text-xs font-bold transition",
-        active
-          ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
-          : "text-slate-600 hover:text-slate-950",
-      )}
     >
       {children}
     </button>

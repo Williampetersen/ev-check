@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminDashboardClient } from "@/components/admin/admin-dashboard-client";
 import { type AdminView } from "@/components/admin/admin-sidebar";
+import { type CalendarMode } from "@/components/admin/calendar-view";
 import { getAdminDashboardData } from "@/lib/server/dashboard";
 import { getAllBookingServices } from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
@@ -55,10 +56,10 @@ export default async function AdminPage({
   const view = views.includes(searchParams?.view as AdminView)
     ? (searchParams?.view as AdminView)
     : isBookingDetail
-    ? views.includes(searchParams?.from as AdminView)
-      ? (searchParams?.from as AdminView)
-      : "calendar"
-    : "overview";
+      ? views.includes(searchParams?.from as AdminView)
+        ? (searchParams?.from as AdminView)
+        : "calendar"
+      : "overview";
   const query = String(searchParams?.q || "")
     .trim()
     .toLowerCase();
@@ -68,7 +69,12 @@ export default async function AdminPage({
   )
     ? String(searchParams?.date)
     : new Date().toISOString().slice(0, 10);
-  const calendarMode = searchParams?.mode === "day" ? "day" : "week";
+  const calendarMode: CalendarMode =
+    searchParams?.mode === "day"
+      ? "day"
+      : searchParams?.mode === "agenda"
+        ? "agenda"
+        : "week";
 
   return (
     <AdminShell>

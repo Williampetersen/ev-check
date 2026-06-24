@@ -1,22 +1,36 @@
+"use client";
+
+import { useState } from "react";
 import {
+  AlertTriangle,
   BarChart3,
   BatteryCharging,
+  Building2,
+  CalendarCheck2,
+  CalendarClock,
   CalendarDays,
+  CheckCircle2,
   CreditCard,
   FileText,
   ImagePlus,
+  Inbox,
+  ListChecks,
   Mail,
   Pencil,
   Plus,
   Search,
+  Send,
   Settings2,
   Trash2,
   User,
   Users,
+  Wrench,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminTabs, type AdminTabItem } from "@/components/admin/admin-tabs";
 import { BookingTrendChart } from "@/components/admin/booking-trend-chart";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
@@ -30,6 +44,7 @@ import {
   type Appointment,
   type AppointmentStatus,
   type Customer,
+  type EmailLog,
 } from "@/lib/ev-domain";
 import { type BookingService } from "@/lib/server/booking-system";
 import { SUPPORTED_TIMEZONES, nowLabelInTimeZone } from "@/lib/server/timezone";
@@ -216,6 +231,51 @@ export function AppointmentsView({
   dashboard: AdminDashboardData;
   onOpenBooking: (id: string) => void;
 }) {
+  type AppointmentStatusFilter = "all" | AppointmentStatus;
+  const normalizedQuery = query.trim().toLowerCase();
+  const countSource = dashboard.appointments.filter((appointment) => {
+    if (!normalizedQuery) return true;
+    return [
+      appointment.customerName,
+      appointment.customerEmail,
+      appointment.customerPhone,
+      appointment.registrationNumber,
+      appointment.vehicleLabel,
+      appointment.serviceLabel,
+      appointment.areaName,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery);
+  });
+  const statusTabs: AdminTabItem<AppointmentStatusFilter>[] = [
+    { id: "all", label: "All", icon: ListChecks, badge: countSource.length },
+    {
+      id: "pending",
+      label: "Pending",
+      icon: CalendarClock,
+      badge: countSource.filter((item) => item.status === "pending").length,
+    },
+    {
+      id: "approved",
+      label: "Approved",
+      icon: CalendarCheck2,
+      badge: countSource.filter((item) => item.status === "approved").length,
+    },
+    {
+      id: "completed",
+      label: "Completed",
+      icon: CheckCircle2,
+      badge: countSource.filter((item) => item.status === "completed").length,
+    },
+    {
+      id: "cancelled",
+      label: "Cancelled",
+      icon: XCircle,
+      badge: countSource.filter((item) => item.status === "cancelled").length,
+    },
+  ];
+
   return (
     <Panel
       title="Appointments"
@@ -247,6 +307,13 @@ export function AppointmentsView({
         </div>
       }
     >
+      <div className="mb-4">
+        <AdminTabs
+          active={(status || "all") as AppointmentStatusFilter}
+          items={statusTabs}
+          onSelect={(next) => onStatusChange(next === "all" ? "" : next)}
+        />
+      </div>
       <AppointmentTable
         appointments={appointments}
         editable
@@ -489,6 +556,9 @@ export function BookingDetailView({
   dashboard: AdminDashboardData;
   backHref: string;
 }) {
+  type BookingDetailTab = "booking" | "status" | "customer" | "notes";
+  const [activeTab, setActiveTab] = useState<BookingDetailTab>("booking");
+
   return (
     <form
       action={`/api/admin/bookings/${appointment.id}/update`}
@@ -502,171 +572,190 @@ export function BookingDetailView({
         <InfoLine label="Invoice number" value={appointment.invoiceNumber} />
       </div>
 
-      <div className="glass-card rounded-lg p-4">
-        <p className="font-semibold text-slate-950">Booking details</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Date">
-            <Input
-              type="date"
-              name="appointment_date"
-              defaultValue={appointment.appointmentDate}
-              required
-            />
-          </Field>
-          <Field label="Time">
-            <Input
-              type="time"
-              name="appointment_time"
-              defaultValue={appointment.appointmentTime}
-              required
-            />
-          </Field>
-          <Field label="End time">
-            <Input
-              type="time"
-              name="appointment_end_time"
-              defaultValue={appointment.appointmentEndTime}
-            />
-          </Field>
-          <Field label="Service">
-            <Input
-              name="service_label"
-              defaultValue={appointment.serviceLabel}
-            />
-          </Field>
-          <Field label="Vehicle">
-            <Input
-              name="vehicle_label"
-              defaultValue={appointment.vehicleLabel}
-            />
-          </Field>
-          <Field label="Registration number">
-            <Input
-              name="registration_number"
-              defaultValue={appointment.registrationNumber}
-            />
-          </Field>
-          <Field label="Total (DKK)">
-            <Input
-              type="number"
-              min={0}
-              name="total"
-              defaultValue={appointment.total}
-            />
-          </Field>
-          <Field label="Area">
-            <Input name="area_name" defaultValue={appointment.areaName} />
-          </Field>
-          <Field label="Assigned user">
-            <select
-              name="assigned_user"
-              defaultValue={appointment.assignedUser}
-              className={adminSelectClass}
-            >
-              <option value="Unassigned">Unassigned</option>
-              {dashboard.users.map((user) => (
-                <option key={user.id} value={user.fullName}>
-                  {user.fullName}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-      </div>
+      <AdminTabs
+        active={activeTab}
+        items={[
+          { id: "booking", label: "Booking", icon: CalendarDays },
+          { id: "status", label: "Status", icon: Settings2 },
+          { id: "customer", label: "Customer", icon: User },
+          { id: "notes", label: "Notes", icon: Pencil },
+        ]}
+        onSelect={setActiveTab}
+      />
 
-      <div className="glass-card rounded-lg p-4">
-        <p className="font-semibold text-slate-950">Status</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <Field label="Booking status">
-            <select
-              name="status"
-              defaultValue={appointment.status}
-              className={adminSelectClass}
-            >
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Payment status">
-            <select
-              name="payment_status"
-              defaultValue={appointment.paymentStatus}
-              className={adminSelectClass}
-            >
-              {Object.entries(paymentLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Invoice status">
-            <select
-              name="invoice_status"
-              defaultValue={appointment.invoiceStatus}
-              className={adminSelectClass}
-            >
-              {Object.entries(invoiceLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
+      <FormTabPanel active={activeTab === "booking"}>
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Booking details</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Date">
+              <Input
+                type="date"
+                name="appointment_date"
+                defaultValue={appointment.appointmentDate}
+                required
+              />
+            </Field>
+            <Field label="Time">
+              <Input
+                type="time"
+                name="appointment_time"
+                defaultValue={appointment.appointmentTime}
+                required
+              />
+            </Field>
+            <Field label="End time">
+              <Input
+                type="time"
+                name="appointment_end_time"
+                defaultValue={appointment.appointmentEndTime}
+              />
+            </Field>
+            <Field label="Service">
+              <Input
+                name="service_label"
+                defaultValue={appointment.serviceLabel}
+              />
+            </Field>
+            <Field label="Vehicle">
+              <Input
+                name="vehicle_label"
+                defaultValue={appointment.vehicleLabel}
+              />
+            </Field>
+            <Field label="Registration number">
+              <Input
+                name="registration_number"
+                defaultValue={appointment.registrationNumber}
+              />
+            </Field>
+            <Field label="Total (DKK)">
+              <Input
+                type="number"
+                min={0}
+                name="total"
+                defaultValue={appointment.total}
+              />
+            </Field>
+            <Field label="Area">
+              <Input name="area_name" defaultValue={appointment.areaName} />
+            </Field>
+            <Field label="Assigned user">
+              <select
+                name="assigned_user"
+                defaultValue={appointment.assignedUser}
+                className={adminSelectClass}
+              >
+                <option value="Unassigned">Unassigned</option>
+                {dashboard.users.map((user) => (
+                  <option key={user.id} value={user.fullName}>
+                    {user.fullName}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
         </div>
-      </div>
+      </FormTabPanel>
 
-      <Field label="Admin notes">
-        <Textarea
-          name="admin_notes"
-          defaultValue={appointment.adminNotes}
-          className="min-h-24"
-        />
-      </Field>
-
-      <div className="glass-card rounded-lg p-4">
-        <p className="font-semibold text-slate-950">Customer details</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Full name">
-            <Input name="customer_name" defaultValue={customer.name} />
-          </Field>
-          <Field label="Email">
-            <Input
-              type="email"
-              name="customer_email"
-              defaultValue={customer.email}
-            />
-          </Field>
-          <Field label="Phone">
-            <Input name="customer_phone" defaultValue={customer.phone} />
-          </Field>
-          <Field label="Company">
-            <Input name="customer_company" defaultValue={customer.company} />
-          </Field>
-          <Field label="Address" className="sm:col-span-2">
-            <Input name="customer_address" defaultValue={customer.address} />
-          </Field>
-          <Field label="Postal code">
-            <Input
-              name="customer_postal_code"
-              defaultValue={customer.postalCode}
-            />
-          </Field>
-          <Field label="City">
-            <Input name="customer_city" defaultValue={customer.city} />
-          </Field>
-          <Field label="Customer notes" className="sm:col-span-2">
-            <Textarea
-              name="customer_notes"
-              defaultValue={customer.notes}
-              className="min-h-20"
-            />
-          </Field>
+      <FormTabPanel active={activeTab === "status"}>
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Status</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <Field label="Booking status">
+              <select
+                name="status"
+                defaultValue={appointment.status}
+                className={adminSelectClass}
+              >
+                {Object.entries(statusLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Payment status">
+              <select
+                name="payment_status"
+                defaultValue={appointment.paymentStatus}
+                className={adminSelectClass}
+              >
+                {Object.entries(paymentLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Invoice status">
+              <select
+                name="invoice_status"
+                defaultValue={appointment.invoiceStatus}
+                className={adminSelectClass}
+              >
+                {Object.entries(invoiceLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
         </div>
-      </div>
+      </FormTabPanel>
+
+      <FormTabPanel active={activeTab === "notes"}>
+        <Field label="Admin notes">
+          <Textarea
+            name="admin_notes"
+            defaultValue={appointment.adminNotes}
+            className="min-h-24"
+          />
+        </Field>
+      </FormTabPanel>
+
+      <FormTabPanel active={activeTab === "customer"}>
+        <div className="glass-card rounded-lg p-4">
+          <p className="font-semibold text-slate-950">Customer details</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Full name">
+              <Input name="customer_name" defaultValue={customer.name} />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                name="customer_email"
+                defaultValue={customer.email}
+              />
+            </Field>
+            <Field label="Phone">
+              <Input name="customer_phone" defaultValue={customer.phone} />
+            </Field>
+            <Field label="Company">
+              <Input name="customer_company" defaultValue={customer.company} />
+            </Field>
+            <Field label="Address" className="sm:col-span-2">
+              <Input name="customer_address" defaultValue={customer.address} />
+            </Field>
+            <Field label="Postal code">
+              <Input
+                name="customer_postal_code"
+                defaultValue={customer.postalCode}
+              />
+            </Field>
+            <Field label="City">
+              <Input name="customer_city" defaultValue={customer.city} />
+            </Field>
+            <Field label="Customer notes" className="sm:col-span-2">
+              <Textarea
+                name="customer_notes"
+                defaultValue={customer.notes}
+                className="min-h-20"
+              />
+            </Field>
+          </div>
+        </div>
+      </FormTabPanel>
 
       <Button
         type="submit"
@@ -686,77 +775,42 @@ export function ServicesView({
   services: BookingService[];
   databaseConfigured: boolean;
 }) {
-  return (
-    <div className="space-y-4">
-      <Panel
-        title="Add service"
-        description="Create a new booking service customers can choose in the booking flow."
-        icon={Plus}
-      >
-        <form
-          action="/api/admin/services"
-          method="POST"
-          encType="multipart/form-data"
-          className="grid gap-4"
-        >
-          <ServiceFields />
-          <Button
-            type="submit"
-            disabled={!databaseConfigured}
-            className="w-full sm:w-fit"
-          >
-            <Plus className="h-4 w-4" />
-            Add service
-          </Button>
-        </form>
-      </Panel>
+  type ServiceTab = "manage" | "add" | "content";
+  const [activeTab, setActiveTab] = useState<ServiceTab>("manage");
+  const serviceTabs: AdminTabItem<ServiceTab>[] = [
+    {
+      id: "manage",
+      label: "Manage",
+      icon: BatteryCharging,
+      badge: services.length,
+    },
+    { id: "add", label: "Add service", icon: Plus },
+    { id: "content", label: "Images & features", icon: ImagePlus },
+  ];
 
-      <Panel
-        title="Services"
-        description="Edit pricing, descriptions, features, and images, or remove a service."
-        icon={BatteryCharging}
-      >
-        {services.length > 0 ? (
+  return (
+    <Panel
+      title="Services"
+      description="Keep booking services, add-ons, pricing, copy, and images separated by task."
+      icon={BatteryCharging}
+    >
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={serviceTabs}
+          onSelect={setActiveTab}
+        />
+      </div>
+
+      {activeTab === "manage" ? (
+        services.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2">
             {services.map((service) => (
               <article key={service.id} className="glass-card rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/60">
-                    {service.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={service.imageUrl}
-                        alt={service.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-slate-300">
-                        <ImagePlus className="h-5 w-5" />
-                      </span>
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-bold text-slate-950">
-                      {service.title}
-                    </h3>
-                    <p className="text-sm text-slate-500">
-                      {formatPrice(service.price)} · {service.duration}
-                    </p>
-                  </div>
-                </div>
+                <ServiceCardHeader service={service} />
                 <p className="mt-3 text-sm text-slate-600">
                   {service.description}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {service.features.map((feature) => (
-                    <span
-                      key={feature}
-                      className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur"
-                    >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
 
                 <details className="mt-3">
                   <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-sky-300 hover:text-sky-700">
@@ -799,9 +853,106 @@ export function ServicesView({
             ))}
           </div>
         ) : (
-          <EmptyState text="No services yet. Add one above." />
+          <EmptyState text="No services yet. Open the Add service tab to create one." />
+        )
+      ) : null}
+
+      {activeTab === "add" ? (
+        <form
+          action="/api/admin/services"
+          method="POST"
+          encType="multipart/form-data"
+          className="glass-card grid gap-4 rounded-lg p-4"
+        >
+          <ServiceFields />
+          <Button
+            type="submit"
+            disabled={!databaseConfigured}
+            className="w-full sm:w-fit"
+          >
+            <Plus className="h-4 w-4" />
+            Add service
+          </Button>
+        </form>
+      ) : null}
+
+      {activeTab === "content" ? (
+        services.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {services.map((service) => (
+              <article key={service.id} className="glass-card rounded-lg p-4">
+                <ServiceCardHeader service={service} />
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {service.features.length > 0 ? (
+                    service.features.map((feature) => (
+                      <span
+                        key={feature}
+                        className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur"
+                      >
+                        {feature}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm font-medium text-slate-500">
+                      No feature bullets yet.
+                    </span>
+                  )}
+                </div>
+                <details className="mt-3">
+                  <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-sky-300 hover:text-sky-700">
+                    <ImagePlus className="h-4 w-4" />
+                    Edit image and features
+                  </summary>
+                  <form
+                    action={`/api/admin/services/${service.id}`}
+                    method="POST"
+                    encType="multipart/form-data"
+                    className="glass-panel mt-2 grid gap-4 rounded-lg p-3"
+                  >
+                    <ServiceFields service={service} />
+                    <Button
+                      type="submit"
+                      disabled={!databaseConfigured}
+                      className="w-full sm:w-fit"
+                    >
+                      Save content
+                    </Button>
+                  </form>
+                </details>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="No service content to edit yet." />
+        )
+      ) : null}
+    </Panel>
+  );
+}
+
+function ServiceCardHeader({ service }: { service: BookingService }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/60">
+        {service.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={service.imageUrl}
+            alt={service.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-slate-300">
+            <ImagePlus className="h-5 w-5" />
+          </span>
         )}
-      </Panel>
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate font-bold text-slate-950">{service.title}</h3>
+        <p className="text-sm text-slate-500">
+          {formatPrice(service.price)} - {service.duration}
+        </p>
+      </div>
     </div>
   );
 }
@@ -877,6 +1028,8 @@ export function CustomersView({
 }: {
   dashboard: AdminDashboardData;
 }) {
+  type CustomerTab = "all" | "active" | "portals";
+  const [activeTab, setActiveTab] = useState<CustomerTab>("all");
   const appointmentsByCustomer = new Map<string, Appointment[]>();
   for (const appointment of dashboard.appointments) {
     appointmentsByCustomer.set(appointment.customerId, [
@@ -884,6 +1037,11 @@ export function CustomersView({
       appointment,
     ]);
   }
+  const activeCustomers = dashboard.customers.filter(
+    (customer) => (appointmentsByCustomer.get(customer.id) || []).length > 0,
+  );
+  const visibleCustomers =
+    activeTab === "active" ? activeCustomers : dashboard.customers;
 
   return (
     <Panel
@@ -891,8 +1049,30 @@ export function CustomersView({
       description="Customer records, portal links, and appointment history."
       icon={Users}
     >
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            {
+              id: "all",
+              label: "All customers",
+              icon: Users,
+              badge: dashboard.customers.length,
+            },
+            {
+              id: "active",
+              label: "With bookings",
+              icon: CalendarCheck2,
+              badge: activeCustomers.length,
+            },
+            { id: "portals", label: "Portal links", icon: User },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {dashboard.customers.map((customer) => {
+        {visibleCustomers.map((customer) => {
           const appointments = appointmentsByCustomer.get(customer.id) || [];
           return (
             <article key={customer.id} className="glass-card rounded-lg p-4">
@@ -917,7 +1097,9 @@ export function CustomersView({
                 className="mt-4 inline-flex text-sm font-semibold text-sky-700 hover:text-sky-900"
                 href={`/kunde/${customer.portalToken || customer.id}`}
               >
-                Open portal
+                {activeTab === "portals"
+                  ? "Open customer portal"
+                  : "Open portal"}
               </a>
             </article>
           );
@@ -928,14 +1110,50 @@ export function CustomersView({
 }
 
 export function UsersView({ dashboard }: { dashboard: AdminDashboardData }) {
+  type UsersTab = "all" | "inspectors" | "admins";
+  const [activeTab, setActiveTab] = useState<UsersTab>("all");
+  const visibleUsers = dashboard.users.filter((user) => {
+    if (activeTab === "inspectors") return user.role === "inspector";
+    if (activeTab === "admins") return user.role === "admin";
+    return true;
+  });
+
   return (
     <Panel
       title="Admin users and field users"
       description="The previous agent dashboard is adapted here as EV Check service users."
       icon={User}
     >
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            {
+              id: "all",
+              label: "All users",
+              icon: Users,
+              badge: dashboard.users.length,
+            },
+            {
+              id: "inspectors",
+              label: "Inspectors",
+              icon: Wrench,
+              badge: dashboard.users.filter((user) => user.role === "inspector")
+                .length,
+            },
+            {
+              id: "admins",
+              label: "Admins",
+              icon: User,
+              badge: dashboard.users.filter((user) => user.role === "admin")
+                .length,
+            },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {dashboard.users.map((user) => (
+        {visibleUsers.map((user) => (
           <article key={user.id} className="glass-card rounded-lg p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -971,75 +1189,179 @@ export function EmailsView({
   dashboard: AdminDashboardData;
   mailConfigured: boolean;
 }) {
+  type EmailTab = "delivery" | "logs" | "failed";
+  const [activeTab, setActiveTab] = useState<EmailTab>("delivery");
+  const failedLogs = dashboard.emailLogs.filter(
+    (email) => email.status === "failed" || email.status === "not_configured",
+  );
+
   return (
     <Panel
       title="Email automation"
       description="SMTP status, automation toggles, test emails, and recent delivery logs."
       icon={Mail}
     >
-      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <div className="glass-card rounded-lg p-4">
-          <p className="text-sm font-semibold text-slate-950">SMTP status</p>
-          <p className="mt-2 text-sm text-slate-600">
-            {mailConfigured
-              ? "SMTP env vars are present."
-              : "SMTP is not fully configured."}
-          </p>
-          <form
-            action="/api/admin/test-email"
-            method="POST"
-            className="mt-4 grid gap-2"
-          >
-            <Input
-              name="to"
-              type="email"
-              placeholder="Send test to email"
-              defaultValue={dashboard.settings.adminNotifyEmail}
-            />
-            <Button
-              type="submit"
-              disabled={!dashboard.databaseConfigured && !mailConfigured}
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            { id: "delivery", label: "Delivery", icon: Send },
+            {
+              id: "logs",
+              label: "All logs",
+              icon: Inbox,
+              badge: dashboard.emailLogs.length,
+            },
+            {
+              id: "failed",
+              label: "Needs attention",
+              icon: AlertTriangle,
+              badge: failedLogs.length,
+            },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
+
+      {activeTab === "delivery" ? (
+        <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+          <div className="glass-card rounded-lg p-4">
+            <p className="text-sm font-semibold text-slate-950">SMTP status</p>
+            <p className="mt-2 text-sm text-slate-600">
+              {mailConfigured
+                ? "SMTP env vars are present."
+                : "SMTP is not fully configured."}
+            </p>
+            <form
+              action="/api/admin/test-email"
+              method="POST"
+              className="mt-4 grid gap-2"
             >
-              Send test email
-            </Button>
-          </form>
-        </div>
-        <div className="glass-card rounded-lg p-4">
-          <p className="text-sm font-semibold text-slate-950">
-            Recent email logs
-          </p>
-          <div className="mt-3 grid gap-2">
-            {dashboard.emailLogs.length > 0 ? (
-              dashboard.emailLogs.map((email) => (
-                <article
-                  key={email.id}
-                  className="rounded-lg border border-white/60 bg-white/45 px-3 py-2 backdrop-blur"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold text-slate-800">
-                      {email.subject}
-                    </p>
-                    <span className="rounded-full border border-white/70 bg-white/60 px-2.5 py-1 text-xs font-semibold text-slate-600 backdrop-blur">
-                      {email.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {email.recipientRole} - {email.recipient}
-                  </p>
-                  {email.errorMessage ? (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {email.errorMessage}
-                    </p>
-                  ) : null}
-                </article>
-              ))
-            ) : (
-              <EmptyState text="No email delivery logs yet." />
-            )}
+              <Input
+                name="to"
+                type="email"
+                placeholder="Send test to email"
+                defaultValue={dashboard.settings.adminNotifyEmail}
+              />
+              <Button
+                type="submit"
+                disabled={!dashboard.databaseConfigured && !mailConfigured}
+              >
+                Send test email
+              </Button>
+            </form>
+          </div>
+          <div className="glass-card rounded-lg p-4">
+            <p className="text-sm font-semibold text-slate-950">
+              Delivery snapshot
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <InfoLine
+                label="Sent"
+                value={String(
+                  dashboard.emailLogs.filter((email) => email.status === "sent")
+                    .length,
+                )}
+              />
+              <InfoLine
+                label="Failed"
+                value={String(
+                  dashboard.emailLogs.filter(
+                    (email) => email.status === "failed",
+                  ).length,
+                )}
+              />
+              <InfoLine
+                label="Pending"
+                value={String(
+                  dashboard.emailLogs.filter(
+                    (email) => email.status === "pending",
+                  ).length,
+                )}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
+
+      {activeTab === "logs" ? (
+        <EmailLogCards
+          logs={dashboard.emailLogs}
+          emptyText="No email delivery logs yet."
+        />
+      ) : null}
+
+      {activeTab === "failed" ? (
+        <EmailLogCards
+          logs={failedLogs}
+          emptyText="No failed email logs. Delivery looks clean."
+        />
+      ) : null}
     </Panel>
+  );
+}
+
+function EmailLogCards({
+  logs,
+  emptyText,
+}: {
+  logs: EmailLog[];
+  emptyText: string;
+}) {
+  if (logs.length === 0) return <EmptyState text={emptyText} />;
+
+  return (
+    <div className="grid gap-2">
+      {logs.map((email) => (
+        <article
+          key={email.id}
+          className={cn(
+            "rounded-lg border px-3 py-3 backdrop-blur",
+            email.status === "failed" || email.status === "not_configured"
+              ? "border-rose-200/80 bg-rose-50/80"
+              : "border-white/60 bg-white/45",
+          )}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="font-semibold text-slate-800">{email.subject}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {email.recipientRole} - {email.recipient}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                {email.sentAt || email.createdAt}
+              </p>
+            </div>
+            <EmailStatusPill status={email.status} />
+          </div>
+          {email.errorMessage ? (
+            <p className="mt-2 rounded-lg border border-rose-200/80 bg-white/55 px-3 py-2 text-xs font-medium text-rose-700">
+              {email.errorMessage}
+            </p>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function EmailStatusPill({ status }: { status: EmailLog["status"] }) {
+  const styles: Record<EmailLog["status"], string> = {
+    sent: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    failed: "border-rose-200 bg-rose-50 text-rose-700",
+    not_configured: "border-amber-200 bg-amber-50 text-amber-700",
+    pending: "border-sky-200 bg-sky-50 text-sky-700",
+  };
+
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2.5 py-1 text-xs font-bold capitalize",
+        styles[status],
+      )}
+    >
+      {status.replace("_", " ")}
+    </span>
   );
 }
 
@@ -1050,16 +1372,62 @@ export function InvoicesView({
   appointments: Appointment[];
   databaseConfigured: boolean;
 }) {
+  type InvoiceTab = "all" | "ready" | "sent" | "paid";
+  const [activeTab, setActiveTab] = useState<InvoiceTab>("all");
   const invoiceAppointments = appointments.filter(
     (item) => item.status !== "cancelled",
   );
+  const visibleInvoiceAppointments =
+    activeTab === "all"
+      ? invoiceAppointments
+      : invoiceAppointments.filter((item) => item.invoiceStatus === activeTab);
+
   return (
     <Panel
       title="Invoices"
       description="Generate receipt PDFs, inspect invoice status, and resend customer confirmations."
       icon={FileText}
     >
-      {invoiceAppointments.length > 0 ? (
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            {
+              id: "all",
+              label: "All invoices",
+              icon: FileText,
+              badge: invoiceAppointments.length,
+            },
+            {
+              id: "ready",
+              label: "Ready",
+              icon: CalendarCheck2,
+              badge: invoiceAppointments.filter(
+                (item) => item.invoiceStatus === "ready",
+              ).length,
+            },
+            {
+              id: "sent",
+              label: "Sent",
+              icon: Send,
+              badge: invoiceAppointments.filter(
+                (item) => item.invoiceStatus === "sent",
+              ).length,
+            },
+            {
+              id: "paid",
+              label: "Paid",
+              icon: CheckCircle2,
+              badge: invoiceAppointments.filter(
+                (item) => item.invoiceStatus === "paid",
+              ).length,
+            },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
+
+      {visibleInvoiceAppointments.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="text-xs tracking-wide text-slate-500 uppercase">
@@ -1073,7 +1441,7 @@ export function InvoicesView({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/60">
-              {invoiceAppointments.map((appointment) => (
+              {visibleInvoiceAppointments.map((appointment) => (
                 <tr key={appointment.id}>
                   <td className="px-3 py-3 font-semibold">
                     {appointment.invoiceNumber || "Draft"}
@@ -1120,7 +1488,7 @@ export function InvoicesView({
           </table>
         </div>
       ) : (
-        <EmptyState text="No invoices yet." />
+        <EmptyState text="No invoices match this tab." />
       )}
     </Panel>
   );
@@ -1131,18 +1499,71 @@ export function PaymentsView({
 }: {
   appointments: Appointment[];
 }) {
+  type PaymentTab = "open" | "paid" | "refunded" | "all";
+  const [activeTab, setActiveTab] = useState<PaymentTab>("open");
   const unpaid = appointments.filter(
-    (item) => item.paymentStatus !== "paid" && item.status !== "cancelled",
+    (item) =>
+      (item.paymentStatus === "unpaid" || item.paymentStatus === "pending") &&
+      item.status !== "cancelled",
   );
+  const paymentAppointments = appointments.filter(
+    (item) => item.status !== "cancelled",
+  );
+  const visiblePayments =
+    activeTab === "open"
+      ? unpaid
+      : activeTab === "all"
+        ? paymentAppointments
+        : paymentAppointments.filter(
+            (item) => item.paymentStatus === activeTab,
+          );
+
   return (
     <Panel
       title="Payments"
       description="Outstanding revenue and payment status."
       icon={CreditCard}
     >
-      {unpaid.length > 0 ? (
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            {
+              id: "open",
+              label: "Open",
+              icon: AlertTriangle,
+              badge: unpaid.length,
+            },
+            {
+              id: "paid",
+              label: "Paid",
+              icon: CheckCircle2,
+              badge: paymentAppointments.filter(
+                (item) => item.paymentStatus === "paid",
+              ).length,
+            },
+            {
+              id: "refunded",
+              label: "Refunded",
+              icon: CreditCard,
+              badge: paymentAppointments.filter(
+                (item) => item.paymentStatus === "refunded",
+              ).length,
+            },
+            {
+              id: "all",
+              label: "All payments",
+              icon: ListChecks,
+              badge: paymentAppointments.length,
+            },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
+
+      {visiblePayments.length > 0 ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {unpaid.map((appointment) => (
+          {visiblePayments.map((appointment) => (
             <article key={appointment.id} className="glass-card rounded-lg p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -1165,13 +1586,15 @@ export function PaymentsView({
           ))}
         </div>
       ) : (
-        <EmptyState text="No outstanding payments." />
+        <EmptyState text="No payments match this tab." />
       )}
     </Panel>
   );
 }
 
 export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
+  type SettingsTab = "company" | "booking" | "schedule" | "areas" | "email";
+  const [activeTab, setActiveTab] = useState<SettingsTab>("company");
   const settings = dashboard.settings;
   return (
     <Panel
@@ -1179,209 +1602,232 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
       description="Company, appointment, service area, and email automation settings."
       icon={Settings2}
     >
+      <div className="mb-4">
+        <AdminTabs
+          active={activeTab}
+          items={[
+            { id: "company", label: "Company", icon: Building2 },
+            { id: "booking", label: "Booking", icon: CalendarCheck2 },
+            { id: "schedule", label: "Schedule", icon: CalendarClock },
+            { id: "areas", label: "Areas", icon: Users },
+            { id: "email", label: "Email", icon: Mail },
+          ]}
+          onSelect={setActiveTab}
+        />
+      </div>
+
       <form action="/api/admin/settings" method="POST" className="grid gap-5">
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Company name">
-            <Input name="company_name" defaultValue={settings.companyName} />
-          </Field>
-          <Field label="Support email">
-            <Input
-              name="support_email"
-              type="email"
-              defaultValue={settings.supportEmail}
-            />
-          </Field>
-          <Field label="Admin notify email">
-            <Input
-              name="admin_notify_email"
-              type="email"
-              defaultValue={settings.adminNotifyEmail}
-            />
-          </Field>
-        </div>
-
-        <div className="glass-card rounded-lg p-4">
-          <p className="font-semibold text-slate-950">New booking approval</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Choose whether bookings made on the website are confirmed instantly,
-            or held as &ldquo;Pending&rdquo; until an admin reviews them.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <label
-              className={cn(
-                "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
-                settings.defaultAppointmentStatus === "approved"
-                  ? "border-sky-300 bg-sky-50/80 text-sky-800"
-                  : "border-white/60 bg-white/45 text-slate-700",
-              )}
-            >
-              <input
-                type="radio"
-                name="default_appointment_status"
-                value="approved"
-                defaultChecked={
-                  settings.defaultAppointmentStatus === "approved"
-                }
-                className="mt-1 text-sky-600 focus:ring-sky-500"
-              />
-              <span>
-                Auto-approve
-                <span className="block text-xs font-normal text-slate-500">
-                  New bookings are confirmed instantly, no review needed.
-                </span>
-              </span>
-            </label>
-            <label
-              className={cn(
-                "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
-                settings.defaultAppointmentStatus !== "approved"
-                  ? "border-sky-300 bg-sky-50/80 text-sky-800"
-                  : "border-white/60 bg-white/45 text-slate-700",
-              )}
-            >
-              <input
-                type="radio"
-                name="default_appointment_status"
-                value="pending"
-                defaultChecked={
-                  settings.defaultAppointmentStatus !== "approved"
-                }
-                className="mt-1 text-sky-600 focus:ring-sky-500"
-              />
-              <span>
-                Manual approval
-                <span className="block text-xs font-normal text-slate-500">
-                  New bookings stay &ldquo;Pending&rdquo; until you approve
-                  them.
-                </span>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-lg p-4">
-          <p className="font-semibold text-slate-950">Time zone</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Every booking date, time slot, and &ldquo;today&rdquo; cut-off is
-            calculated live against this time zone, not the server&apos;s own
-            clock. Summer/winter time (CEST/CET) switches are handled
-            automatically &mdash; there is nothing to adjust manually when the
-            clocks change.
-          </p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Field label="Booking system time zone">
-              <select
-                name="timezone"
-                defaultValue={settings.timezone}
-                className={adminSelectClass}
-              >
-                {SUPPORTED_TIMEZONES.map((zone) => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.label}
-                  </option>
-                ))}
-              </select>
+        <FormTabPanel active={activeTab === "company"}>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Field label="Company name">
+              <Input name="company_name" defaultValue={settings.companyName} />
             </Field>
-            <Field label="Current live time">
-              <div className="flex h-12 items-center rounded-lg border border-white/70 bg-white/70 px-3 text-sm font-semibold text-slate-700 backdrop-blur sm:h-10">
-                {nowLabelInTimeZone(settings.timezone)}
-              </div>
+            <Field label="Support email">
+              <Input
+                name="support_email"
+                type="email"
+                defaultValue={settings.supportEmail}
+              />
+            </Field>
+            <Field label="Admin notify email">
+              <Input
+                name="admin_notify_email"
+                type="email"
+                defaultValue={settings.adminNotifyEmail}
+              />
             </Field>
           </div>
-        </div>
+        </FormTabPanel>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Start hour">
-            <Input
-              name="start_hour"
-              type="number"
-              min={0}
-              max={23}
-              defaultValue={settings.startHour}
-            />
-          </Field>
-          <Field label="End hour">
-            <Input
-              name="end_hour"
-              type="number"
-              min={1}
-              max={24}
-              defaultValue={settings.endHour}
-            />
-          </Field>
-          <Field label="Slot minutes">
-            <Input
-              name="slot_minutes"
-              type="number"
-              min={15}
-              step={15}
-              defaultValue={settings.slotMinutes}
-            />
-          </Field>
-        </div>
-
-        <Field label="Service areas">
-          <Textarea
-            name="service_areas"
-            defaultValue={settings.serviceAreas.join("\n")}
-          />
-        </Field>
-
-        <div className="glass-card rounded-lg p-4">
-          <p className="font-semibold text-slate-950">Email automation</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              [
-                "customer_on_create",
-                "Customer created",
-                settings.emailAutomation.customerOnCreate,
-              ],
-              [
-                "customer_on_approve",
-                "Customer approved",
-                settings.emailAutomation.customerOnApprove,
-              ],
-              [
-                "customer_on_complete",
-                "Customer completed",
-                settings.emailAutomation.customerOnComplete,
-              ],
-              [
-                "customer_on_cancel",
-                "Customer cancelled",
-                settings.emailAutomation.customerOnCancel,
-              ],
-              [
-                "admin_on_create",
-                "Admin alert",
-                settings.emailAutomation.adminOnCreate,
-              ],
-            ].map(([name, label, checked]) => (
+        <FormTabPanel active={activeTab === "booking"}>
+          <div className="glass-card rounded-lg p-4">
+            <p className="font-semibold text-slate-950">New booking approval</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose whether bookings made on the website are confirmed
+              instantly, or held as &ldquo;Pending&rdquo; until an admin reviews
+              them.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <label
-                key={String(name)}
-                className="flex min-h-11 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur"
+                className={cn(
+                  "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
+                  settings.defaultAppointmentStatus === "approved"
+                    ? "border-sky-300 bg-sky-50/80 text-sky-800"
+                    : "border-white/60 bg-white/45 text-slate-700",
+                )}
               >
                 <input
-                  name={String(name)}
-                  type="checkbox"
-                  defaultChecked={Boolean(checked)}
-                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  type="radio"
+                  name="default_appointment_status"
+                  value="approved"
+                  defaultChecked={
+                    settings.defaultAppointmentStatus === "approved"
+                  }
+                  className="mt-1 text-sky-600 focus:ring-sky-500"
                 />
-                {String(label)}
+                <span>
+                  Auto-approve
+                  <span className="block text-xs font-normal text-slate-500">
+                    New bookings are confirmed instantly, no review needed.
+                  </span>
+                </span>
               </label>
-            ))}
+              <label
+                className={cn(
+                  "flex items-start gap-2 rounded-lg border px-3 py-3 text-sm font-semibold backdrop-blur",
+                  settings.defaultAppointmentStatus !== "approved"
+                    ? "border-sky-300 bg-sky-50/80 text-sky-800"
+                    : "border-white/60 bg-white/45 text-slate-700",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="default_appointment_status"
+                  value="pending"
+                  defaultChecked={
+                    settings.defaultAppointmentStatus !== "approved"
+                  }
+                  className="mt-1 text-sky-600 focus:ring-sky-500"
+                />
+                <span>
+                  Manual approval
+                  <span className="block text-xs font-normal text-slate-500">
+                    New bookings stay &ldquo;Pending&rdquo; until you approve
+                    them.
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <input
-            name="booking_enabled"
-            type="checkbox"
-            defaultChecked={settings.bookingEnabled}
-            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-          />
-          Online appointments enabled
-        </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <input
+              name="booking_enabled"
+              type="checkbox"
+              defaultChecked={settings.bookingEnabled}
+              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            />
+            Online appointments enabled
+          </label>
+        </FormTabPanel>
+
+        <FormTabPanel active={activeTab === "schedule"}>
+          <div className="glass-card rounded-lg p-4">
+            <p className="font-semibold text-slate-950">Time zone</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Every booking date, time slot, and &ldquo;today&rdquo; cut-off is
+              calculated live against this time zone, not the server&apos;s own
+              clock.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Field label="Booking system time zone">
+                <select
+                  name="timezone"
+                  defaultValue={settings.timezone}
+                  className={adminSelectClass}
+                >
+                  {SUPPORTED_TIMEZONES.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Current live time">
+                <div className="flex h-12 items-center rounded-lg border border-white/70 bg-white/70 px-3 text-sm font-semibold text-slate-700 backdrop-blur sm:h-10">
+                  {nowLabelInTimeZone(settings.timezone)}
+                </div>
+              </Field>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <Field label="Start hour">
+              <Input
+                name="start_hour"
+                type="number"
+                min={0}
+                max={23}
+                defaultValue={settings.startHour}
+              />
+            </Field>
+            <Field label="End hour">
+              <Input
+                name="end_hour"
+                type="number"
+                min={1}
+                max={24}
+                defaultValue={settings.endHour}
+              />
+            </Field>
+            <Field label="Slot minutes">
+              <Input
+                name="slot_minutes"
+                type="number"
+                min={15}
+                step={15}
+                defaultValue={settings.slotMinutes}
+              />
+            </Field>
+          </div>
+        </FormTabPanel>
+
+        <FormTabPanel active={activeTab === "areas"}>
+          <Field label="Service areas">
+            <Textarea
+              name="service_areas"
+              defaultValue={settings.serviceAreas.join("\n")}
+            />
+          </Field>
+        </FormTabPanel>
+
+        <FormTabPanel active={activeTab === "email"}>
+          <div className="glass-card rounded-lg p-4">
+            <p className="font-semibold text-slate-950">Email automation</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                [
+                  "customer_on_create",
+                  "Customer created",
+                  settings.emailAutomation.customerOnCreate,
+                ],
+                [
+                  "customer_on_approve",
+                  "Customer approved",
+                  settings.emailAutomation.customerOnApprove,
+                ],
+                [
+                  "customer_on_complete",
+                  "Customer completed",
+                  settings.emailAutomation.customerOnComplete,
+                ],
+                [
+                  "customer_on_cancel",
+                  "Customer cancelled",
+                  settings.emailAutomation.customerOnCancel,
+                ],
+                [
+                  "admin_on_create",
+                  "Admin alert",
+                  settings.emailAutomation.adminOnCreate,
+                ],
+              ].map(([name, label, checked]) => (
+                <label
+                  key={String(name)}
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur"
+                >
+                  <input
+                    name={String(name)}
+                    type="checkbox"
+                    defaultChecked={Boolean(checked)}
+                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  {String(label)}
+                </label>
+              ))}
+            </div>
+          </div>
+        </FormTabPanel>
 
         <Button
           type="submit"
@@ -1392,6 +1838,20 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
         </Button>
       </form>
     </Panel>
+  );
+}
+
+function FormTabPanel({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("grid gap-5", !active && "hidden")} role="tabpanel">
+      {children}
+    </div>
   );
 }
 
