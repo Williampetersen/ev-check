@@ -2,35 +2,14 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, FileText, Gauge } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 
 const steps = [
-  {
-    title: "Plug & play",
-    detail: "Diagnoseudstyret tilsluttes bilen, og testen er klar på 15 minutter.",
-    image: "/step/step1.png",
-  },
-  {
-    title: "Den reelle værdi",
-    detail: "En uvildig SoH-rapport viser batteriets sande værdi til køb og salg.",
-    image: "/step/step2.png",
-  },
-  {
-    title: "Branchens standard",
-    detail: "Sikker, dokumenteret rapport anerkendt som standard for elbilbatterier.",
-    image: "/step/step3.png",
-  },
+  { label: "Book", detail: "Tid og adresse", icon: CalendarCheck },
+  { label: "Test", detail: "SoH og BMS", icon: Gauge },
+  { label: "Rapport", detail: "PDF samme dag", icon: FileText },
 ];
-
-const container = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.14,
-    },
-  },
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -43,64 +22,79 @@ const fadeUp = {
 
 export function HowItWorksSection() {
   return (
-    <motion.section
+    <section
       id="saadan-fungerer-det"
-      className="relative isolate overflow-hidden bg-white py-14 text-slate-950 sm:py-16 lg:py-20"
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.3 }}
+      className="py-7 text-slate-950 sm:py-8 lg:py-10"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr]">
-          <motion.div variants={fadeUp}>
-            <p className="text-3xl font-extrabold tracking-tight text-sky-500 sm:text-4xl">
-              Tryghed
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeUp}
+          className="grid overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-lg shadow-sky-950/10 lg:grid-cols-2"
+        >
+          <div className="relative min-h-[16rem] sm:min-h-[20rem] lg:min-h-[28rem]">
+            <Image
+              src="/wp/ev-bil-denmark-1.jpg"
+              alt="EV-Check tekniker udfører batteritest af elbil"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+
+          <div className="flex flex-col justify-center p-8 sm:p-10 lg:p-12">
+            <p className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+              Book. Test.
             </p>
-            <p className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-              i ét nemt trin
+            <p className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              <span className="rounded bg-sky-500 px-2 py-0.5 text-white">
+                Rapport
+              </span>{" "}
+              <span className="text-sky-500">på 15 minutter</span>
             </p>
-            <p className="mt-4 max-w-md text-slate-600">
-              Få svar på batteriets tilstand på 15 minutter – uvildigt,
-              præcist og uden at åbne højvoltsbatteriet. Book din
-              batteritest, og stå med en garantineutral rapport samme dag.
-            </p>
-            <ButtonLink href="/book-tid" className="mt-6">
+
+            <div className="mt-5 border-l-4 border-sky-400 pl-4">
+              <p className="text-base font-bold text-sky-600">
+                Book = Test = Rapport
+              </p>
+              <p className="mt-2 text-slate-600">
+                Vælg tid og adresse, vi tester bilen der hvor den står, og du
+                får en garantineutral rapport samme dag – uden
+                værkstedsbesøg.
+              </p>
+            </div>
+
+            <ButtonLink href="/book-tid" className="mt-6 w-fit">
               <CalendarCheck className="h-4 w-4" />
               Book batteritest nu
             </ButtonLink>
-            <p className="mt-3 text-xs text-slate-400">
-              Mobil test i hele Danmark · Fra 1.300 kr.
-            </p>
-          </motion.div>
 
-          <motion.div
-            variants={container}
-            className="grid gap-8 sm:grid-cols-3 sm:gap-6"
-          >
-            {steps.map((step) => (
-              <motion.div
-                key={step.title}
-                variants={fadeUp}
-                className="flex flex-col items-center text-center"
-              >
-                <div className="relative h-24 w-24 sm:h-28 sm:w-28">
-                  <Image
-                    src={step.image}
-                    alt={step.title}
-                    fill
-                    className="object-contain"
-                    sizes="112px"
-                  />
-                </div>
-                <h3 className="mt-4 text-base font-bold text-slate-950">
-                  {step.title}
-                </h3>
-                <p className="mt-1 text-sm text-slate-600">{step.detail}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+            <div className="mt-7 grid gap-2 sm:grid-cols-3">
+              {steps.map((step) => {
+                const Icon = step.icon;
+                return (
+                  <div
+                    key={step.label}
+                    className="flex min-h-12 items-center gap-2 rounded-lg border border-sky-100 bg-sky-50/60 px-3 py-2 text-sm font-bold text-slate-800"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-300 text-white shadow-sm">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="truncate">
+                      {step.label}
+                      <span className="block text-xs font-semibold text-slate-500">
+                        {step.detail}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </motion.section>
+    </section>
   );
 }

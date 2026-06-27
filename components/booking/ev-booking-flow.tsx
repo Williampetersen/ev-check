@@ -1177,7 +1177,10 @@ function TimeStep({
                     selected
                       ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
                       : "text-slate-700 hover:bg-sky-50",
-                    !day.inMonth && "text-slate-300",
+                    !selected &&
+                      !day.disabled &&
+                      !day.inMonth &&
+                      "text-slate-400",
                     day.disabled &&
                       "cursor-not-allowed text-slate-300 hover:bg-transparent",
                     day.blocked &&
