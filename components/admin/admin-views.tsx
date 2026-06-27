@@ -54,6 +54,16 @@ import { cn } from "@/lib/utils";
 export const adminSelectClass =
   "h-12 rounded-lg border border-white/70 bg-white/70 px-3 text-base font-medium text-slate-700 outline-none backdrop-blur focus:border-sky-400 focus:bg-white/85 focus:ring-4 focus:ring-sky-500/10 sm:h-10 sm:text-sm";
 
+const weekdayOptions = [
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+  { value: 0, label: "Sunday" },
+];
+
 export function Notice({
   children,
   tone,
@@ -1809,6 +1819,31 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
                 defaultValue={settings.slotMinutes}
               />
             </Field>
+          </div>
+
+          <div className="glass-card rounded-lg p-4">
+            <p className="font-semibold text-slate-950">Opening days</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Days customers can book a slot on. Unchecked days are closed
+              every week, including in future months.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              {weekdayOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur"
+                >
+                  <input
+                    name="working_days"
+                    type="checkbox"
+                    value={option.value}
+                    defaultChecked={settings.workingDays.includes(option.value)}
+                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
           </div>
         </FormTabPanel>
 

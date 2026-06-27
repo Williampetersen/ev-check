@@ -134,8 +134,8 @@ function addDays(date: string, amount: number) {
   return dateKey(next);
 }
 
-function isSunday(date: string) {
-  return dateFromKey(date).getDay() === 0;
+function isWorkingDay(date: string, workingDays: number[]) {
+  return workingDays.includes(dateFromKey(date).getDay());
 }
 
 function isDateFullyBlocked(
@@ -164,7 +164,10 @@ function firstSelectableDate(config: BookingConfig) {
     current <= config.maxDate;
     current = addDays(current, 1)
   ) {
-    if (!isSunday(current) && !isDateFullyBlocked(current, config.unavailablePeriods)) {
+    if (
+      isWorkingDay(current, config.settings.workingDays) &&
+      !isDateFullyBlocked(current, config.unavailablePeriods)
+    ) {
       return current;
     }
   }
@@ -211,6 +214,7 @@ function calendarDaysForMonth(
   minDate: string,
   maxDate: string,
   unavailablePeriods: BookingConfig["unavailablePeriods"],
+  workingDays: number[],
 ): CalendarDay[] {
   const first = dateFromKey(monthKey(visibleMonth));
   const start = new Date(first);
@@ -226,7 +230,11 @@ function calendarDaysForMonth(
       key,
       day: day.getDate(),
       inMonth: day.getMonth() === first.getMonth(),
-      disabled: key < minDate || key > maxDate || isSunday(key) || blocked,
+      disabled:
+        key < minDate ||
+        key > maxDate ||
+        !isWorkingDay(key, workingDays) ||
+        blocked,
       blocked,
     };
   });
@@ -289,8 +297,15 @@ export function EvBookingFlow({ config }: BookingFlowProps) {
         config.minDate,
         config.maxDate,
         config.unavailablePeriods,
+        config.settings.workingDays,
       ),
-    [config.maxDate, config.minDate, config.unavailablePeriods, visibleMonth],
+    [
+      config.maxDate,
+      config.minDate,
+      config.unavailablePeriods,
+      config.settings.workingDays,
+      visibleMonth,
+    ],
   );
 
   useEffect(() => {

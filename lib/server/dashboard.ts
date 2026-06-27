@@ -51,6 +51,12 @@ function normalizeSettings(row: any): DashboardSettings {
     startHour: numberValue(row?.start_hour, defaultSettings.startHour),
     endHour: numberValue(row?.end_hour, defaultSettings.endHour),
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
+    workingDays:
+      Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
+        ? row.working_days_json
+            .map((value: unknown) => Number(value))
+            .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+        : defaultSettings.workingDays,
     serviceAreas: Array.isArray(row?.service_areas_json)
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
@@ -365,6 +371,12 @@ export async function saveDashboardSettings(formData: FormData) {
     startHour: numberValue(formData.get("start_hour"), 8),
     endHour: numberValue(formData.get("end_hour"), 18),
     slotMinutes: numberValue(formData.get("slot_minutes"), 60),
+    workingDays: formData.getAll("working_days").length > 0
+      ? formData
+          .getAll("working_days")
+          .map((value) => Number(value))
+          .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
+      : defaultSettings.workingDays,
     serviceAreas: text(formData.get("service_areas"), "")
       .split(/[\n,]+/)
       .map((item) => item.trim())
@@ -382,13 +394,14 @@ export async function saveDashboardSettings(formData: FormData) {
   await sql`
     INSERT INTO dashboard_settings (
       settings_key, company_name, support_email, admin_notify_email, default_appointment_status,
-      booking_enabled, timezone, start_hour, end_hour, slot_minutes, service_areas_json, services_json,
+      booking_enabled, timezone, start_hour, end_hour, slot_minutes, working_days_json, service_areas_json, services_json,
       email_automation_json, updated_at
     )
     VALUES (
       'default', ${settings.companyName}, ${settings.supportEmail}, ${settings.adminNotifyEmail},
       ${settings.defaultAppointmentStatus}, ${settings.bookingEnabled}, ${settings.timezone},
-      ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes}, ${sql.json(settings.serviceAreas)},
+      ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes}, ${sql.json(settings.workingDays)},
+      ${sql.json(settings.serviceAreas)},
       ${sql.json(settings.services)}, ${sql.json(settings.emailAutomation)}, NOW()
     )
     ON CONFLICT (settings_key)
@@ -402,6 +415,7 @@ export async function saveDashboardSettings(formData: FormData) {
       start_hour = EXCLUDED.start_hour,
       end_hour = EXCLUDED.end_hour,
       slot_minutes = EXCLUDED.slot_minutes,
+      working_days_json = EXCLUDED.working_days_json,
       service_areas_json = EXCLUDED.service_areas_json,
       services_json = EXCLUDED.services_json,
       email_automation_json = EXCLUDED.email_automation_json,

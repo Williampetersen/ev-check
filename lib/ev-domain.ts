@@ -85,6 +85,8 @@ export type DashboardSettings = {
   startHour: number;
   endHour: number;
   slotMinutes: number;
+  /** Days the booking system accepts appointments on, JS Date.getDay() convention (0 = Sunday … 6 = Saturday). */
+  workingDays: number[];
   serviceAreas: string[];
   services: Array<{ id: string; label: string; price: number; durationMinutes: number }>;
   emailAutomation: {
@@ -147,6 +149,7 @@ export const defaultSettings: DashboardSettings = {
   startHour: 9,
   endHour: 18,
   slotMinutes: 15,
+  workingDays: [0, 1, 2, 3, 4, 5, 6],
   serviceAreas: ["København", "Nordsjælland", "Roskilde", "Køge", "Hele Sjælland"],
   services: [
     { id: "battery-health", label: "Batteritest af elbil", price: 1300, durationMinutes: 15 },

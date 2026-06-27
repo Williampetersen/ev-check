@@ -187,6 +187,12 @@ function normalizeSettings(row: any): DashboardSettings {
     startHour: numberValue(row?.start_hour, defaultSettings.startHour),
     endHour: numberValue(row?.end_hour, defaultSettings.endHour),
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
+    workingDays:
+      Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
+        ? row.working_days_json
+            .map((value: unknown) => Number(value))
+            .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+        : defaultSettings.workingDays,
     serviceAreas: Array.isArray(row?.service_areas_json)
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
@@ -700,7 +706,7 @@ export async function getAvailableSlots(input: {
     Date.UTC(selectedYear, selectedMonth - 1, selectedDay),
   ).getUTCDay();
 
-  if (weekday === 0) return [];
+  if (!config.settings.workingDays.includes(weekday)) return [];
   if (input.date < config.minDate || input.date > config.maxDate) return [];
 
   // Live cutoff: a slot today must still be in the future in the configured
