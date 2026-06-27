@@ -11,6 +11,8 @@ import {
   siteUrl,
 } from "@/components/site/public-site";
 import { HomeShowcaseSections } from "@/components/site/home-showcase-sections";
+import { AvilooCertifiedSection } from "@/components/site/aviloo-certified-section";
+import { BatteryCertificateSection } from "@/components/site/battery-certificate-section";
 import {
   brandLogoUrl,
   batteryServiceJsonLd,
@@ -73,6 +75,8 @@ export default function Home() {
       />
       <HeroSection />
       <HowItWorks />
+      <AvilooCertifiedSection />
+      <BatteryCertificateSection />
       <HomeShowcaseSections />
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <BrandsAndCertificate />
