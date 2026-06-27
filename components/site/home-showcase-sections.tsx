@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  BadgeCheck,
   BatteryCharging,
   CalendarCheck,
   CheckCircle2,
@@ -67,6 +68,38 @@ const sections = [
       { label: "Tryghed", icon: ShieldCheck },
     ],
   },
+  {
+    eyebrow: "Certifikat",
+    title: "Et synligt bevis på bilens stand",
+    text: "Når testen er gennemført, sætter vi et EV-Check-certifikat på bilen – dokumentation der skaber tillid ved køb, salg og leasing.",
+    image: "/badge/carcertificate.jpg",
+    imageAlt: "EV-Check-certifikat sættes på elbilens forrude",
+    href: "/batteritest-elbil",
+    cta: "Læs om testen",
+    stat: { value: "Certificeret", label: "Efter test" },
+    tone: "from-indigo-500 to-sky-400",
+    points: [
+      { label: "Uafhængig", icon: ShieldCheck },
+      { label: "Synligt", icon: CheckCircle2 },
+      { label: "Værdi", icon: BadgeCheck },
+    ],
+  },
+  {
+    eyebrow: "Digital rapport",
+    title: "Alle data, samlet på 15 minutter",
+    text: "SoH, cellebalance og fejlkoder samlet i én rapport, du kan gennemgå direkte på testen.",
+    image: "/batterycertificateproof.jpg",
+    imageAlt: "EV-Check-rapport vist på en tablet",
+    href: "/batteritest-elbil",
+    cta: "Se rapporten",
+    stat: { value: "Direkte", label: "På testen" },
+    tone: "from-violet-500 to-sky-400",
+    points: [
+      { label: "SoH", icon: BatteryCharging },
+      { label: "Cellebalance", icon: Zap },
+      { label: "Fejlkoder", icon: ShieldCheck },
+    ],
+  },
 ];
 
 const sectionMotion = {
@@ -89,7 +122,7 @@ export function HomeShowcaseSections() {
             key={section.title}
             className={cn(
               "relative py-14 sm:py-16 lg:py-20",
-              index === 1
+              index % 2 === 1
                 ? "bg-white/48"
                 : "bg-[linear-gradient(180deg,rgba(248,253,255,0.78),rgba(236,253,245,0.42))]",
             )}
