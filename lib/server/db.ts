@@ -275,6 +275,8 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           description TEXT NOT NULL DEFAULT '',
           badge TEXT NOT NULL DEFAULT '',
           duration_minutes INTEGER NOT NULL DEFAULT 15,
+          buffer_before_minutes INTEGER NOT NULL DEFAULT 60,
+          buffer_after_minutes INTEGER NOT NULL DEFAULT 0,
           price INTEGER NOT NULL DEFAULT 0,
           image_data TEXT NOT NULL DEFAULT '',
           features_json JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -285,13 +287,20 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
       `;
 
       await sql`
+        ALTER TABLE booking_services
+          ADD COLUMN IF NOT EXISTS buffer_before_minutes INTEGER NOT NULL DEFAULT 60,
+          ADD COLUMN IF NOT EXISTS buffer_after_minutes INTEGER NOT NULL DEFAULT 0;
+      `;
+
+      await sql`
         INSERT INTO booking_services (
-          id, title, description, badge, duration_minutes, price, image_data, features_json, sort_order
+          id, title, description, badge, duration_minutes, buffer_before_minutes,
+          buffer_after_minutes, price, image_data, features_json, sort_order
         )
         VALUES (
           'battery-health', 'Batteritest af elbil',
           'Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.',
-          'Fast service', 15, 1300, '/wp/ev-car-danmark-1.png',
+          'Fast service', 15, 60, 0, 1300, '/wp/ev-car-danmark-1.png',
           ${sql.json([
             "Test af batteriets sundhed (SoH)",
             "Opladningstilstand (SoC)",
@@ -302,6 +311,25 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ])}, 0
         )
         ON CONFLICT (id) DO NOTHING;
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS booking_unavailable_periods (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL DEFAULT '',
+          start_date DATE NOT NULL,
+          end_date DATE NOT NULL,
+          start_time TEXT NOT NULL DEFAULT '00:00',
+          end_time TEXT NOT NULL DEFAULT '23:59',
+          is_full_day BOOLEAN NOT NULL DEFAULT false,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS booking_unavailable_periods_dates_idx
+        ON booking_unavailable_periods (start_date, end_date);
       `;
     })();
     globalThis.EvCheckSchemaPromise = schemaPromise;

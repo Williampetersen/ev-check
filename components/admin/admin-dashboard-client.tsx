@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import { CalendarRange } from "lucide-react";
 import { AdminSidebar, type AdminView } from "@/components/admin/admin-sidebar";
-import { CalendarView } from "@/components/admin/calendar-view";
+import {
+  CalendarView,
+  type CalendarMode,
+} from "@/components/admin/calendar-view";
 import { BookingPanel } from "@/components/admin/booking-panel";
 import {
   AppointmentsView,
@@ -41,7 +44,7 @@ export function AdminDashboardClient({
   sessionEmail: string;
   initialView: AdminView;
   initialCalendarDate: string;
-  initialCalendarMode: "day" | "week";
+  initialCalendarMode: CalendarMode;
   initialQuery: string;
   initialStatus: string;
   initialBookingId?: string;
@@ -51,9 +54,8 @@ export function AdminDashboardClient({
 }) {
   const [view, setView] = useState<AdminView>(initialView);
   const [calendarDate, setCalendarDate] = useState(initialCalendarDate);
-  const [calendarMode, setCalendarMode] = useState<"day" | "week">(
-    initialCalendarMode,
-  );
+  const [calendarMode, setCalendarMode] =
+    useState<CalendarMode>(initialCalendarMode);
   const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState(initialStatus);
   const [activeBookingId, setActiveBookingId] = useState<string | null>(
@@ -147,6 +149,7 @@ export function AdminDashboardClient({
           >
             <CalendarView
               appointments={dashboard.appointments}
+              unavailablePeriods={dashboard.unavailablePeriods}
               settings={dashboard.settings}
               date={calendarDate}
               mode={calendarMode}
