@@ -45,9 +45,14 @@ export const navItems = [
   { href: "/", label: "Forside" },
   { href: "/batteritest-elbil", label: "Batteritest" },
   { href: "/erhverv", label: "Erhverv" },
+  { href: "/privat", label: "Privat" },
+  { href: "/kontakt", label: "Kontakt" },
+];
+
+const footerLinks = [
+  ...navItems,
   { href: "/om-ev-check", label: "Om EV-Check" },
   { href: "/hvad-vores-kunder-siger", label: "Kunder" },
-  { href: "/kontakt", label: "Kontakt" },
 ];
 
 const socialLinks = [
@@ -335,7 +340,7 @@ export function SiteFooter() {
               Hurtige links
             </h3>
             <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
-              {navItems.map((item) => (
+              {footerLinks.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

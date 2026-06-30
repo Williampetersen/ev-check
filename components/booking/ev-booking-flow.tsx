@@ -1177,10 +1177,8 @@ export function TimeStep({
                     selected
                       ? "bg-sky-500 text-white shadow-sm shadow-sky-700/20"
                       : "text-slate-700 hover:bg-sky-50",
-                    !selected &&
-                      !day.disabled &&
-                      !day.inMonth &&
-                      "text-slate-400",
+                    // Only truly disabled dates get the gray/muted look.
+                    // Next-month future dates are clickable and must NOT be grayed.
                     day.disabled &&
                       "cursor-not-allowed text-slate-300 hover:bg-transparent",
                     day.blocked &&

@@ -9,12 +9,14 @@ import {
   JsonLd,
   SitePage,
   TestimonialsSection,
+  faqs,
   siteUrl,
 } from "@/components/site/public-site";
 import { HomeShowcaseSections } from "@/components/site/home-showcase-sections";
 import {
   brandLogoUrl,
   batteryServiceJsonLd,
+  buildFaqJsonLd,
   businessJsonLd,
   seoKeywords,
   websiteJsonLd,
@@ -70,6 +72,7 @@ export default function Home() {
             isPartOf: { "@id": `${siteUrl}#website` },
             mainEntity: { "@id": `${siteUrl}/batteritest-elbil#service` },
           },
+          buildFaqJsonLd(faqs),
         ]}
       />
       <HeroSection />

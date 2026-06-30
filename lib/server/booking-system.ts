@@ -734,6 +734,8 @@ export async function getAvailableSlots(input: {
   date: string;
   serviceId: string;
   addonIds: string[];
+  /** Override the effective booking duration (e.g. N-car fleet block = N × service.durationMinutes). */
+  blockDurationMinutes?: number;
 }) {
   if (!validateDate(input.date)) return [];
 
@@ -743,6 +745,10 @@ export async function getAvailableSlots(input: {
   if (!selectedService) return [];
 
   const pricing = calculateBooking(input, config.services, config.addons);
+  const effectiveDurationMinutes =
+    input.blockDurationMinutes && input.blockDurationMinutes > pricing.durationMinutes
+      ? input.blockDurationMinutes
+      : pricing.durationMinutes;
   const requestedBufferBefore = minutesValue(
     selectedService.bufferBeforeMinutes,
     60,
@@ -815,12 +821,12 @@ export async function getAvailableSlots(input: {
   const slots: string[] = [];
   for (
     let minutes = start;
-    minutes + pricing.durationMinutes <= end;
+    minutes + effectiveDurationMinutes <= end;
     minutes += interval
   ) {
     if (minutes < cutoffMinutes) continue;
     const slot = minutesToTime(minutes);
-    const slotEnd = minutes + pricing.durationMinutes;
+    const slotEnd = minutes + effectiveDurationMinutes;
     const protectedStart = minutes - requestedBufferBefore;
     const protectedEnd = slotEnd + requestedBufferAfter;
     const isUnavailable = unavailableIntervals.some((interval) =>
@@ -1158,22 +1164,25 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     config.services[0];
   const durationMinutes = service.durationMinutes;
   const carCount = bookingInput.vehicles.length;
+  // Total block duration for the whole fleet visit (e.g. 5 cars × 15 min = 75 min).
+  const totalDurationMinutes = carCount * durationMinutes;
   const unitPrice = Math.max(
     0,
     Math.round(service.price * (1 - erhvervDiscountPercent / 100)),
   );
+  const totalPrice = unitPrice * carCount;
 
+  // Check that a single contiguous block of totalDurationMinutes is available
+  // at the chosen start time — no per-car slot juggling needed.
   const slots = await getAvailableSlots({
     date: bookingInput.appointmentDate,
     serviceId: bookingInput.serviceId,
     addonIds: [],
+    blockDurationMinutes: totalDurationMinutes,
   });
-  const carTimes = Array.from({ length: carCount }, (_, index) =>
-    addMinutesToTime(bookingInput.appointmentTime, index * durationMinutes),
-  );
-  if (!carTimes.every((time) => slots.includes(time))) {
+  if (!slots.includes(bookingInput.appointmentTime)) {
     throw new Error(
-      "Der er ikke ledig tid nok i træk til alle biler på den valgte dato og tid. Vælg en anden tid, eller book færre biler ad gangen.",
+      "Den valgte tid er ikke længere ledig til alle biler. Vælg venligst en anden tid.",
     );
   }
 
@@ -1187,12 +1196,12 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
   const customerCvr = bookingInput.customer.cvr;
   const customerNotes = bookingInput.customer.notes || "";
 
-  type CreatedAppointment = {
-    id: string;
-    vehicleLabel: string;
-    appointmentTime: string;
-    appointmentEndTime: string;
-  };
+  // Combined vehicle label summarising the whole fleet in one line.
+  const vehicleLabel = bookingInput.vehicles.map((v) => v.make).join(", ");
+  const appointmentEndTime = addMinutesToTime(
+    bookingInput.appointmentTime,
+    totalDurationMinutes,
+  );
 
   const created = await sql.begin(async (tx) => {
     const [existingCustomer] = await tx<
@@ -1238,47 +1247,39 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
       `;
     }
 
-    const appointments: CreatedAppointment[] = [];
-    for (let index = 0; index < bookingInput.vehicles.length; index += 1) {
-      const vehicle = bookingInput.vehicles[index];
-      const appointmentId = id("apt");
-      const appointmentTime = carTimes[index];
-      const appointmentEndTime = addMinutesToTime(
-        appointmentTime,
-        durationMinutes,
-      );
-
-      await tx`
-        INSERT INTO appointments (
-          id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
-          appointment_date, appointment_time, appointment_end_time, status, payment_status,
-          invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
-          booking_payload_json, source, customer_type, booking_group_id, discount_percent
-        )
-        VALUES (
-          ${appointmentId}, ${finalCustomerId}, ${vehicle.make},
-          '', ${service.title}, ${service.id},
-          'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${appointmentTime},
-          ${appointmentEndTime}, ${config.settings.defaultAppointmentStatus}, 'unpaid',
-          'not_requested', ${unitPrice}, '', ${bookingInput.customer.city},
-          ${customerNotes}, ${tx.json([])},
-          ${tx.json({ vehicle, customer: bookingInput.customer, erhverv: true })}, 'website',
-          'business', ${groupId}, ${erhvervDiscountPercent}
-        )
-      `;
-
-      appointments.push({
-        id: appointmentId,
-        vehicleLabel: vehicle.make,
-        appointmentTime,
-        appointmentEndTime,
-      });
-    }
+    const appointmentId = id("apt");
+    await tx`
+      INSERT INTO appointments (
+        id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
+        appointment_date, appointment_time, appointment_end_time, status, payment_status,
+        invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
+        booking_payload_json, source, customer_type, booking_group_id, discount_percent
+      )
+      VALUES (
+        ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
+        '', ${service.title}, ${service.id},
+        'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate},
+        ${bookingInput.appointmentTime}, ${appointmentEndTime},
+        ${config.settings.defaultAppointmentStatus}, 'unpaid',
+        'not_requested', ${totalPrice}, '', ${bookingInput.customer.city},
+        ${customerNotes}, ${tx.json([])},
+        ${tx.json({
+          vehicles: bookingInput.vehicles,
+          carCount,
+          customer: bookingInput.customer,
+          totalDurationMinutes,
+          unitPrice,
+          discountPercent: erhvervDiscountPercent,
+          erhverv: true,
+        })},
+        'website', 'business', ${groupId}, ${erhvervDiscountPercent}
+      )
+    `;
 
     return {
       customerId: finalCustomerId,
       portalToken: finalPortalToken,
-      appointments,
+      appointmentId,
     };
   });
 
@@ -1297,24 +1298,24 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     createdAt: todayKeyInTimeZone(config.settings.timezone),
   };
 
-  const appointments: Appointment[] = created.appointments.map((row) => ({
-    id: row.id,
+  const appointment: Appointment = {
+    id: created.appointmentId,
     customerId: created.customerId,
     customerName: customer.name,
     customerEmail: customer.email,
     customerPhone: customer.phone,
-    vehicleLabel: row.vehicleLabel,
+    vehicleLabel,
     registrationNumber: "",
     serviceLabel: service.title,
     reportLabel: "Batterirapport og systemdiagnose",
     appointmentDate: bookingInput.appointmentDate,
-    appointmentTime: row.appointmentTime,
-    appointmentEndTime: row.appointmentEndTime,
+    appointmentTime: bookingInput.appointmentTime,
+    appointmentEndTime,
     status: config.settings.defaultAppointmentStatus,
     paymentStatus: "unpaid",
     invoiceStatus: "not_requested",
     invoiceNumber: "",
-    total: unitPrice,
+    total: totalPrice,
     assignedUser: "",
     areaName: customer.city,
     adminNotes: customer.notes,
@@ -1322,31 +1323,25 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     customerType: "business",
     groupId,
     discountPercent: erhvervDiscountPercent,
-  }));
+  };
 
-  for (const appointment of appointments) {
-    try {
-      const invoice = await ensureInvoiceRecord({ appointment, customer });
-      appointment.invoiceStatus = "ready";
-      appointment.invoiceNumber = invoice.invoiceNumber;
-    } catch (error) {
-      // Booking is saved either way; invoices can still be generated later
-      // from the admin dashboard or customer portal.
-      console.error(
-        "Failed to create invoice record for erhverv booking",
-        appointment.id,
-        error,
-      );
-    }
+  try {
+    const invoice = await ensureInvoiceRecord({ appointment, customer });
+    appointment.invoiceStatus = "ready";
+    appointment.invoiceNumber = invoice.invoiceNumber;
+  } catch (error) {
+    console.error(
+      "Failed to create invoice record for erhverv booking",
+      appointment.id,
+      error,
+    );
   }
-
-  const totalPrice = appointments.reduce((sum, item) => sum + item.total, 0);
 
   try {
     if (config.settings.emailAutomation.customerOnCreate !== false) {
       await sendCustomerErhvervBookingEmail({
         customer,
-        appointments,
+        appointments: [appointment],
         settings: config.settings,
         portalUrl: `${siteUrl}/kunde/${created.portalToken}`,
         totalPrice,
@@ -1361,7 +1356,7 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     if (config.settings.emailAutomation.adminOnCreate !== false) {
       await sendAdminErhvervBookingEmail({
         customer,
-        appointments,
+        appointments: [appointment],
         settings: config.settings,
         totalPrice,
         discountPercent: erhvervDiscountPercent,
@@ -1372,21 +1367,20 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
   }
 
   return {
-    bookingGroupId: groupId,
+    bookingId: created.appointmentId,
+    groupId,
     portalToken: created.portalToken,
     portalUrl: `/kunde/${created.portalToken}`,
     total: totalPrice,
     carCount,
     unitPrice,
     discountPercent: erhvervDiscountPercent,
-    appointmentLabel: `${bookingInput.appointmentDate} kl. ${bookingInput.appointmentTime}`,
+    appointmentDate: bookingInput.appointmentDate,
+    appointmentTime: bookingInput.appointmentTime,
+    appointmentEndTime,
+    appointmentLabel: `${bookingInput.appointmentDate} kl. ${bookingInput.appointmentTime}–${appointmentEndTime}`,
     serviceLabel: service.title,
-    appointments: appointments.map((item) => ({
-      id: item.id,
-      vehicleLabel: item.vehicleLabel,
-      appointmentTime: item.appointmentTime,
-      appointmentEndTime: item.appointmentEndTime,
-      invoiceNumber: item.invoiceNumber,
-    })),
+    vehicles: bookingInput.vehicles,
+    invoiceNumber: appointment.invoiceNumber,
   };
 }

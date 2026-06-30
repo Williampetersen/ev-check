@@ -1,36 +1,64 @@
 # EV-Check.dk
 
 EV-Check.dk tilbyder mobil batteritest og elbil-diagnose på Sjælland.
-Servicen hjælper elbilejere, købere, sælgere og forhandlere med at forstå
-højvoltsbatteriets tilstand før køb, salg, service eller fejlfinding.
+Servicen hjælper private elbilejere, virksomheder, leasingselskaber og bilforhandlere
+med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller fejlfinding.
 
 ## Vigtige sider
 
-- Batteritest af elbil: https://evcheck.dk/batteritest-elbil
+- Forside: https://evcheck.dk/
+- Batteritest af elbil (service detaljer): https://evcheck.dk/batteritest-elbil
 - Batteritest for privatkunder: https://evcheck.dk/privat
-- Batteritest for erhverv: https://evcheck.dk/erhverv
-- Book tid: https://evcheck.dk/book-tid
-- Book erhvervsbooking (flere biler): https://evcheck.dk/erhverv/book-tid
+- Batteritest for erhverv og flåder: https://evcheck.dk/erhverv
+- Book tid (privat booking): https://evcheck.dk/book-tid
+- Book erhvervsbooking (op til 50 biler): https://evcheck.dk/erhverv/book-tid
 - Om EV-Check.dk: https://evcheck.dk/om-ev-check
+- Kunder og anmeldelser: https://evcheck.dk/hvad-vores-kunder-siger
 - Kontakt: https://evcheck.dk/kontakt
 
 ## Servicefakta
 
-- Pris: 1300 DKK pr. bil (privat)
+- Pris: 1300 DKK pr. bil (privat, inkl. moms)
 - Erhvervspris: 1105 DKK pr. bil (15% rabat med CVR-nummer)
-- Område: København og Sjælland
-- Rapport: professionel PDF-rapport pr. bil
-- Målepunkter: SoH, SoC, BMS-status, cellebalance, temperaturer og relevante fejlkoder
-- Relevante situationer: køb af brugt elbil, salg af elbil, lavere rækkevidde, garantisag og teknisk fejlfinding
+- Testtid: ca. 15 minutter pr. bil
+- Område: København, Storkøbenhavn og store dele af Sjælland
+- Rapport: professionel PDF-rapport, leveres samme dag
+- Målepunkter: SoH (State of Health), SoC, BMS-status, cellebalance, temperaturer og fejlkoder
+- Booking: 100% online, mobil test — vi kører ud til kunden
+
+## Hvornår giver en batteritest mening
+
+- Køb af brugt elbil — få dokumentation for batteriets reelle stand
+- Salg af elbil — dokumentér tilstanden for at skabe tryghed hos køber
+- Lavere rækkevidde end forventet — find årsagen hurtigt
+- Inden garantien udløber — brug rapporten som dokumentation
+- Flådestyring og leasing — hold styr på batterierne i hele bilparken
+- Bilforhandlere — uvildigt SoH-certifikat ved videresalg
 
 ## Erhverv og flåde
 
 - Målgruppe: virksomheder med firmabiler, leasingselskaber, bilforhandlere og flådeejere
 - Rabat: 15% på alle batteritests ved booking med gyldigt CVR-nummer
 - Fakturering: samlet faktura til virksomheden, betalingsfrist 8 dage
-- Booking: ingen binding eller minimumsantal, 100% online via dedikeret erhvervsbooking (op til 50 biler pr. booking)
+- Kapacitet: op til 50 biler i én erhvervsbooking
+- Booking: 100% online via dedikeret erhvervsbooking, ingen binding eller minimumsantal
+
+## Tekniske detaljer
+
+- Testudstyr: professionelt OBD/BMS-diagnoseudstyr
+- Certificeringer: Tesla-træning, EV Diagnostics Certified
+- Aktiv siden: 2021
+- Bilmærker: Tesla, BYD, Polestar, Volkswagen ID, Kia, Hyundai, BMW, Audi, Mercedes,
+  Volvo, Skoda, Renault, Peugeot, Citroën, Cupra, Opel, Ford, Toyota, Nissan og mange flere
 
 ## Kontakt
 
 - Telefon: +45 71 90 05 30
 - E-mail: info@ev-check.dk
+- Hjemmeside: https://evcheck.dk
+- Trustpilot: https://dk.trustpilot.com/review/ev-check.dk
+- Åbningstider: alle ugens dage kl. 08-17
+
+## Anmeldelser
+
+- Kundevurdering: 4.9/5 baseret på 120+ anmeldelser fra elbilsejere på Sjælland

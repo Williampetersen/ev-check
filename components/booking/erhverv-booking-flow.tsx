@@ -149,7 +149,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
   const [visibleMonth, setVisibleMonth] = useState(
     monthKey(initialAppointmentDate),
   );
-  const [rawSlots, setRawSlots] = useState<string[]>([]);
+  const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState("");
   const [customer, setCustomer] = useState<ErhvervCustomerForm>(initialCustomer);
@@ -193,9 +193,16 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
     ],
   );
 
+  // Total block duration for the whole fleet visit (N cars × service duration).
+  const blockDurationMinutes = carCount * durationMinutes;
+
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ date: appointmentDate, serviceId });
+    const params = new URLSearchParams({
+      date: appointmentDate,
+      serviceId,
+      blockDurationMinutes: String(blockDurationMinutes),
+    });
     setSlotsLoading(true);
     setSlotsError("");
     fetch(`/api/booking/availability?${params.toString()}`, {
@@ -209,12 +216,12 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
         };
         if (!response.ok)
           throw new Error(payload.error || "Kunne ikke hente ledige tider.");
-        setRawSlots(Array.isArray(payload.slots) ? payload.slots : []);
+        setSlots(Array.isArray(payload.slots) ? payload.slots : []);
       })
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
-        setRawSlots([]);
+        setSlots([]);
         setSlotsError(
           error instanceof Error
             ? error.message
@@ -226,26 +233,13 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
       });
 
     return () => controller.abort();
-  }, [appointmentDate, serviceId]);
-
-  // Only offer start times that have enough consecutive room for every car
-  // in the group, since the whole fleet is tested back-to-back in one visit.
-  const feasibleSlots = useMemo(() => {
-    const slotSet = new Set(rawSlots);
-    return rawSlots.filter((start) => {
-      const [hours, minutes] = start.split(":").map(Number);
-      const startMinutes = hours * 60 + minutes;
-      return Array.from({ length: carCount }, (_, index) =>
-        minutesToTimeLabel(startMinutes + index * durationMinutes),
-      ).every((time) => slotSet.has(time));
-    });
-  }, [rawSlots, carCount, durationMinutes]);
+  }, [appointmentDate, serviceId, blockDurationMinutes]);
 
   useEffect(() => {
     setAppointmentTime((current) =>
-      feasibleSlots.includes(current) ? current : "",
+      slots.includes(current) ? current : "",
     );
-  }, [feasibleSlots]);
+  }, [slots]);
 
   const step1Valid =
     Boolean(serviceId) &&
@@ -412,12 +406,14 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
               <div>
                 <Card className="mb-4">
                   <p className="text-sm leading-6 text-slate-600">
-                    Vi viser kun starttidspunkter, hvor der er plads til alle{" "}
+                    Vælg starttidspunkt for hele besøget. Vi tester alle{" "}
                     <strong className="text-slate-900">{carCount}</strong>{" "}
-                    {carCount === 1 ? "bil" : "biler"} i træk
-                    {selectedService
-                      ? ` (${durationMinutes} min. pr. bil).`
-                      : "."}
+                    {carCount === 1 ? "bil" : "biler"} samlet — besøget varer
+                    ca.{" "}
+                    <strong className="text-slate-900">
+                      {blockDurationMinutes} min.
+                    </strong>{" "}
+                    i alt.
                   </p>
                 </Card>
                 <TimeStep
@@ -428,7 +424,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
                   minDate={config.minDate}
                   unavailablePeriods={config.unavailablePeriods}
                   visibleMonth={visibleMonth}
-                  slots={feasibleSlots}
+                  slots={slots}
                   slotsError={slotsError}
                   slotsLoading={slotsLoading}
                   onDateChange={(date) => {
@@ -460,9 +456,9 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
                 config={config}
                 appointmentDate={appointmentDate}
                 appointmentTime={appointmentTime}
+                blockDurationMinutes={blockDurationMinutes}
                 customer={customer}
                 vehicles={vehicles}
-                durationMinutes={durationMinutes}
                 service={selectedService}
                 subtotal={subtotal}
                 savings={savings}
@@ -483,6 +479,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
             vehicles={vehicles}
             appointmentDate={appointmentDate}
             appointmentTime={appointmentTime}
+            blockDurationMinutes={blockDurationMinutes}
             subtotal={subtotal}
             savings={savings}
             total={total}
@@ -927,9 +924,9 @@ function ReviewStep({
   config,
   appointmentDate,
   appointmentTime,
+  blockDurationMinutes,
   customer,
   vehicles,
-  durationMinutes,
   service,
   subtotal,
   savings,
@@ -944,9 +941,9 @@ function ReviewStep({
   config: BookingConfig;
   appointmentDate: string;
   appointmentTime: string;
+  blockDurationMinutes: number;
   customer: ErhvervCustomerForm;
   vehicles: ErhvervVehicle[];
-  durationMinutes: number;
   service?: BookingService;
   subtotal: number;
   savings: number;
@@ -958,13 +955,11 @@ function ReviewStep({
   onBack: () => void;
   onSubmit: () => void;
 }) {
-  const carTimes = useMemo(() => {
-    const [hours, minutes] = appointmentTime.split(":").map(Number);
-    const startMinutes = (hours || 0) * 60 + (minutes || 0);
-    return vehicles.map((_, index) =>
-      minutesToTimeLabel(startMinutes + index * durationMinutes),
-    );
-  }, [appointmentTime, durationMinutes, vehicles]);
+  const endTime = useMemo(() => {
+    if (!appointmentTime) return "";
+    const [h, m] = appointmentTime.split(":").map(Number);
+    return minutesToTimeLabel((h || 0) * 60 + (m || 0) + blockDurationMinutes);
+  }, [appointmentTime, blockDurationMinutes]);
 
   return (
     <Card>
@@ -974,17 +969,21 @@ function ReviewStep({
       />
       <div className="grid gap-2">
         <ReviewRow label="Service" value={service?.title || ""} />
+        <ReviewRow label="Dato" value={dateLabel(appointmentDate)} />
         <ReviewRow
-          label="Dato"
-          value={dateLabel(appointmentDate)}
+          label="Tid"
+          value={
+            appointmentTime
+              ? `kl. ${appointmentTime}–${endTime} (ca. ${blockDurationMinutes} min.)`
+              : "-"
+          }
         />
-        {vehicles.map((vehicle, index) => (
-          <ReviewRow
-            key={vehicle.id}
-            label={`Bil ${index + 1}`}
-            value={`${vehicleLabel(vehicle, config) || "-"} · kl. ${carTimes[index]}`}
-          />
-        ))}
+        <ReviewRow
+          label={`Biler (${vehicles.length})`}
+          value={vehicles
+            .map((v, i) => `${i + 1}. ${vehicleLabel(v, config) || "–"}`)
+            .join(" · ")}
+        />
         <ReviewRow label="Firma" value={customer.company} />
         <ReviewRow label="CVR-nummer" value={customer.cvr} />
         <ReviewRow label="Kontaktperson" value={customer.name} />
@@ -1043,6 +1042,7 @@ function ErhvervSummaryCard({
   vehicles,
   appointmentDate,
   appointmentTime,
+  blockDurationMinutes,
   subtotal,
   savings,
   total,
@@ -1053,11 +1053,21 @@ function ErhvervSummaryCard({
   vehicles: ErhvervVehicle[];
   appointmentDate: string;
   appointmentTime: string;
+  blockDurationMinutes: number;
   subtotal: number;
   savings: number;
   total: number;
   className?: string;
 }) {
+  const endTime = appointmentTime
+    ? minutesToTimeLabel(
+        (() => {
+          const [h, m] = appointmentTime.split(":").map(Number);
+          return (h || 0) * 60 + (m || 0) + blockDurationMinutes;
+        })(),
+      )
+    : "";
+
   return (
     <div
       className={cn(
@@ -1078,7 +1088,8 @@ function ErhvervSummaryCard({
         <div className="mt-3 grid gap-2 text-sm text-slate-600">
           <span className="flex items-center gap-2">
             <Car className="h-4 w-4 text-sky-700" />
-            {vehicles.length} {vehicles.length === 1 ? "bil" : "biler"}
+            {vehicles.length} {vehicles.length === 1 ? "bil" : "biler"} · ca.{" "}
+            {blockDurationMinutes} min. i alt
           </span>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-sky-700" />
@@ -1086,7 +1097,7 @@ function ErhvervSummaryCard({
           </span>
         </div>
 
-        <div className="mt-4 grid max-h-40 gap-1.5 overflow-y-auto pr-1">
+        <div className="mt-4 grid max-h-36 gap-1.5 overflow-y-auto pr-1">
           {vehicles.map((vehicle, index) => {
             const label = vehicleLabel(vehicle, config);
             return (
@@ -1102,9 +1113,14 @@ function ErhvervSummaryCard({
 
         <div className="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-3 py-2.5 text-sm">
           {appointmentTime ? (
-            <p className="font-semibold text-slate-900">
-              {dateLabel(appointmentDate)} fra kl. {appointmentTime}
-            </p>
+            <>
+              <p className="font-semibold text-slate-900">
+                {dateLabel(appointmentDate)}
+              </p>
+              <p className="mt-0.5 text-slate-600">
+                kl. {appointmentTime}–{endTime}
+              </p>
+            </>
           ) : (
             <p className="font-semibold text-sky-700">Vælg dato og tid.</p>
           )}
@@ -1132,22 +1148,21 @@ function ErhvervSummaryCard({
 }
 
 type ErhvervConfirmation = {
-  bookingGroupId: string;
+  bookingId: string;
+  groupId: string;
   portalToken: string;
   portalUrl: string;
   total: number;
   carCount: number;
   unitPrice: number;
   discountPercent: number;
+  appointmentDate: string;
+  appointmentTime: string;
+  appointmentEndTime: string;
   appointmentLabel: string;
   serviceLabel: string;
-  appointments: Array<{
-    id: string;
-    vehicleLabel: string;
-    appointmentTime: string;
-    appointmentEndTime: string;
-    invoiceNumber: string;
-  }>;
+  vehicles: Array<{ make: string }>;
+  invoiceNumber: string;
 };
 
 function ErhvervConfirmationView({
@@ -1157,6 +1172,7 @@ function ErhvervConfirmationView({
   confirmation: ErhvervConfirmation;
   customerEmail: string;
 }) {
+  const carWord = confirmation.carCount === 1 ? "bil" : "biler";
   return (
     <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 p-6 text-center shadow-sm sm:p-10">
@@ -1167,25 +1183,37 @@ function ErhvervConfirmationView({
           Jeres erhvervsbooking er modtaget
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
-          Vi har sendt en bekræftelse og samlet bookingen i kundeportalen for{" "}
-          {confirmation.carCount} {confirmation.carCount === 1 ? "bil" : "biler"}.
+          Vi har reserveret tid til batteritest af{" "}
+          <strong className="text-slate-900">
+            {confirmation.carCount} {carWord}
+          </strong>{" "}
+          og sendt en bekræftelse pr. e-mail.
         </p>
         <div className="mt-6 grid gap-2 text-left">
-          <ReviewRow label="Erhvervsbooking" value={confirmation.bookingGroupId} />
+          <ReviewRow label="Booking ID" value={confirmation.bookingId} />
           <ReviewRow label="Service" value={confirmation.serviceLabel} />
-          <ReviewRow label="Tid" value={confirmation.appointmentLabel} />
-          {confirmation.appointments.map((appointment, index) => (
-            <ReviewRow
-              key={appointment.id}
-              label={`Bil ${index + 1}`}
-              value={`${appointment.vehicleLabel} · kl. ${appointment.appointmentTime}`}
-            />
-          ))}
+          <ReviewRow
+            label="Tid"
+            value={`${dateLabel(confirmation.appointmentDate)} kl. ${confirmation.appointmentTime}–${confirmation.appointmentEndTime}`}
+          />
+          <ReviewRow
+            label={`Biler (${confirmation.carCount})`}
+            value={confirmation.vehicles
+              .map((v, i) => `${i + 1}. ${v.make}`)
+              .join(" · ")}
+          />
+          {confirmation.invoiceNumber ? (
+            <ReviewRow label="Faktura" value={confirmation.invoiceNumber} />
+          ) : null}
           <ReviewRow
             label={`Erhvervsrabat (${confirmation.discountPercent}%)`}
             value={`${formatPrice(confirmation.unitPrice)} pr. bil`}
           />
-          <ReviewRow label="Total" value={formatPrice(confirmation.total)} highlight />
+          <ReviewRow
+            label="Total"
+            value={formatPrice(confirmation.total)}
+            highlight
+          />
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
