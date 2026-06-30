@@ -10,6 +10,7 @@ const routes: Array<{
 }> = [
   { path: "", changeFrequency: "weekly", priority: 1 },
   { path: "/batteritest-elbil", changeFrequency: "weekly", priority: 0.95 },
+  { path: "/privat", changeFrequency: "weekly", priority: 0.9 },
   { path: "/erhverv", changeFrequency: "weekly", priority: 0.9 },
   { path: "/erhverv/book-tid", changeFrequency: "weekly", priority: 0.85 },
   { path: "/book-tid", changeFrequency: "weekly", priority: 0.9 },

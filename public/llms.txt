@@ -7,6 +7,7 @@ højvoltsbatteriets tilstand før køb, salg, service eller fejlfinding.
 ## Vigtige sider
 
 - Batteritest af elbil: https://evcheck.dk/batteritest-elbil
+- Batteritest for privatkunder: https://evcheck.dk/privat
 - Batteritest for erhverv: https://evcheck.dk/erhverv
 - Book tid: https://evcheck.dk/book-tid
 - Book erhvervsbooking (flere biler): https://evcheck.dk/erhverv/book-tid

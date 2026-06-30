@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   BadgePercent,
@@ -9,7 +10,6 @@ import {
   CheckCircle2,
   Clock,
   FileCheck2,
-  Gauge,
   Phone,
   Receipt,
   ShieldCheck,
@@ -33,9 +33,7 @@ import {
   erhvervDiscountPercent,
   erhvervSeoKeywords,
   erhvervServiceJsonLd,
-  erhvervServicePrice,
   seoKeywords,
-  servicePrice,
   siteUrl,
   websiteJsonLd,
 } from "@/lib/seo";
@@ -82,7 +80,7 @@ const erhvervFaqs = [
   {
     question: "Hvordan får vi den 15% rabat til erhverv?",
     answer:
-      "Opgiv jeres CVR-nummer ved booking eller i kontaktformularen, så bliver erhvervsrabatten automatisk trukket fra på fakturaen. Prisen falder fra 1.300 kr. til 1.105 kr. pr. bil.",
+      "Opgiv jeres CVR-nummer ved booking eller i kontaktformularen, så bliver erhvervsrabatten på 15% automatisk trukket fra normalprisen på fakturaen.",
   },
   {
     question: "Kan I teste flere biler i flåden samme dag?",
@@ -118,7 +116,7 @@ const erhvervFaqs = [
 
 const heroFacts = [
   { label: "Erhvervsrabat", value: `${erhvervDiscountPercent}%`, icon: BadgePercent },
-  { label: "Pris pr. bil", value: `${erhvervServicePrice} kr.`, icon: Receipt },
+  { label: "Faktura", value: "Samlet til CVR", icon: Receipt },
   { label: "Testtid", value: "15 min./bil", icon: Clock },
   { label: "Booking", value: "100% online", icon: CalendarCheck },
 ];
@@ -172,7 +170,7 @@ const bookingSteps = [
 const conditions = [
   "Ingen bindingsperiode eller minimumsantal — book én bil eller hele flåden.",
   `${erhvervDiscountPercent}% rabat på alle batteritests ved booking som erhvervskund med gyldigt CVR-nummer.`,
-  `Fast pris ${servicePrice} kr. pr. bil før rabat, ${erhvervServicePrice} kr. pr. bil efter erhvervsrabat.`,
+  "Normalprisen ses ved booking — erhvervsrabatten fratrækkes automatisk på fakturaen.",
   "Samlet fakturering til virksomheden med betalingsfrist på 8 dage.",
   "Vi kommer ud til jer — på adressen, depotet eller hvor bilerne holder.",
   "Testen tager ca. 15 minutter pr. bil og kan udføres på flere biler samme dag.",
@@ -254,6 +252,13 @@ function ErhvervHero() {
               <ArrowRight className="h-4 w-4" />
             </ButtonLink>
           </div>
+          <p className="mt-4 text-sm text-slate-500">
+            Privatkund?{" "}
+            <Link href="/privat" className="font-semibold text-sky-700 underline-offset-4 hover:underline">
+              Se priser og book som privat her
+            </Link>
+            .
+          </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-4">
             {heroFacts.map((fact) => {
               const Icon = fact.icon;
@@ -323,8 +328,7 @@ function DiscountBanner() {
                 {erhvervDiscountPercent}% rabat på alle tests — gælder
                 leasingselskaber, bilforhandlere, flådeejere og virksomheder
                 med firmabiler. Opgiv blot jeres CVR-nummer ved booking, så
-                trækkes rabatten automatisk fra på fakturaen. Prisen falder
-                fra {servicePrice} kr. til {erhvervServicePrice} kr. pr. bil.
+                trækkes rabatten automatisk fra på fakturaen.
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
@@ -448,21 +452,16 @@ function ConditionsSection() {
           />
           <div className="glass-panel mt-6 rounded-lg p-5">
             <div className="flex items-center gap-2 text-sky-700">
-              <Gauge className="h-5 w-5" />
+              <BadgePercent className="h-5 w-5" />
               <p className="text-sm font-bold tracking-[0.1em] uppercase">
-                Pris pr. bil
+                Erhvervsrabat
               </p>
             </div>
-            <div className="mt-3 flex items-end gap-3">
-              <p className="text-3xl font-bold text-slate-400 line-through">
-                {servicePrice} kr.
-              </p>
-              <p className="text-4xl font-bold text-sky-700">
-                {erhvervServicePrice} kr.
-              </p>
-            </div>
+            <p className="mt-3 text-4xl font-bold text-sky-700">
+              {erhvervDiscountPercent}%
+            </p>
             <p className="mt-2 text-sm text-slate-600">
-              Inkl. {erhvervDiscountPercent}% erhvervsrabat ved booking med
+              Rabatten fratrækkes automatisk på fakturaen ved booking med
               CVR-nummer.
             </p>
           </div>

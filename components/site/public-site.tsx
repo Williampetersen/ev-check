@@ -4,7 +4,9 @@ import type { CSSProperties } from "react";
 import {
   ArrowRight,
   Award,
+  BadgePercent,
   BatteryCharging,
+  Briefcase,
   CalendarCheck,
   CheckCircle2,
   Clock,
@@ -17,6 +19,7 @@ import {
   MapPin,
   Phone,
   Quote,
+  Receipt,
   ShieldCheck,
   Star,
   Twitter,
@@ -27,7 +30,13 @@ import {
 import { ButtonLink } from "@/components/ui/button";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { MobileNav } from "@/components/site/mobile-nav";
-import { brandLogoPath, companyCvr, sameAsLinks, siteUrl } from "@/lib/seo";
+import {
+  brandLogoPath,
+  companyCvr,
+  erhvervDiscountPercent,
+  sameAsLinks,
+  siteUrl,
+} from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export { siteUrl };
@@ -697,6 +706,70 @@ export function AboutSection() {
               Ville du købe en elbil uden at kende batteriets tilstand? En kort
               batteritest kan give dokumentation, ro og bedre beslutninger.
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const erhvervHomePoints = [
+  `${erhvervDiscountPercent}% rabat til erhverv med CVR-nummer`,
+  "Book op til 50 biler i én bestilling",
+  "Ét samlet besøg — biler testes efter hinanden",
+  "Samlet faktura til virksomheden, 8 dages betalingsfrist",
+  "PDF-rapport pr. bil, typisk samme dag",
+  "Ingen binding eller minimumsantal",
+];
+
+export function ErhvervHomeSection() {
+  return (
+    <section className="py-16 sm:py-20">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+        <div className="relative min-h-[20rem] overflow-hidden rounded-lg shadow-xl shadow-sky-950/8 lg:min-h-[26rem]">
+          <Image
+            src="/wp/17739.jpg"
+            alt="Erhvervskunde får batteritest af firmabil med EV-Check.dk"
+            fill
+            sizes="(min-width: 1024px) 44vw, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/64 via-slate-950/5 to-transparent" />
+          <p className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-white uppercase backdrop-blur">
+            <BadgePercent className="h-3.5 w-3.5" />
+            {erhvervDiscountPercent}% erhvervsrabat
+          </p>
+        </div>
+        <div className="self-center">
+          <SectionHeading
+            eyebrow="Erhverv og flåde"
+            title="Batteritest af elbil til virksomheder og bilflåder"
+            description="Leasingselskaber, bilforhandlere og virksomheder med firmabiler kan booke batteritest til hele flåden online, med automatisk erhvervsrabat og samlet fakturering."
+          />
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {erhvervHomePoints.map((point) => (
+              <div
+                key={point}
+                className="glass-card flex items-start gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-slate-700"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                <span>{point}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <ButtonLink href="/erhverv/book-tid">
+              <Receipt className="h-4 w-4" />
+              Book som erhverv
+            </ButtonLink>
+            <Link
+              href="/erhverv"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-white/70 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:bg-sky-50 sm:h-10"
+            >
+              <Briefcase className="h-4 w-4" />
+              Læs om erhverv
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </div>

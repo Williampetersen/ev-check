@@ -109,6 +109,21 @@ export const batteryServiceJsonLd = {
     "Test af elbilens højvoltsbatteri med SoH, SoC, BMS-status, cellebalance, temperaturer, fejlkoder og professionel PDF-rapport.",
 };
 
+export const privatSeoKeywords = [
+  "batteritest elbil privat",
+  "batteritest til privatkunder",
+  "elbil batteritest pris",
+  "batteritest før køb af brugt elbil",
+  "batteritest før salg af elbil",
+  "SoH test privat elbil",
+  "mobil batteritest hjemme",
+  "batteritest elbil hjemme",
+  "uvildig batteritest elbil",
+  "batteritest elbil København privat",
+  "tjek batteri elbil før køb",
+  "elbil rækkevidde test",
+];
+
 export const erhvervSeoKeywords = [
   "batteritest erhverv",
   "elbil batteritest virksomhed",

@@ -635,7 +635,9 @@ export async function getBookingConfig(): Promise<BookingConfig> {
     carBrands: getCarBrands(),
     unavailablePeriods,
     minDate,
-    maxDate: addMonths(minDate, 6),
+    // No real booking horizon cap — customers (especially erhverv/fleet
+    // bookings planned far ahead) should be able to pick any future date.
+    maxDate: addMonths(minDate, 60),
     databaseConfigured: isDatabaseConfigured(),
   };
 }
