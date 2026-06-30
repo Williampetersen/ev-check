@@ -447,6 +447,85 @@ export async function sendCustomerAppointmentEmail(input: {
     throw error;
   }
 }
+export async function sendCustomerReportReadyEmail(input: {
+  customer: Customer;
+  settings: DashboardSettings;
+  portalUrl: string;
+  reportTitle?: string;
+}) {
+  const supportEmail =
+    input.settings.supportEmail || defaultSettings.supportEmail;
+  const subject = `${input.settings.companyName}: Din rapport er klar`;
+  const transporter = getTransporter();
+  const reportName = input.reportTitle || "Ny rapport";
+
+  if (!transporter) {
+    await recordEmailLog({
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_report_ready",
+      subject,
+      status: "not_configured",
+      errorMessage: "SMTP is not configured.",
+    });
+    throw new Error("SMTP is not configured.");
+  }
+
+  try {
+    await transporter.sendMail({
+      from: getMailConfig().from,
+      to: input.customer.email,
+      replyTo: supportEmail,
+      subject,
+      text: [
+        subject,
+        "",
+        `Hej ${input.customer.name},`,
+        "",
+        `Din rapport "${reportName}" er nu klar og kan ses i din kundeportal.`,
+        `Log ind her: ${input.portalUrl}`,
+        "",
+        `Support: ${supportEmail}`,
+      ].join("\n"),
+      html: renderMessage({
+        title: "Din rapport er klar",
+        eyebrow: "Ny rapport",
+        intro: `Hej ${input.customer.name}, vi har uploadet en ny rapport til dig. Log ind på din kundeportal for at se og downloade den som PDF.`,
+        rows: [["Rapport", reportName]],
+        settings: input.settings,
+        action: {
+          label: "Åbn kundeportal og se rapport",
+          url: input.portalUrl,
+        },
+        notice:
+          "Har du spørgsmål til rapporten, er du velkommen til at kontakte os.",
+        preheader: "Din rapport er klar i kundeportalen",
+      }),
+    });
+
+    await recordEmailLog({
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_report_ready",
+      subject,
+      status: "sent",
+    });
+  } catch (error) {
+    await recordEmailLog({
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_report_ready",
+      subject,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
 export async function sendAdminBookingEmail(input: {
   customer: Customer;
   appointment: Appointment;

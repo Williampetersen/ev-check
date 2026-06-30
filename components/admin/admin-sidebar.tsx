@@ -6,6 +6,7 @@ import {
   BatteryCharging,
   CalendarDays,
   CalendarRange,
+  ClipboardList,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -28,6 +29,7 @@ const items = [
   { id: "users", label: "Users", icon: Wrench },
   { id: "emails", label: "Emails", icon: Mail },
   { id: "invoices", label: "Invoices", icon: FileText },
+  { id: "reports", label: "Reports", icon: ClipboardList },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "settings", label: "Settings", icon: Settings2 },
 ] as const;

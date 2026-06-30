@@ -48,6 +48,18 @@ export type Appointment = {
   discountPercent?: number;
 };
 
+export type CustomerReport = {
+  id: string;
+  customerId: string;
+  title: string;
+  fileName: string;
+  fileSize: number;
+  sentAt: string;
+  createdAt: string;
+};
+
+export const MAX_CUSTOMER_REPORTS = 10;
+
 export type EmailLog = {
   id: string;
   appointmentId: string;
@@ -120,6 +132,7 @@ export type AdminDashboardData = {
   customers: Customer[];
   users: DashboardUser[];
   emailLogs: EmailLog[];
+  reports: CustomerReport[];
   unavailablePeriods: BookingUnavailablePeriod[];
   settings: DashboardSettings;
   databaseConfigured: boolean;
@@ -314,6 +327,8 @@ export const demoAppointments: Appointment[] = [
     createdAt: dateText(-6),
   },
 ];
+
+export const demoReports: CustomerReport[] = [];
 
 export const demoEmailLogs: EmailLog[] = [
   {

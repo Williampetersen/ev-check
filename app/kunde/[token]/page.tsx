@@ -98,9 +98,7 @@ export default async function CustomerTokenPage({
           <Metric
             icon={FileText}
             label="Reports"
-            value={String(
-              portal.appointments.filter((item) => item.reportLabel).length,
-            )}
+            value={String(portal.reports.length)}
           />
         </section>
 
@@ -160,6 +158,42 @@ export default async function CustomerTokenPage({
             ) : (
               <div className="rounded-lg border border-dashed border-white/70 bg-white/45 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
                 No appointments yet.
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="glass-shell rounded-lg p-4">
+          <h2 className="text-lg font-bold text-slate-950">Your reports</h2>
+          <div className="mt-4 grid gap-3">
+            {portal.reports.length > 0 ? (
+              portal.reports.map((report) => (
+                <article
+                  key={report.id}
+                  className="glass-card flex flex-wrap items-center justify-between gap-3 rounded-lg p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-950">
+                      {report.title || report.fileName}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Uploaded {formatShortDate(report.createdAt)}
+                    </p>
+                  </div>
+                  <a
+                    href={`/api/customer/reports/${report.id}?token=${encodeURIComponent(token)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-50 px-3 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Download PDF
+                  </a>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-lg border border-dashed border-white/70 bg-white/45 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
+                No reports yet.
               </div>
             )}
           </div>

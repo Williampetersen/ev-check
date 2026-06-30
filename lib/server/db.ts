@@ -276,6 +276,24 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
       `;
 
       await sql`
+        CREATE TABLE IF NOT EXISTS customer_reports (
+          id TEXT PRIMARY KEY,
+          customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+          title TEXT NOT NULL DEFAULT '',
+          file_name TEXT NOT NULL DEFAULT '',
+          file_size INTEGER NOT NULL DEFAULT 0,
+          pdf_data BYTEA NOT NULL,
+          sent_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS customer_reports_customer_idx
+        ON customer_reports (customer_id, created_at DESC);
+      `;
+
+      await sql`
         INSERT INTO dashboard_settings (settings_key)
         VALUES ('default')
         ON CONFLICT (settings_key) DO NOTHING;

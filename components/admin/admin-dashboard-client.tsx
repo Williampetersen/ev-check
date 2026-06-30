@@ -18,6 +18,7 @@ import {
   Overview,
   Panel,
   PaymentsView,
+  ReportsView,
   ServicesView,
   SettingsView,
   UsersView,
@@ -174,6 +175,12 @@ export function AdminDashboardClient({
           <InvoicesView
             appointments={visibleAppointments}
             databaseConfigured={dashboard.databaseConfigured}
+          />
+        ) : null}
+        {view === "reports" ? (
+          <ReportsView
+            dashboard={dashboard}
+            mailConfigured={mailConfigured}
           />
         ) : null}
         {view === "payments" ? (

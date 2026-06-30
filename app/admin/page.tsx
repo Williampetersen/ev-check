@@ -23,6 +23,7 @@ const views: AdminView[] = [
   "users",
   "emails",
   "invoices",
+  "reports",
   "payments",
   "settings",
 ];

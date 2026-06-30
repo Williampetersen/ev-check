@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CalendarX2,
   CheckCircle2,
+  ClipboardList,
   CreditCard,
   FileText,
   ImagePlus,
@@ -23,6 +24,7 @@ import {
   Send,
   Settings2,
   Trash2,
+  Upload,
   User,
   Users,
   Wrench,
@@ -39,12 +41,14 @@ import {
   formatPrice,
   formatShortDate,
   invoiceLabels,
+  MAX_CUSTOMER_REPORTS,
   paymentLabels,
   statusLabels,
   type AdminDashboardData,
   type Appointment,
   type AppointmentStatus,
   type Customer,
+  type CustomerReport,
   type EmailLog,
 } from "@/lib/ev-domain";
 import { type BookingService } from "@/lib/server/booking-system";
@@ -1526,6 +1530,236 @@ export function InvoicesView({
         <EmptyState text="No invoices match this tab." />
       )}
     </Panel>
+  );
+}
+
+const REPORTS_PAGE_SIZE = 10;
+
+export function ReportsView({
+  dashboard,
+  mailConfigured,
+}: {
+  dashboard: AdminDashboardData;
+  mailConfigured: boolean;
+}) {
+  const [page, setPage] = useState(1);
+
+  const reportsByCustomer = new Map<string, CustomerReport[]>();
+  for (const report of dashboard.reports) {
+    reportsByCustomer.set(report.customerId, [
+      ...(reportsByCustomer.get(report.customerId) || []),
+      report,
+    ]);
+  }
+
+  const latestBookingByCustomer = new Map<string, string>();
+  for (const appointment of dashboard.appointments) {
+    const current = latestBookingByCustomer.get(appointment.customerId);
+    if (!current || appointment.appointmentDate > current) {
+      latestBookingByCustomer.set(
+        appointment.customerId,
+        appointment.appointmentDate,
+      );
+    }
+  }
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(dashboard.customers.length / REPORTS_PAGE_SIZE),
+  );
+  const safePage = Math.min(page, totalPages);
+  const pageCustomers = dashboard.customers.slice(
+    (safePage - 1) * REPORTS_PAGE_SIZE,
+    safePage * REPORTS_PAGE_SIZE,
+  );
+
+  return (
+    <Panel
+      title="Reports"
+      description={`Upload PDF reports per customer (PDF only, max 4 MB, up to ${MAX_CUSTOMER_REPORTS} reports each) and email the customer when a report is ready.`}
+      icon={ClipboardList}
+    >
+      {!mailConfigured ? (
+        <div className="mb-4">
+          <Notice tone="sky">
+            SMTP is not fully configured, so &ldquo;Send email&rdquo; will log
+            a failed delivery instead of notifying the customer.
+          </Notice>
+        </div>
+      ) : null}
+
+      <div className="grid gap-3">
+        {pageCustomers.length > 0 ? (
+          pageCustomers.map((customer) => (
+            <CustomerReportCard
+              key={customer.id}
+              customer={customer}
+              reports={(reportsByCustomer.get(customer.id) || []).sort(
+                (a, b) => b.createdAt.localeCompare(a.createdAt),
+              )}
+              latestBooking={latestBookingByCustomer.get(customer.id)}
+              databaseConfigured={dashboard.databaseConfigured}
+            />
+          ))
+        ) : (
+          <EmptyState text="No customers yet." />
+        )}
+      </div>
+
+      {totalPages > 1 ? (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={safePage <= 1}
+            onClick={() => setPage(safePage - 1)}
+            className="h-9 text-xs"
+          >
+            Previous
+          </Button>
+          <span className="text-sm font-semibold text-slate-600">
+            Page {safePage} / {totalPages}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={safePage >= totalPages}
+            onClick={() => setPage(safePage + 1)}
+            className="h-9 text-xs"
+          >
+            Next
+          </Button>
+        </div>
+      ) : null}
+    </Panel>
+  );
+}
+
+function CustomerReportCard({
+  customer,
+  reports,
+  latestBooking,
+  databaseConfigured,
+}: {
+  customer: Customer;
+  reports: CustomerReport[];
+  latestBooking?: string;
+  databaseConfigured: boolean;
+}) {
+  const canAddMore = reports.length < MAX_CUSTOMER_REPORTS;
+
+  return (
+    <article className="glass-card rounded-lg p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-bold text-slate-950">{customer.name}</p>
+          <p className="text-sm text-slate-500">{customer.email}</p>
+          <p className="mt-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+            ID: {customer.id}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-slate-700">
+            {latestBooking ? formatShortDate(latestBooking) : "No bookings"}
+          </p>
+          <p className="text-xs text-slate-400">Last booking</p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <span className="rounded-full border border-sky-200/80 bg-sky-50/80 px-2.5 py-1 text-xs font-semibold text-sky-700 backdrop-blur">
+          {reports.length}/{MAX_CUSTOMER_REPORTS} reports
+        </span>
+      </div>
+
+      {reports.length > 0 ? (
+        <div className="mt-3 grid gap-2">
+          {reports.map((report) => (
+            <div
+              key={report.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 backdrop-blur"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-800">
+                  {report.title || report.fileName}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {formatShortDate(report.createdAt)} ·{" "}
+                  {report.sentAt ? "Sent to customer" : "Not sent"}
+                </p>
+              </div>
+              <div className="flex gap-1.5">
+                <a
+                  className="inline-flex h-8 items-center rounded-lg border border-sky-200 bg-white/70 px-3 text-xs font-bold text-sky-700 shadow-sm shadow-slate-900/5 transition hover:border-sky-400 hover:bg-sky-50"
+                  href={`/api/admin/reports/${report.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View
+                </a>
+                <form
+                  action={`/api/admin/reports/${report.id}/send`}
+                  method="POST"
+                >
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={!databaseConfigured}
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    {report.sentAt ? "Resend email" : "Send email"}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-slate-500">No reports uploaded yet.</p>
+      )}
+
+      {canAddMore ? (
+        <details className="mt-3">
+          <summary className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/70 bg-white/55 px-3 text-sm font-semibold text-slate-700 marker:content-[''] hover:border-sky-300 hover:text-sky-700">
+            <Plus className="h-4 w-4" />
+            Add report
+          </summary>
+          <form
+            action="/api/admin/reports"
+            method="POST"
+            encType="multipart/form-data"
+            className="glass-panel mt-2 grid gap-3 rounded-lg p-3"
+          >
+            <input type="hidden" name="customer_id" value={customer.id} />
+            <Field label="Title (optional)">
+              <Input name="title" placeholder="Fx Batterirapport - juli 2026" />
+            </Field>
+            <Field label="PDF file">
+              <input
+                name="file"
+                type="file"
+                accept="application/pdf"
+                required
+                className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
+              />
+            </Field>
+            <Button
+              type="submit"
+              disabled={!databaseConfigured}
+              className="w-full sm:w-fit"
+            >
+              <Upload className="h-4 w-4" />
+              Upload report
+            </Button>
+          </form>
+        </details>
+      ) : (
+        <p className="mt-3 text-xs font-semibold text-amber-600">
+          Maximum of {MAX_CUSTOMER_REPORTS} reports reached for this customer.
+        </p>
+      )}
+    </article>
   );
 }
 

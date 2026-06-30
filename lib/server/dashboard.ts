@@ -5,12 +5,14 @@ import {
   demoAppointments,
   demoCustomers,
   demoEmailLogs,
+  demoReports,
   demoUsers,
   type AdminDashboardData,
   type Appointment,
   type AppointmentStatus,
   type BookingUnavailablePeriod,
   type Customer,
+  type CustomerReport,
   type DashboardSettings,
   type DashboardUser,
   type EmailLog,
@@ -78,6 +80,7 @@ const demoDashboard = (databaseError?: string): AdminDashboardData => ({
   customers: demoCustomers,
   users: demoUsers,
   emailLogs: demoEmailLogs,
+  reports: demoReports,
   unavailablePeriods: [],
   settings: defaultSettings,
   databaseConfigured: isDatabaseConfigured(),
@@ -92,7 +95,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   try {
     await ensureSchema({ force: true });
     const sql = getSql();
-    const [customers, appointments, users, logs, unavailablePeriods, settingsRows] = await Promise.all([
+    const [customers, appointments, users, logs, reportRows, unavailablePeriods, settingsRows] = await Promise.all([
       sql<any[]>`
         SELECT id, name, email, phone, address, postal_code, city, company, cvr, notes, portal_token, created_at
         FROM customers
@@ -115,6 +118,11 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         FROM email_logs
         ORDER BY created_at DESC
         LIMIT 80
+      `,
+      sql<any[]>`
+        SELECT id, customer_id, title, file_name, file_size, sent_at, created_at
+        FROM customer_reports
+        ORDER BY created_at DESC
       `,
       sql<any[]>`
         SELECT id, title, start_date, end_date, start_time, end_time, is_full_day
@@ -201,6 +209,16 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
     }));
 
+    const mappedReports: CustomerReport[] = reportRows.map((row) => ({
+      id: row.id,
+      customerId: row.customer_id,
+      title: row.title || "",
+      fileName: row.file_name || "",
+      fileSize: Number(row.file_size || 0),
+      sentAt: row.sent_at ? new Date(row.sent_at).toISOString().slice(0, 10) : "",
+      createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
+    }));
+
     const mappedUnavailablePeriods: BookingUnavailablePeriod[] =
       unavailablePeriods.map((row) => {
         const startDate = dateKey(row.start_date);
@@ -226,6 +244,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       customers: mappedCustomers,
       users: mappedUsers.length > 0 ? mappedUsers : demoUsers,
       emailLogs: mappedLogs,
+      reports: mappedReports,
       unavailablePeriods: mappedUnavailablePeriods,
       settings,
       databaseConfigured: true,
@@ -245,6 +264,7 @@ export async function getCustomerDashboardByToken(token: string) {
   return {
     customer,
     appointments: dashboard.appointments.filter((item) => item.customerId === customer.id),
+    reports: dashboard.reports.filter((item) => item.customerId === customer.id),
     settings: dashboard.settings,
     databaseConfigured: dashboard.databaseConfigured,
   };
