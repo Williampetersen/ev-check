@@ -62,6 +62,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           postal_code TEXT DEFAULT '',
           city TEXT DEFAULT '',
           company TEXT DEFAULT '',
+          cvr TEXT DEFAULT '',
           notes TEXT DEFAULT '',
           portal_token TEXT UNIQUE,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -78,6 +79,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ADD COLUMN IF NOT EXISTS postal_code TEXT DEFAULT '',
           ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '',
           ADD COLUMN IF NOT EXISTS company TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS cvr TEXT DEFAULT '',
           ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '',
           ADD COLUMN IF NOT EXISTS portal_token TEXT,
           ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -130,8 +132,17 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ADD COLUMN IF NOT EXISTS addons_json JSONB NOT NULL DEFAULT '[]'::jsonb,
           ADD COLUMN IF NOT EXISTS booking_payload_json JSONB NOT NULL DEFAULT '{}'::jsonb,
           ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'website',
+          ADD COLUMN IF NOT EXISTS customer_type TEXT NOT NULL DEFAULT 'private',
+          ADD COLUMN IF NOT EXISTS booking_group_id TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
           ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS appointments_booking_group_idx
+        ON appointments (booking_group_id)
+        WHERE booking_group_id <> '';
       `;
 
       await sql`

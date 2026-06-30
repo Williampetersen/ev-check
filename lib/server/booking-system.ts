@@ -10,12 +10,14 @@ import {
   type Customer,
   type DashboardSettings,
 } from "@/lib/ev-domain";
-import { siteUrl } from "@/lib/seo";
+import { erhvervDiscountPercent, siteUrl } from "@/lib/seo";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { ensureInvoiceRecord } from "@/lib/server/invoices";
 import {
   sendAdminBookingEmail,
+  sendAdminErhvervBookingEmail,
   sendCustomerAppointmentEmail,
+  sendCustomerErhvervBookingEmail,
 } from "@/lib/server/mail";
 import {
   nowMinutesInTimeZone,
@@ -94,6 +96,25 @@ export type BookingCreateInput = {
   };
 };
 
+export type ErhvervBookingCreateInput = {
+  serviceId: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    postalCode: string;
+    city: string;
+    company: string;
+    cvr: string;
+    notes?: string;
+    acceptsTerms: boolean;
+  };
+  vehicles: Array<{ make: string }>;
+};
+
 const id = (prefix: string) => `${prefix}_${randomBytes(8).toString("hex")}`;
 const portalToken = () => randomBytes(18).toString("base64url");
 
@@ -161,6 +182,35 @@ function normalizeBookingInput(input: unknown): BookingCreateInput {
       registrationNumber: sanitize(vehicle.registrationNumber).toUpperCase(),
       currentRange: sanitize(vehicle.currentRange),
     },
+  };
+}
+
+function normalizeErhvervBookingInput(input: unknown): ErhvervBookingCreateInput {
+  const payload = isObject(input) ? input : {};
+  const customer = isObject(payload.customer) ? payload.customer : {};
+  const vehicles = Array.isArray(payload.vehicles) ? payload.vehicles : [];
+
+  return {
+    serviceId: sanitize(payload.serviceId),
+    appointmentDate: sanitize(payload.appointmentDate),
+    appointmentTime: sanitize(payload.appointmentTime).slice(0, 5),
+    customer: {
+      name: sanitize(customer.name),
+      email: normalizeEmail(sanitize(customer.email)),
+      phone: sanitize(customer.phone),
+      address: sanitize(customer.address),
+      postalCode: sanitize(customer.postalCode),
+      city: sanitize(customer.city),
+      company: sanitize(customer.company),
+      cvr: sanitize(customer.cvr).replace(/\s+/g, ""),
+      notes: sanitize(customer.notes),
+      acceptsTerms: customer.acceptsTerms === true,
+    },
+    vehicles: vehicles
+      .filter(isObject)
+      .map((vehicle) => ({ make: sanitize(vehicle.make) }))
+      .filter((vehicle) => vehicle.make.length > 0)
+      .slice(0, 50),
   };
 }
 
@@ -839,6 +889,39 @@ function validateBooking(
   return "";
 }
 
+function validateErhvervBooking(
+  input: ErhvervBookingCreateInput,
+  services: BookingService[],
+) {
+  if (!input.customer.acceptsTerms)
+    return "Du skal acceptere, at EV-Check må kontakte dig om bookingen.";
+  if (!sanitize(input.customer.name)) return "Indtast dit fulde navn.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(input.customer.email)))
+    return "Indtast en gyldig e-mailadresse.";
+  if (!validatePhone(input.customer.phone))
+    return "Indtast et gyldigt telefonnummer.";
+  if (
+    !sanitize(input.customer.address) ||
+    !sanitize(input.customer.postalCode) ||
+    !sanitize(input.customer.city)
+  ) {
+    return "Indtast adressen, hvor testen skal udføres.";
+  }
+  if (!sanitize(input.customer.company)) return "Indtast firmanavn.";
+  if (!/^\d{8}$/.test(sanitize(input.customer.cvr)))
+    return "Indtast et gyldigt CVR-nummer (8 cifre).";
+  if (input.vehicles.length === 0) return "Tilføj mindst én bil.";
+  if (input.vehicles.length > 50) return "Maks. 50 biler pr. erhvervsbooking.";
+  if (
+    !validateDate(input.appointmentDate) ||
+    !validateTime(input.appointmentTime)
+  )
+    return "Vælg en ledig dato og tid.";
+  if (!getBookingService(input.serviceId, services))
+    return "Vælg en gyldig testpakke.";
+  return "";
+}
+
 export async function createBooking(input: BookingCreateInput) {
   const bookingInput = normalizeBookingInput(input);
 
@@ -1046,5 +1129,262 @@ export async function createBooking(input: BookingCreateInput) {
     total: pricing.total,
     appointmentLabel: `${bookingInput.appointmentDate} kl. ${bookingInput.appointmentTime}`,
     serviceLabel: pricing.service.title,
+  };
+}
+
+export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
+  const bookingInput = normalizeErhvervBookingInput(input);
+
+  if (!isDatabaseConfigured()) {
+    throw new Error(
+      "Bookingsystemet mangler databaseopsætning. Tilføj DATABASE_URL før rigtige bookinger kan gemmes.",
+    );
+  }
+
+  const config = await getBookingConfig();
+  if (!config.settings.bookingEnabled) {
+    throw new Error(
+      "Online booking er midlertidigt lukket. Kontakt EV-Check for at aftale en tid.",
+    );
+  }
+
+  const validationError = validateErhvervBooking(bookingInput, config.services);
+  if (validationError) throw new Error(validationError);
+
+  const service =
+    getBookingService(bookingInput.serviceId, config.services) ||
+    config.services[0];
+  const durationMinutes = service.durationMinutes;
+  const carCount = bookingInput.vehicles.length;
+  const unitPrice = Math.max(
+    0,
+    Math.round(service.price * (1 - erhvervDiscountPercent / 100)),
+  );
+
+  const slots = await getAvailableSlots({
+    date: bookingInput.appointmentDate,
+    serviceId: bookingInput.serviceId,
+    addonIds: [],
+  });
+  const carTimes = Array.from({ length: carCount }, (_, index) =>
+    addMinutesToTime(bookingInput.appointmentTime, index * durationMinutes),
+  );
+  if (!carTimes.every((time) => slots.includes(time))) {
+    throw new Error(
+      "Der er ikke ledig tid nok i træk til alle biler på den valgte dato og tid. Vælg en anden tid, eller book færre biler ad gangen.",
+    );
+  }
+
+  await ensureSchema({ force: true });
+  const sql = getSql();
+  const normalizedEmail = normalizeEmail(bookingInput.customer.email);
+  const token = portalToken();
+  const customerId = id("cus");
+  const groupId = id("grp");
+  const customerCompany = bookingInput.customer.company;
+  const customerCvr = bookingInput.customer.cvr;
+  const customerNotes = bookingInput.customer.notes || "";
+
+  type CreatedAppointment = {
+    id: string;
+    vehicleLabel: string;
+    appointmentTime: string;
+    appointmentEndTime: string;
+  };
+
+  const created = await sql.begin(async (tx) => {
+    const [existingCustomer] = await tx<
+      Array<{ id: string; portal_token: string | null }>
+    >`
+      SELECT id, portal_token
+      FROM customers
+      WHERE LOWER(email) = ${normalizedEmail}
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    const finalCustomerId = existingCustomer?.id || customerId;
+    const finalPortalToken = existingCustomer?.portal_token || token;
+
+    if (existingCustomer) {
+      await tx`
+        UPDATE customers
+        SET
+          name = ${bookingInput.customer.name},
+          phone = ${bookingInput.customer.phone},
+          address = ${bookingInput.customer.address},
+          postal_code = ${bookingInput.customer.postalCode},
+          city = ${bookingInput.customer.city},
+          company = ${customerCompany},
+          cvr = ${customerCvr},
+          notes = ${customerNotes},
+          portal_token = ${finalPortalToken},
+          updated_at = NOW()
+        WHERE id = ${finalCustomerId}
+      `;
+    } else {
+      await tx`
+        INSERT INTO customers (
+          id, name, email, phone, address, postal_code, city, company, cvr, notes, portal_token
+        )
+        VALUES (
+          ${finalCustomerId}, ${bookingInput.customer.name}, ${normalizedEmail},
+          ${bookingInput.customer.phone}, ${bookingInput.customer.address},
+          ${bookingInput.customer.postalCode}, ${bookingInput.customer.city},
+          ${customerCompany}, ${customerCvr}, ${customerNotes}, ${finalPortalToken}
+        )
+      `;
+    }
+
+    const appointments: CreatedAppointment[] = [];
+    for (let index = 0; index < bookingInput.vehicles.length; index += 1) {
+      const vehicle = bookingInput.vehicles[index];
+      const appointmentId = id("apt");
+      const appointmentTime = carTimes[index];
+      const appointmentEndTime = addMinutesToTime(
+        appointmentTime,
+        durationMinutes,
+      );
+
+      await tx`
+        INSERT INTO appointments (
+          id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
+          appointment_date, appointment_time, appointment_end_time, status, payment_status,
+          invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
+          booking_payload_json, source, customer_type, booking_group_id, discount_percent
+        )
+        VALUES (
+          ${appointmentId}, ${finalCustomerId}, ${vehicle.make},
+          '', ${service.title}, ${service.id},
+          'Batterirapport og systemdiagnose', ${bookingInput.appointmentDate}, ${appointmentTime},
+          ${appointmentEndTime}, ${config.settings.defaultAppointmentStatus}, 'unpaid',
+          'not_requested', ${unitPrice}, '', ${bookingInput.customer.city},
+          ${customerNotes}, ${tx.json([])},
+          ${tx.json({ vehicle, customer: bookingInput.customer, erhverv: true })}, 'website',
+          'business', ${groupId}, ${erhvervDiscountPercent}
+        )
+      `;
+
+      appointments.push({
+        id: appointmentId,
+        vehicleLabel: vehicle.make,
+        appointmentTime,
+        appointmentEndTime,
+      });
+    }
+
+    return {
+      customerId: finalCustomerId,
+      portalToken: finalPortalToken,
+      appointments,
+    };
+  });
+
+  const customer: Customer = {
+    id: created.customerId,
+    name: bookingInput.customer.name,
+    email: normalizedEmail,
+    phone: bookingInput.customer.phone,
+    address: bookingInput.customer.address,
+    postalCode: bookingInput.customer.postalCode,
+    city: bookingInput.customer.city,
+    company: customerCompany,
+    cvr: customerCvr,
+    notes: customerNotes,
+    portalToken: created.portalToken,
+    createdAt: todayKeyInTimeZone(config.settings.timezone),
+  };
+
+  const appointments: Appointment[] = created.appointments.map((row) => ({
+    id: row.id,
+    customerId: created.customerId,
+    customerName: customer.name,
+    customerEmail: customer.email,
+    customerPhone: customer.phone,
+    vehicleLabel: row.vehicleLabel,
+    registrationNumber: "",
+    serviceLabel: service.title,
+    reportLabel: "Batterirapport og systemdiagnose",
+    appointmentDate: bookingInput.appointmentDate,
+    appointmentTime: row.appointmentTime,
+    appointmentEndTime: row.appointmentEndTime,
+    status: config.settings.defaultAppointmentStatus,
+    paymentStatus: "unpaid",
+    invoiceStatus: "not_requested",
+    invoiceNumber: "",
+    total: unitPrice,
+    assignedUser: "",
+    areaName: customer.city,
+    adminNotes: customer.notes,
+    createdAt: todayKeyInTimeZone(config.settings.timezone),
+    customerType: "business",
+    groupId,
+    discountPercent: erhvervDiscountPercent,
+  }));
+
+  for (const appointment of appointments) {
+    try {
+      const invoice = await ensureInvoiceRecord({ appointment, customer });
+      appointment.invoiceStatus = "ready";
+      appointment.invoiceNumber = invoice.invoiceNumber;
+    } catch (error) {
+      // Booking is saved either way; invoices can still be generated later
+      // from the admin dashboard or customer portal.
+      console.error(
+        "Failed to create invoice record for erhverv booking",
+        appointment.id,
+        error,
+      );
+    }
+  }
+
+  const totalPrice = appointments.reduce((sum, item) => sum + item.total, 0);
+
+  try {
+    if (config.settings.emailAutomation.customerOnCreate !== false) {
+      await sendCustomerErhvervBookingEmail({
+        customer,
+        appointments,
+        settings: config.settings,
+        portalUrl: `${siteUrl}/kunde/${created.portalToken}`,
+        totalPrice,
+        discountPercent: erhvervDiscountPercent,
+      });
+    }
+  } catch {
+    // Booking is saved; email status is tracked separately when SMTP is configured.
+  }
+
+  try {
+    if (config.settings.emailAutomation.adminOnCreate !== false) {
+      await sendAdminErhvervBookingEmail({
+        customer,
+        appointments,
+        settings: config.settings,
+        totalPrice,
+        discountPercent: erhvervDiscountPercent,
+      });
+    }
+  } catch {
+    // Booking is saved; email status is tracked separately when SMTP is configured.
+  }
+
+  return {
+    bookingGroupId: groupId,
+    portalToken: created.portalToken,
+    portalUrl: `/kunde/${created.portalToken}`,
+    total: totalPrice,
+    carCount,
+    unitPrice,
+    discountPercent: erhvervDiscountPercent,
+    appointmentLabel: `${bookingInput.appointmentDate} kl. ${bookingInput.appointmentTime}`,
+    serviceLabel: service.title,
+    appointments: appointments.map((item) => ({
+      id: item.id,
+      vehicleLabel: item.vehicleLabel,
+      appointmentTime: item.appointmentTime,
+      appointmentEndTime: item.appointmentEndTime,
+      invoiceNumber: item.invoiceNumber,
+    })),
   };
 }

@@ -35,6 +35,7 @@ export { siteUrl };
 export const navItems = [
   { href: "/", label: "Forside" },
   { href: "/batteritest-elbil", label: "Batteritest" },
+  { href: "/erhverv", label: "Erhverv" },
   { href: "/om-ev-check", label: "Om EV-Check" },
   { href: "/hvad-vores-kunder-siger", label: "Kunder" },
   { href: "/kontakt", label: "Kontakt" },
@@ -1018,17 +1019,27 @@ export function TestimonialsSection() {
   );
 }
 
-export function FaqSection() {
+export function FaqSection({
+  eyebrow = "FAQ",
+  title = "Spørgsmål om batteritest",
+  description = "Kort og praktisk svar på det, kunder typisk spørger om før en test.",
+  items = faqs,
+}: {
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  items?: typeof faqs;
+}) {
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="FAQ"
-          title="Spørgsmål om batteritest"
-          description="Kort og praktisk svar på det, kunder typisk spørger om før en test."
+          eyebrow={eyebrow}
+          title={title}
+          description={description}
         />
         <div className="mt-8 grid gap-3">
-          {faqs.map((faq) => (
+          {items.map((faq) => (
             <details
               key={faq.question}
               className="glass-card group rounded-lg p-5 transition hover:border-sky-200 hover:bg-white/90"

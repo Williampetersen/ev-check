@@ -38,9 +38,9 @@ type BookingFlowProps = {
   config: BookingConfig;
 };
 
-type CustomerType = "private" | "business";
+export type CustomerType = "private" | "business";
 
-type CustomerForm = {
+export type CustomerForm = {
   customerType: CustomerType;
   name: string;
   email: string;
@@ -53,7 +53,7 @@ type CustomerForm = {
   acceptsTerms: boolean;
 };
 
-type VehicleForm = {
+export type VehicleForm = {
   brand: string;
   model: string;
   customBrand: string;
@@ -88,7 +88,7 @@ const initialVehicle: VehicleForm = {
   customModel: "",
 };
 
-const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
+export const weekdayLabels = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
 
 const steps = [
   { id: 1 as const, label: "Vælg bil" },
@@ -100,7 +100,7 @@ const steps = [
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-type CalendarDay = {
+export type CalendarDay = {
   key: string;
   day: number;
   inMonth: boolean;
@@ -118,11 +118,11 @@ function dateKey(date: Date) {
   return copy.toISOString().slice(0, 10);
 }
 
-function monthKey(date: string) {
+export function monthKey(date: string) {
   return `${date.slice(0, 7)}-01`;
 }
 
-function addMonths(date: string, months: number) {
+export function addMonths(date: string, months: number) {
   const next = dateFromKey(monthKey(date));
   next.setMonth(next.getMonth() + months);
   return dateKey(next);
@@ -134,11 +134,11 @@ function addDays(date: string, amount: number) {
   return dateKey(next);
 }
 
-function isWorkingDay(date: string, workingDays: number[]) {
+export function isWorkingDay(date: string, workingDays: number[]) {
   return workingDays.includes(dateFromKey(date).getDay());
 }
 
-function isDateFullyBlocked(
+export function isDateFullyBlocked(
   date: string,
   periods: BookingConfig["unavailablePeriods"],
 ) {
@@ -148,7 +148,7 @@ function isDateFullyBlocked(
   });
 }
 
-function unavailablePeriodsForDate(
+export function unavailablePeriodsForDate(
   date: string,
   periods: BookingConfig["unavailablePeriods"],
 ) {
@@ -158,7 +158,7 @@ function unavailablePeriodsForDate(
   });
 }
 
-function firstSelectableDate(config: BookingConfig) {
+export function firstSelectableDate(config: BookingConfig) {
   for (
     let current = config.minDate;
     current <= config.maxDate;
@@ -174,7 +174,7 @@ function firstSelectableDate(config: BookingConfig) {
   return config.minDate;
 }
 
-function dateLabel(date: string) {
+export function dateLabel(date: string) {
   try {
     return new Intl.DateTimeFormat("da-DK", {
       weekday: "short",
@@ -186,7 +186,7 @@ function dateLabel(date: string) {
   }
 }
 
-function fullDateLabel(date: string) {
+export function fullDateLabel(date: string) {
   try {
     return new Intl.DateTimeFormat("da-DK", {
       weekday: "long",
@@ -198,7 +198,7 @@ function fullDateLabel(date: string) {
   }
 }
 
-function monthLabel(date: string) {
+export function monthLabel(date: string) {
   try {
     return new Intl.DateTimeFormat("da-DK", {
       month: "long",
@@ -209,7 +209,7 @@ function monthLabel(date: string) {
   }
 }
 
-function calendarDaysForMonth(
+export function calendarDaysForMonth(
   visibleMonth: string,
   minDate: string,
   maxDate: string,
@@ -240,19 +240,19 @@ function calendarDaysForMonth(
   });
 }
 
-function cleanValue(value: string) {
+export function cleanValue(value: string) {
   return value.trim();
 }
 
-function hasValue(value: string) {
+export function hasValue(value: string) {
   return cleanValue(value).length > 0;
 }
 
-function isValidEmail(value: string) {
+export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanValue(value));
 }
 
-function isValidPhone(value: string) {
+export function isValidPhone(value: string) {
   const digits = cleanValue(value).replace(/[\s-]/g, "");
   return /^\+?\d{8,12}$/.test(digits);
 }
@@ -683,7 +683,7 @@ function Stepper({
   );
 }
 
-function Card({
+export function Card({
   children,
   className,
 }: {
@@ -702,7 +702,7 @@ function Card({
   );
 }
 
-function StepHeading({
+export function StepHeading({
   title,
   description,
   className,
@@ -721,7 +721,7 @@ function StepHeading({
   );
 }
 
-function StepNav({
+export function StepNav({
   onBack,
   onContinue,
   canContinue,
@@ -750,7 +750,7 @@ function StepNav({
   );
 }
 
-function BrandDropdown({
+export function BrandDropdown({
   brands,
   value,
   onChange,
@@ -853,7 +853,7 @@ function BrandDropdown({
   );
 }
 
-function ModelSelect({
+export function ModelSelect({
   models,
   value,
   disabled,
@@ -1079,7 +1079,7 @@ function ServiceStep({
   );
 }
 
-function TimeStep({
+export function TimeStep({
   appointmentDate,
   appointmentTime,
   calendarDays,
@@ -1828,7 +1828,7 @@ function MobileBookingBottomBar({
   );
 }
 
-function Field({
+export function Field({
   label,
   children,
   className,
@@ -1858,7 +1858,7 @@ function Field({
   );
 }
 
-function ReviewRow({
+export function ReviewRow({
   label,
   value,
   highlight = false,

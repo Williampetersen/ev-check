@@ -109,6 +109,64 @@ export const batteryServiceJsonLd = {
     "Test af elbilens højvoltsbatteri med SoH, SoC, BMS-status, cellebalance, temperaturer, fejlkoder og professionel PDF-rapport.",
 };
 
+export const erhvervSeoKeywords = [
+  "batteritest erhverv",
+  "elbil batteritest virksomhed",
+  "firmabil batteritest",
+  "flådetest elbil",
+  "batteritest leasingselskab",
+  "bilforhandler batteritest elbil",
+  "SoH test firmabiler",
+  "batteritest plug-in hybrid erhverv",
+  "erhverv elbil diagnose",
+  "batteritest CVR faktura",
+  "mobil batteritest virksomhed",
+  "batteritest flåde Sjælland",
+  "erhvervsrabat batteritest",
+];
+
+export const erhvervDiscountPercent = 15;
+export const erhvervServicePrice = Math.round(
+  servicePrice * (1 - erhvervDiscountPercent / 100),
+);
+
+export const erhvervServiceJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `${siteUrl}/erhverv#service`,
+  name: "Batteritest af elbil for erhverv",
+  serviceType: "Mobil batteritest og elbil-diagnose til virksomheder og flåder",
+  category: "Elbil-diagnose for erhverv",
+  provider: {
+    "@id": `${siteUrl}#business`,
+  },
+  audience: {
+    "@type": "BusinessAudience",
+    audienceType:
+      "Virksomheder, flådeejere, leasingselskaber og bilforhandlere",
+  },
+  areaServed: [
+    {
+      "@type": "AdministrativeArea",
+      name: "Sjælland",
+    },
+    {
+      "@type": "City",
+      name: "København",
+    },
+  ],
+  offers: {
+    "@type": "Offer",
+    url: `${siteUrl}/book-tid`,
+    price: erhvervServicePrice,
+    priceCurrency: "DKK",
+    availability: "https://schema.org/InStock",
+    description: `${servicePrice} kr. pr. bil før rabat. Erhvervskunder med CVR-nummer får ${erhvervDiscountPercent}% rabat, svarende til ${erhvervServicePrice} kr. pr. bil.`,
+  },
+  description:
+    "Mobil batteritest af firmabiler, leasingbiler og bilflåder med SoH, BMS-status, cellebalance, fejlkoder og PDF-rapport pr. bil. Samlet fakturering til virksomheden og 15% rabat til erhvervskunder.",
+};
+
 export function buildBreadcrumbJsonLd(
   items: Array<{ name: string; url: string }>,
 ) {
@@ -120,6 +178,23 @@ export function buildBreadcrumbJsonLd(
       position: index + 1,
       name: item.name,
       item: item.url,
+    })),
+  };
+}
+
+export function buildFaqJsonLd(
+  items: Array<{ question: string; answer: string }>,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
     })),
   };
 }

@@ -7,17 +7,27 @@ højvoltsbatteriets tilstand før køb, salg, service eller fejlfinding.
 ## Vigtige sider
 
 - Batteritest af elbil: https://evcheck.dk/batteritest-elbil
+- Batteritest for erhverv: https://evcheck.dk/erhverv
 - Book tid: https://evcheck.dk/book-tid
+- Book erhvervsbooking (flere biler): https://evcheck.dk/erhverv/book-tid
 - Om EV-Check.dk: https://evcheck.dk/om-ev-check
 - Kontakt: https://evcheck.dk/kontakt
 
 ## Servicefakta
 
-- Pris: 1300 DKK
+- Pris: 1300 DKK pr. bil (privat)
+- Erhvervspris: 1105 DKK pr. bil (15% rabat med CVR-nummer)
 - Område: København og Sjælland
-- Rapport: professionel PDF-rapport
+- Rapport: professionel PDF-rapport pr. bil
 - Målepunkter: SoH, SoC, BMS-status, cellebalance, temperaturer og relevante fejlkoder
 - Relevante situationer: køb af brugt elbil, salg af elbil, lavere rækkevidde, garantisag og teknisk fejlfinding
+
+## Erhverv og flåde
+
+- Målgruppe: virksomheder med firmabiler, leasingselskaber, bilforhandlere og flådeejere
+- Rabat: 15% på alle batteritests ved booking med gyldigt CVR-nummer
+- Fakturering: samlet faktura til virksomheden, betalingsfrist 8 dage
+- Booking: ingen binding eller minimumsantal, 100% online via dedikeret erhvervsbooking (op til 50 biler pr. booking)
 
 ## Kontakt
 

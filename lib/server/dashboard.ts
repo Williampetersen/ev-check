@@ -94,7 +94,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     const sql = getSql();
     const [customers, appointments, users, logs, unavailablePeriods, settingsRows] = await Promise.all([
       sql<any[]>`
-        SELECT id, name, email, phone, address, postal_code, city, company, notes, portal_token, created_at
+        SELECT id, name, email, phone, address, postal_code, city, company, cvr, notes, portal_token, created_at
         FROM customers
         ORDER BY created_at DESC
       `,
@@ -138,6 +138,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       postalCode: row.postal_code || "",
       city: row.city || "",
       company: row.company || "",
+      cvr: row.cvr || "",
       notes: row.notes || "",
       portalToken: row.portal_token || "",
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
@@ -167,6 +168,9 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       areaName: row.area_name || "",
       adminNotes: row.admin_notes || "",
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
+      customerType: row.customer_type === "business" ? "business" : "private",
+      groupId: row.booking_group_id || "",
+      discountPercent: Number(row.discount_percent || 0),
     }));
 
     const mappedUsers: DashboardUser[] = users.map((row) => ({

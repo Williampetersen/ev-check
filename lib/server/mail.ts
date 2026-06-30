@@ -542,3 +542,227 @@ export async function sendAdminBookingEmail(input: {
     throw error;
   }
 }
+
+export async function sendCustomerErhvervBookingEmail(input: {
+  customer: Customer;
+  appointments: Appointment[];
+  settings: DashboardSettings;
+  portalUrl?: string;
+  totalPrice: number;
+  discountPercent: number;
+}) {
+  const supportEmail =
+    input.settings.supportEmail || defaultSettings.supportEmail;
+  const carCount = input.appointments.length;
+  const carWord = carCount === 1 ? "bil" : "biler";
+  const subject = `${input.settings.companyName}: Erhvervsbooking modtaget (${carCount} ${carWord})`;
+  const transporter = getTransporter();
+  const first = input.appointments[0];
+  const groupId = first?.groupId || first?.id || "";
+
+  const carRows: Array<[string, string]> = input.appointments.map(
+    (appointment, index) => [
+      `Bil ${index + 1}`,
+      `${appointment.vehicleLabel} · ${appointment.appointmentTime}-${appointment.appointmentEndTime}`,
+    ],
+  );
+
+  const rows: Array<[string, string]> = [
+    ["Erhvervsbooking", groupId],
+    ["Firma", input.customer.company],
+    ["CVR-nummer", input.customer.cvr || ""],
+    ["Dato", first?.appointmentDate || ""],
+    ...carRows,
+    ["Rabat", `${input.discountPercent}%`],
+    ["Total pris", `${input.totalPrice} DKK`],
+    [
+      "Adresse",
+      [
+        input.customer.address,
+        input.customer.postalCode,
+        input.customer.city,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    ],
+  ];
+
+  if (!transporter) {
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_erhverv_booking_created",
+      subject,
+      status: "not_configured",
+      errorMessage: "SMTP is not configured.",
+    });
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: getMailConfig().from,
+      to: input.customer.email,
+      replyTo: supportEmail,
+      subject,
+      text: `Jeres erhvervsbooking hos EV-Check.dk er modtaget til ${first?.appointmentDate} fra kl. ${first?.appointmentTime}. ${carCount} ${carWord}, total ${input.totalPrice} DKK efter ${input.discountPercent}% erhvervsrabat.`,
+      html: renderMessage({
+        title: "Jeres erhvervsbooking er modtaget",
+        eyebrow: "Erhvervsbooking",
+        intro: `Tak for jeres booking. Vi har reserveret tid til batteritest af ${carCount} ${carWord}, og I har fået ${input.discountPercent}% erhvervsrabat på prisen.`,
+        rows,
+        settings: input.settings,
+        action: input.portalUrl
+          ? { label: "Åbn kundeportal", url: input.portalUrl }
+          : undefined,
+        notice:
+          "Vi kontakter jer, hvis vi mangler oplysninger. I modtager en PDF-rapport pr. bil samt faktura efter testen.",
+        preheader: `Erhvervsbooking modtaget: ${carCount} ${carWord} til ${first?.appointmentDate}`,
+      }),
+    });
+
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_erhverv_booking_created",
+      subject,
+      status: "sent",
+    });
+  } catch (error) {
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient: input.customer.email,
+      recipientRole: "customer",
+      templateKey: "customer_erhverv_booking_created",
+      subject,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+export async function sendAdminErhvervBookingEmail(input: {
+  customer: Customer;
+  appointments: Appointment[];
+  settings: DashboardSettings;
+  totalPrice: number;
+  discountPercent: number;
+}) {
+  const recipient =
+    input.settings.adminNotifyEmail ||
+    process.env.BOOKING_ADMIN_EMAIL ||
+    input.settings.supportEmail ||
+    defaultSettings.supportEmail;
+  const carCount = input.appointments.length;
+  const carWord = carCount === 1 ? "bil" : "biler";
+  const first = input.appointments[0];
+  const groupId = first?.groupId || first?.id || "";
+  const subject = `${input.settings.companyName}: Ny erhvervsbooking fra ${
+    input.customer.company || input.customer.name
+  } (${carCount} ${carWord})`;
+  const transporter = getTransporter();
+
+  const carRows: Array<[string, string]> = input.appointments.map(
+    (appointment, index) => [
+      `Bil ${index + 1}`,
+      `${appointment.vehicleLabel} · ${appointment.appointmentTime}-${appointment.appointmentEndTime} · ${
+        appointment.invoiceNumber || "faktura følger"
+      }`,
+    ],
+  );
+
+  const rows: Array<[string, string]> = [
+    ["Erhvervsbooking", groupId],
+    ["Firma", input.customer.company],
+    ["CVR-nummer", input.customer.cvr || ""],
+    ["Kontaktperson", input.customer.name],
+    ["E-mail", input.customer.email],
+    ["Telefon", input.customer.phone],
+    [
+      "Adresse",
+      [
+        input.customer.address,
+        input.customer.postalCode,
+        input.customer.city,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    ],
+    ["Dato", first?.appointmentDate || ""],
+    ...carRows,
+    ["Rabat", `${input.discountPercent}%`],
+    ["Total pris", `${input.totalPrice} DKK`],
+    ["Besked", input.customer.notes],
+  ];
+
+  if (!transporter) {
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient,
+      recipientRole: "admin",
+      templateKey: "admin_erhverv_booking_created",
+      subject,
+      status: "not_configured",
+      errorMessage: "SMTP is not configured.",
+    });
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: getMailConfig().from,
+      to: recipient,
+      replyTo: input.customer.email,
+      subject,
+      text: `Ny erhvervsbooking: ${
+        input.customer.company || input.customer.name
+      }, ${carCount} ${carWord}, ${first?.appointmentDate} fra kl. ${first?.appointmentTime}.`,
+      html: renderMessage({
+        title: "Ny erhvervsbooking modtaget",
+        eyebrow: "Admin notifikation",
+        intro:
+          "En virksomhed har booket batteritest til flere biler via erhvervsbookingen på hjemmesiden.",
+        rows,
+        settings: input.settings,
+        action: {
+          label: "Åbn admin dashboard",
+          url: `${siteUrl()}/admin?view=bookings`,
+        },
+        notice:
+          "Husk at kontrollere adresse, CVR-nummer og biler før endelig planlægning.",
+        preheader: `Ny erhvervsbooking fra ${
+          input.customer.company || input.customer.name
+        }`,
+      }),
+    });
+
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient,
+      recipientRole: "admin",
+      templateKey: "admin_erhverv_booking_created",
+      subject,
+      status: "sent",
+    });
+  } catch (error) {
+    await recordEmailLog({
+      appointmentId: first?.id,
+      customerId: input.customer.id,
+      recipient,
+      recipientRole: "admin",
+      templateKey: "admin_erhverv_booking_created",
+      subject,
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}

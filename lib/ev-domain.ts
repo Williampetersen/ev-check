@@ -11,6 +11,8 @@ export type Customer = {
   postalCode: string;
   city: string;
   company: string;
+  /** CVR registration number for business customers, e.g. erhverv bookings. */
+  cvr?: string;
   notes: string;
   portalToken: string;
   createdAt: string;
@@ -38,6 +40,12 @@ export type Appointment = {
   areaName: string;
   adminNotes: string;
   createdAt: string;
+  /** "business" for erhverv bookings, otherwise a private/consumer booking. */
+  customerType?: "private" | "business";
+  /** Shared id linking the appointments created together in one multi-car erhverv booking. */
+  groupId?: string;
+  /** Discount percent applied to this appointment's price (e.g. 15 for erhverv rabat). */
+  discountPercent?: number;
 };
 
 export type EmailLog = {

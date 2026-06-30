@@ -90,8 +90,16 @@ async function renderInvoicePdf(input: {
   const rows: Array<[string, string]> = [
     ["Booking ID", input.appointment.id],
     ["Invoice number", input.invoiceNumber],
-    ["CVR-nummer", companyCvr],
+    ["CVR-nummer (EV-Check)", companyCvr],
     ["Customer", input.customer.name],
+    ...(input.customer.company
+      ? ([["Company", input.customer.company]] as Array<[string, string]>)
+      : []),
+    ...(input.customer.cvr
+      ? ([["Customer CVR-nummer", input.customer.cvr]] as Array<
+          [string, string]
+        >)
+      : []),
     ["Email", input.customer.email],
     ["Phone", input.customer.phone],
     ["Service", input.appointment.serviceLabel],
