@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CalendarPlus, Mail, ShieldCheck } from "lucide-react";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { brandLogoPath } from "@/lib/seo";
@@ -370,13 +371,10 @@ export default function LoginForm() {
             </p>
           </div>
 
-          <Link
-            href="/book-tid"
-            className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-sky-300/70 bg-sky-500/90 text-base font-extrabold text-white shadow-[0_16px_34px_rgba(14,116,184,0.30),inset_0_1px_0_rgba(255,255,255,0.34)] transition hover:bg-sky-600"
-          >
+          <BookTidTrigger className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-sky-300/70 bg-sky-500/90 text-base font-extrabold text-white shadow-[0_16px_34px_rgba(14,116,184,0.30),inset_0_1px_0_rgba(255,255,255,0.34)] transition hover:bg-sky-600">
             <CalendarPlus className="h-5 w-5" />
             Book din første batteritest
-          </Link>
+          </BookTidTrigger>
 
           <p className="text-center text-sm text-slate-700">
             Har du allerede en booking?{" "}

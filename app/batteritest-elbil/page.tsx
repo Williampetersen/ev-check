@@ -19,6 +19,7 @@ import {
   ServicesSection,
   SitePage,
 } from "@/components/site/public-site";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { ButtonLink } from "@/components/ui/button";
 import {
   batteryServiceJsonLd,
@@ -125,10 +126,10 @@ function BatteryTestHero() {
             salg af brugt elbil.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/book-tid" className="h-12 px-5">
+            <BookTidTrigger variant="primary" className="h-12 px-5">
               <CalendarCheck className="h-4 w-4" />
               Book batteritest
-            </ButtonLink>
+            </BookTidTrigger>
             <ButtonLink href="/kontakt" variant="outline" className="h-12 px-5">
               Spørg om din bil
               <ArrowRight className="h-4 w-4" />

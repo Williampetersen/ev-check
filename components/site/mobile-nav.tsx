@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarCheck, Menu, Phone, UserRound, X } from "lucide-react";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 
 export function MobileNav({
   items,
@@ -79,14 +80,10 @@ export function MobileNav({
                 <UserRound className="h-4 w-4" />
                 Min konto
               </Link>
-              <Link
-                href="/book-tid"
-                onClick={close}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
-              >
+              <BookTidTrigger className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600">
                 <CalendarCheck className="h-4 w-4" />
                 Book tid
-              </Link>
+              </BookTidTrigger>
               <a
                 href="tel:+4571900530"
                 onClick={close}

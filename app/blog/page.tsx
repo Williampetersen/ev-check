@@ -7,7 +7,7 @@ import {
   SectionHeading,
   SitePage,
 } from "@/components/site/public-site";
-import { ButtonLink } from "@/components/ui/button";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { blogPosts } from "@/data/blog-posts";
 import {
   blogSeoKeywords,
@@ -146,10 +146,10 @@ export default function BlogIndexPage() {
             EV-Check kommer ud til dig på Sjælland med AVILOO-baseret
             batteritest og en klar PDF-rapport samme dag.
           </p>
-          <ButtonLink href="/book-tid" className="mt-6">
+          <BookTidTrigger variant="primary" className="mt-6">
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
         </div>
       </section>
     </SitePage>

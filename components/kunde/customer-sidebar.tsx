@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   CalendarCheck,
   CalendarDays,
@@ -10,6 +9,7 @@ import {
   LogOut,
   Settings2,
 } from "lucide-react";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { brandLogoPath } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -59,13 +59,10 @@ export function CustomerSidebar({
       </div>
 
       <div className="px-3 pt-3">
-        <Link
-          href="/book-tid"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-3 text-sm font-bold text-white shadow-sm shadow-sky-700/20 transition hover:bg-sky-600"
-        >
+        <BookTidTrigger className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-3 text-sm font-bold text-white shadow-sm shadow-sky-700/20 transition hover:bg-sky-600">
           <CalendarCheck className="h-4 w-4" />
           Book new test
-        </Link>
+        </BookTidTrigger>
       </div>
 
       <nav className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-3 py-3 [-ms-overflow-style:none] xl:grid xl:grid-cols-1 xl:overflow-visible [&::-webkit-scrollbar]:hidden">

@@ -28,6 +28,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { MobileNav } from "@/components/site/mobile-nav";
 import {
@@ -286,13 +287,10 @@ export function SiteHeader() {
                 <UserRound className="h-4 w-4" />
                 Min konto
               </Link>
-              <Link
-                href="/book-tid"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
-              >
+              <BookTidTrigger className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600">
                 <CalendarCheck className="h-4 w-4" />
                 Book tid
-              </Link>
+              </BookTidTrigger>
             </div>
 
             <div className="lg:hidden">
@@ -350,9 +348,9 @@ export function SiteFooter() {
                   {item.label}
                 </Link>
               ))}
-              <Link href="/book-tid" className="transition hover:text-sky-800">
+              <BookTidTrigger className="transition hover:text-sky-800">
                 Book batteritest
-              </Link>
+              </BookTidTrigger>
               <Link
                 href="/cookiepolitik"
                 className="transition hover:text-sky-800"
@@ -389,13 +387,10 @@ export function SiteFooter() {
               <p>Alle ugens dage kl. 08-17</p>
               Dækker København, Storkøbenhavn og store dele af Sjælland
             </div>
-            <Link
-              href="/book-tid"
-              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
-            >
+            <BookTidTrigger className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(14,116,184,0.24)] transition hover:bg-sky-600">
               <CalendarCheck className="h-4 w-4" />
               Book tid
-            </Link>
+            </BookTidTrigger>
 
             <div className="mt-6">
               <p className="text-xs font-bold tracking-[0.18em] text-slate-500 uppercase">
@@ -540,13 +535,13 @@ export function HeroSection() {
         </div>
 
         <div className="mx-auto mt-7 grid w-full max-w-[19.5rem] gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
-          <ButtonLink
-            href="/book-tid"
+          <BookTidTrigger
+            variant="primary"
             className="h-12 w-full px-5 shadow-xl shadow-black/30 sm:h-11 sm:w-auto"
           >
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
           <ButtonLink
             href="/batteritest-elbil"
             variant="secondary"
@@ -616,10 +611,10 @@ export function PriceCard() {
           </div>
         ))}
       </div>
-      <ButtonLink href="/book-tid" className="mt-6 w-full">
+      <BookTidTrigger variant="primary" className="mt-6 w-full">
         <CalendarCheck className="h-4 w-4" />
         Book tid
-      </ButtonLink>
+      </BookTidTrigger>
     </aside>
   );
 }
@@ -746,10 +741,10 @@ export function AvilooSection() {
               </div>
             ))}
           </div>
-          <ButtonLink href="/book-tid" className="mt-7">
+          <BookTidTrigger variant="primary" className="mt-7">
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
         </div>
         <div className="relative min-h-[20rem] overflow-hidden rounded-lg shadow-xl shadow-sky-950/8 lg:min-h-[26rem]">
           <Image
@@ -882,10 +877,10 @@ export function BrandsAndCertificate() {
           elbilmodeller, kontakt os og hør mere.
         </p>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/book-tid">
+          <BookTidTrigger variant="primary">
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
           <Link
             href="/kontakt"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-white/70 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:bg-sky-50 sm:h-10"
@@ -1006,10 +1001,10 @@ export function DiagnosticDetailsSection() {
             title="Hvad viser en batteritest af elbil?"
             description="Rapporten samler de vigtigste batteridata i et format, der er nemt at bruge, når du skal vurdere en brugt elbil eller dokumentere bilens tilstand."
           />
-          <ButtonLink href="/book-tid" className="mt-6">
+          <BookTidTrigger variant="primary" className="mt-6">
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
         </div>
         <dl className="grid gap-3 sm:grid-cols-2">
           {diagnosticRows.map((row) => (
@@ -1127,10 +1122,10 @@ export function TestimonialsSection() {
           ))}
         </div>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <ButtonLink href="/book-tid">
+          <BookTidTrigger variant="primary">
             <CalendarCheck className="h-4 w-4" />
             Book din batteritest
-          </ButtonLink>
+          </BookTidTrigger>
           <Link
             href="/hvad-vores-kunder-siger"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-white/70 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-950/5 backdrop-blur transition hover:bg-sky-50 sm:h-10"
@@ -1246,10 +1241,10 @@ export function ContactSection({ booking = false }: { booking?: boolean }) {
             <ContactLine icon={Clock} text="Svar samme dag på hverdage" />
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/book-tid" className="sm:w-auto">
+            <BookTidTrigger variant="primary" className="sm:w-auto">
               Book batteritest
               <ArrowRight className="h-4 w-4" />
-            </ButtonLink>
+            </BookTidTrigger>
             <a
               href="tel:+4571900530"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-300/70 bg-white/75 px-5 text-sm font-bold text-sky-800 shadow-sm shadow-sky-700/10 backdrop-blur transition hover:bg-sky-50"

@@ -8,7 +8,7 @@ import {
   JsonLd,
   SitePage,
 } from "@/components/site/public-site";
-import { ButtonLink } from "@/components/ui/button";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { blogPosts, getBlogPost, type BlogBlock } from "@/data/blog-posts";
 import {
   buildBlogPostingJsonLd,
@@ -155,10 +155,10 @@ function BlockRenderer({ block }: { block: BlogBlock }) {
           <p className="mt-2 text-base leading-7 text-slate-700">
             {block.text}
           </p>
-          <ButtonLink href="/book-tid" className="mt-5">
+          <BookTidTrigger variant="primary" className="mt-5">
             <CalendarCheck className="h-4 w-4" />
             Book batteritest
-          </ButtonLink>
+          </BookTidTrigger>
         </div>
       );
     default:

@@ -6,7 +6,7 @@ import type {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const variants = {
+export const buttonVariants = {
   primary:
     "border border-sky-400/70 bg-sky-500/90 text-white shadow-lg shadow-sky-700/20 backdrop-blur-xl hover:bg-sky-600",
   secondary:
@@ -17,7 +17,10 @@ const variants = {
   danger: "bg-rose-600 text-white hover:bg-rose-700",
 };
 
-type Variant = keyof typeof variants;
+const variants = buttonVariants;
+
+export type ButtonVariant = keyof typeof variants;
+type Variant = ButtonVariant;
 
 export function Button({
   className,

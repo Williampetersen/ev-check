@@ -16,7 +16,7 @@ import {
   ThermometerSun,
   Zap,
 } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 import { cn } from "@/lib/utils";
 
 const sections = [
@@ -171,10 +171,10 @@ export function HomeShowcaseSections() {
                   </div>
 
                   <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <ButtonLink href="/book-tid" className="h-11 sm:h-10">
+                    <BookTidTrigger variant="primary" className="h-11 sm:h-10">
                       <CalendarCheck className="h-4 w-4" />
                       Book batteritest
-                    </ButtonLink>
+                    </BookTidTrigger>
                     {section.href !== "/book-tid" ? (
                       <Link
                         href={section.href}

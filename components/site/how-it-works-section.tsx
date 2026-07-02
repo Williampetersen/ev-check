@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { CalendarCheck } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
+import { BookTidTrigger } from "@/components/site/book-tid-button";
 
 const steps = [
   {
@@ -64,10 +64,10 @@ export function HowItWorksSection() {
               præcist og uden at åbne højvoltsbatteriet. Book din
               batteritest, og stå med en garantineutral rapport samme dag.
             </p>
-            <ButtonLink href="/book-tid" className="mt-6">
+            <BookTidTrigger variant="primary" className="mt-6">
               <CalendarCheck className="h-4 w-4" />
               Book batteritest nu
-            </ButtonLink>
+            </BookTidTrigger>
             <p className="mt-3 text-xs text-slate-400">
               Mobil test i hele Danmark · Fra 1.300 kr.
             </p>
