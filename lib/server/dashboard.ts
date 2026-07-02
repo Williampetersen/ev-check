@@ -381,6 +381,51 @@ export async function updateAppointmentDetails(
   `;
 }
 
+export async function updateCustomerProfile(
+  customerId: string,
+  input: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    postalCode: string;
+    city: string;
+    company: string;
+    notes: string;
+  },
+) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("DATABASE_URL is not configured.");
+  }
+  await ensureSchema({ force: true });
+  const sql = getSql();
+
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const [existing] = await sql<Array<{ id: string }>>`
+    SELECT id FROM customers
+    WHERE LOWER(email) = ${normalizedEmail} AND id <> ${customerId}
+    LIMIT 1
+  `;
+  if (existing) {
+    throw new Error("Denne e-mail bruges allerede af en anden konto.");
+  }
+
+  await sql`
+    UPDATE customers
+    SET
+      name = ${input.name},
+      email = ${input.email},
+      phone = ${input.phone},
+      address = ${input.address},
+      postal_code = ${input.postalCode},
+      city = ${input.city},
+      company = ${input.company},
+      notes = ${input.notes},
+      updated_at = NOW()
+    WHERE id = ${customerId}
+  `;
+}
+
 export async function saveDashboardSettings(formData: FormData) {
   if (!isDatabaseConfigured()) return;
   await ensureSchema({ force: true });
