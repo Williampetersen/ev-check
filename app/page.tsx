@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  AvilooSection,
   BrandsAndCertificate,
   ContactSection,
   ErhvervHomeSection,
@@ -78,6 +79,7 @@ export default function Home() {
       <HeroSection />
       <HowItWorks />
       <HomeShowcaseSections />
+      <AvilooSection />
       <ErhvervHomeSection />
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <BrandsAndCertificate />

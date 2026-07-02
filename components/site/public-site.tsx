@@ -719,6 +719,52 @@ export function AboutSection() {
   );
 }
 
+const avilooPoints = [
+  "Uafhængig og objektiv måling af batteriets SoH",
+  "Bruges af forhandlere og testcentre i hele Europa",
+  "Resultatet leveres i en klar PDF-rapport samme dag",
+];
+
+export function AvilooSection() {
+  return (
+    <section className="py-16 sm:py-20">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+        <div className="self-center">
+          <SectionHeading
+            eyebrow="AVILOO-teknologi"
+            title="Batteritest udført med AVILOO"
+            description="AVILOO er en uafhængig østrigsk teknologi til diagnose af elbilbatterier, som bruges af forhandlere, leasingselskaber og testcentre i hele Europa. Hos EV-Check bruger vi AVILOO-udstyr til hver eneste batteritest, så resultatet ikke afhænger af bilens eget display eller producentens software. Du får en objektiv måling af batteriets State of Health (SoH), som du kan bruge til køb, salg eller dokumentation. Resultatet leveres samlet i en letforståelig PDF-rapport samme dag."
+          />
+          <div className="mt-6 grid gap-3">
+            {avilooPoints.map((point) => (
+              <div
+                key={point}
+                className="glass-card flex items-start gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-slate-700"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                <span>{point}</span>
+              </div>
+            ))}
+          </div>
+          <ButtonLink href="/book-tid" className="mt-7">
+            <CalendarCheck className="h-4 w-4" />
+            Book batteritest
+          </ButtonLink>
+        </div>
+        <div className="relative min-h-[20rem] overflow-hidden rounded-lg shadow-xl shadow-sky-950/8 lg:min-h-[26rem]">
+          <Image
+            src="/billide2.jpeg"
+            alt="AVILOO batteritest tilsluttet elbil"
+            fill
+            sizes="(min-width: 1024px) 44vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const erhvervHomePoints = [
   `${erhvervDiscountPercent}% rabat til erhverv med CVR-nummer`,
   "Book op til 50 biler i én bestilling",
