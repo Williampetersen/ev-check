@@ -1,6 +1,7 @@
 export type AppointmentStatus = "pending" | "approved" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded";
 export type InvoiceStatus = "not_requested" | "ready" | "sent" | "paid";
+export type ReportPaymentStatus = "paid" | "unpaid";
 
 export type Customer = {
   id: string;
@@ -54,6 +55,7 @@ export type CustomerReport = {
   title: string;
   fileName: string;
   fileSize: number;
+  paymentStatus: ReportPaymentStatus;
   sentAt: string;
   createdAt: string;
 };
@@ -158,6 +160,11 @@ export const invoiceLabels: Record<InvoiceStatus, string> = {
   ready: "Ready",
   sent: "Sent",
   paid: "Paid",
+};
+
+export const reportPaymentLabels: Record<ReportPaymentStatus, string> = {
+  paid: "Paid",
+  unpaid: "Unpaid",
 };
 
 export const defaultSettings: DashboardSettings = {

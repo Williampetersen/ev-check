@@ -5,13 +5,18 @@ import {
   BatteryCharging,
   CalendarDays,
   FileText,
+  Lock,
   LogOut,
   Receipt,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
-import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
+import {
+  PaymentBadge,
+  ReportPaymentBadge,
+  StatusBadge,
+} from "@/components/admin/status-badge";
 import { formatPrice, formatShortDate } from "@/lib/ev-domain";
-import { brandLogoPath } from "@/lib/seo";
+import { brandLogoPath, contactEmail, contactPhone } from "@/lib/seo";
 import { getCustomerDashboardByToken } from "@/lib/server/dashboard";
 import {
   CUSTOMER_COOKIE_NAME,
@@ -167,30 +172,71 @@ export default async function CustomerTokenPage({
           <h2 className="text-lg font-bold text-slate-950">Your reports</h2>
           <div className="mt-4 grid gap-3">
             {portal.reports.length > 0 ? (
-              portal.reports.map((report) => (
-                <article
-                  key={report.id}
-                  className="glass-card flex flex-wrap items-center justify-between gap-3 rounded-lg p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="font-bold text-slate-950">
-                      {report.title || report.fileName}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Uploaded {formatShortDate(report.createdAt)}
-                    </p>
-                  </div>
-                  <a
-                    href={`/api/customer/reports/${report.id}?token=${encodeURIComponent(token)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-50 px-3 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+              portal.reports.map((report) =>
+                report.paymentStatus === "unpaid" ? (
+                  <article
+                    key={report.id}
+                    className="glass-card rounded-lg border border-rose-200/70 p-4"
                   >
-                    <FileText className="h-4 w-4" />
-                    Download PDF
-                  </a>
-                </article>
-              ))
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-950">
+                          {report.title || report.fileName}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Uploaded {formatShortDate(report.createdAt)}
+                        </p>
+                      </div>
+                      <ReportPaymentBadge status={report.paymentStatus} />
+                    </div>
+                    <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-rose-200/70 bg-rose-50/70 px-3 py-3 text-sm text-rose-800">
+                      <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>
+                        Your PDF is ready, but payment has not been received.
+                        Please pay the invoice to see and download your PDF.
+                        For more details, please contact EV-Check at{" "}
+                        <a
+                          href={`mailto:${contactEmail}`}
+                          className="font-semibold underline underline-offset-2"
+                        >
+                          {contactEmail}
+                        </a>{" "}
+                        or call{" "}
+                        <a
+                          href={`tel:${contactPhone.replace(/\s+/g, "")}`}
+                          className="font-semibold underline underline-offset-2"
+                        >
+                          {contactPhone}
+                        </a>
+                        .
+                      </p>
+                    </div>
+                  </article>
+                ) : (
+                  <article
+                    key={report.id}
+                    className="glass-card flex flex-wrap items-center justify-between gap-3 rounded-lg p-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-950">
+                        {report.title || report.fileName}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Uploaded {formatShortDate(report.createdAt)}
+                      </p>
+                    </div>
+                    <a
+                      href={`/api/customer/reports/${report.id}?token=${encodeURIComponent(token)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-300/70 bg-sky-50 px-3 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Download PDF
+                    </a>
+                  </article>
+                ),
+              )
             ) : (
               <div className="rounded-lg border border-dashed border-white/70 bg-white/45 px-4 py-8 text-center text-sm font-medium text-slate-500 backdrop-blur">
                 No reports yet.

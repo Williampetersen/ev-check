@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { blogPosts } from "@/data/blog-posts";
 import { siteUrl } from "@/lib/seo";
 
 type SitemapEntry = {
@@ -62,6 +63,12 @@ const routes: SitemapEntry[] = [
     lastModified: lastMonth,
   },
   {
+    path: "/blog",
+    changeFrequency: "weekly",
+    priority: 0.7,
+    lastModified: today,
+  },
+  {
     path: "/cookiepolitik",
     changeFrequency: "yearly",
     priority: 0.2,
@@ -69,8 +76,15 @@ const routes: SitemapEntry[] = [
   },
 ];
 
+const blogRoutes: SitemapEntry[] = blogPosts.map((post) => ({
+  path: `/blog/${post.slug}`,
+  changeFrequency: "monthly",
+  priority: 0.6,
+  lastModified: new Date(post.dateModified),
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return routes.map((route) => ({
+  return [...routes, ...blogRoutes].map((route) => ({
     url: `${siteUrl}${route.path}`,
     lastModified: route.lastModified,
     changeFrequency: route.changeFrequency,

@@ -51,6 +51,7 @@ export const navItems = [
 
 const footerLinks = [
   ...navItems,
+  { href: "/blog", label: "Blog" },
   { href: "/om-ev-check", label: "Om EV-Check" },
   { href: "/hvad-vores-kunder-siger", label: "Kunder" },
 ];

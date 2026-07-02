@@ -213,3 +213,64 @@ export function buildFaqJsonLd(
     })),
   };
 }
+
+export const blogSeoKeywords = [
+  "batteritest elbil blog",
+  "brugt elbil batteri guide",
+  "SoH elbil forklaret",
+  "AVILOO batteritest",
+  "batterirapport elbil",
+  "batterigaranti elbil",
+  "elbil batteri levetid",
+  "test batteri før køb af elbil",
+];
+
+export function buildBlogPostingJsonLd(post: {
+  slug: string;
+  title: string;
+  metaDescription: string;
+  image: { src: string; alt: string };
+  datePublished: string;
+  dateModified: string;
+  keywords: string[];
+}) {
+  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": `${postUrl}#article`,
+    mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+    headline: post.title,
+    description: post.metaDescription,
+    image: `${siteUrl}${post.image.src}`,
+    url: postUrl,
+    datePublished: post.datePublished,
+    dateModified: post.dateModified,
+    inLanguage: "da-DK",
+    keywords: post.keywords.join(", "),
+    author: { "@id": `${siteUrl}#business` },
+    publisher: { "@id": `${siteUrl}#business` },
+  };
+}
+
+export function buildBlogJsonLd(
+  posts: Array<{ slug: string; title: string; metaDescription: string }>,
+) {
+  const blogUrl = `${siteUrl}/blog`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": `${blogUrl}#blog`,
+    url: blogUrl,
+    name: "EV-Check.dk Blog",
+    inLanguage: "da-DK",
+    publisher: { "@id": `${siteUrl}#business` },
+    blogPost: posts.map((post) => ({
+      "@type": "BlogPosting",
+      "@id": `${siteUrl}/blog/${post.slug}#article`,
+      headline: post.title,
+      description: post.metaDescription,
+      url: `${siteUrl}/blog/${post.slug}`,
+    })),
+  };
+}

@@ -2,13 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   normalizeReportPaymentStatus,
-  saveReportForCustomer,
+  updateReportPaymentStatus,
 } from "@/lib/server/reports";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const session = verifySessionToken(
     (await cookies()).get(ADMIN_COOKIE_NAME)?.value,
     "admin",
@@ -17,29 +20,20 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/admin/login", request.url), 303);
   }
 
+  const { id } = await params;
   const formData = await request.formData();
-  const customerId = String(formData.get("customer_id") || "").trim();
-  const title = String(formData.get("title") || "").trim();
-  const file = formData.get("file");
   const paymentStatus = normalizeReportPaymentStatus(
     formData.get("payment_status"),
   );
 
-  if (!customerId || !(file instanceof File)) {
-    return NextResponse.redirect(
-      new URL("/admin?view=reports&error=1", request.url),
-      303,
-    );
-  }
-
   try {
-    await saveReportForCustomer({ customerId, title, file, paymentStatus });
+    await updateReportPaymentStatus(id, paymentStatus);
     return NextResponse.redirect(
       new URL("/admin?view=reports&saved=report", request.url),
       303,
     );
   } catch (error) {
-    console.error("Failed to save customer report", error);
+    console.error("Failed to update report payment status", error);
     return NextResponse.redirect(
       new URL("/admin?view=reports&error=1", request.url),
       303,

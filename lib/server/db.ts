@@ -283,9 +283,15 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           file_name TEXT NOT NULL DEFAULT '',
           file_size INTEGER NOT NULL DEFAULT 0,
           pdf_data BYTEA NOT NULL,
+          payment_status TEXT NOT NULL DEFAULT 'paid',
           sent_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+      `;
+
+      await sql`
+        ALTER TABLE customer_reports
+          ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'paid';
       `;
 
       await sql`

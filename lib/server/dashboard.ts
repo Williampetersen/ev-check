@@ -120,7 +120,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         LIMIT 80
       `,
       sql<any[]>`
-        SELECT id, customer_id, title, file_name, file_size, sent_at, created_at
+        SELECT id, customer_id, title, file_name, file_size, payment_status, sent_at, created_at
         FROM customer_reports
         ORDER BY created_at DESC
       `,
@@ -215,6 +215,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       title: row.title || "",
       fileName: row.file_name || "",
       fileSize: Number(row.file_size || 0),
+      paymentStatus: row.payment_status === "unpaid" ? "unpaid" : "paid",
       sentAt: row.sent_at ? new Date(row.sent_at).toISOString().slice(0, 10) : "",
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
     }));

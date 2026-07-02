@@ -15,6 +15,18 @@ med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller f
 - Om EV-Check.dk: https://evcheck.dk/om-ev-check
 - Kunder og anmeldelser: https://evcheck.dk/hvad-vores-kunder-siger
 - Kontakt: https://evcheck.dk/kontakt
+- Blog: https://evcheck.dk/blog
+
+## Blogartikler
+
+- Skal du købe en brugt elbil? Test batteriet først: https://evcheck.dk/blog/test-batteriet-foer-du-koeber-brugt-elbil
+  (Hvorfor batteriet er bilens dyreste komponent, hvad SoH betyder, hvordan SoH påvirker rækkevidde, hvad et batteriskift koster, og de fejl folk oftest laver ved køb af brugt elbil.)
+- Hvad er en AVILOO-batteritest? Flash Test vs. Premium Test: https://evcheck.dk/blog/aviloo-batteritest-flash-og-premium-test
+  (Forklaring af AVILOO, hvorfor bilens egen rækkevidde ikke er nok, hvad testen kontrollerer, forskellen på Flash Test og Premium Test, og hvad der kan slide på et elbilbatteri.)
+- Sådan læser du batterirapporten, før du køber en brugt elbil: https://evcheck.dk/blog/laes-batterirapporten-foer-du-koeber-elbil
+  (Hvad man skal spørge sælger om, hvordan batterigaranti fungerer, hvorfor batteritest er vigtig ved privat handel, og hvordan en rapport bruges til prisforhandling.)
+- EV-Check: Mobil batteritest af elbil på Sjælland: https://evcheck.dk/blog/ev-check-mobil-batteritest-sjaelland
+  (EV-Checks rolle, hvem der bør få testet batteriet, hvilke bilmærker der kan testes, og hvad man får i en batteritest hos EV-Check.)
 
 ## Servicefakta
 

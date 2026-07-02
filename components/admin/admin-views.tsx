@@ -36,13 +36,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { AdminTabs, type AdminTabItem } from "@/components/admin/admin-tabs";
 import { BookingTrendChart } from "@/components/admin/booking-trend-chart";
 import { KpiCard } from "@/components/admin/kpi-card";
-import { PaymentBadge, StatusBadge } from "@/components/admin/status-badge";
+import {
+  PaymentBadge,
+  ReportPaymentBadge,
+  StatusBadge,
+} from "@/components/admin/status-badge";
 import {
   formatPrice,
   formatShortDate,
   invoiceLabels,
   MAX_CUSTOMER_REPORTS,
   paymentLabels,
+  reportPaymentLabels,
   statusLabels,
   type AdminDashboardData,
   type Appointment,
@@ -50,6 +55,7 @@ import {
   type Customer,
   type CustomerReport,
   type EmailLog,
+  type ReportPaymentStatus,
 } from "@/lib/ev-domain";
 import { type BookingService } from "@/lib/server/booking-system";
 import { SUPPORTED_TIMEZONES, nowLabelInTimeZone } from "@/lib/server/timezone";
@@ -1688,7 +1694,8 @@ function CustomerReportCard({
                   {report.sentAt ? "Sent to customer" : "Not sent"}
                 </p>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <ReportPaymentBadge status={report.paymentStatus} />
                 <a
                   className="inline-flex h-8 items-center rounded-lg border border-sky-200 bg-white/70 px-3 text-xs font-bold text-sky-700 shadow-sm shadow-slate-900/5 transition hover:border-sky-400 hover:bg-sky-50"
                   href={`/api/admin/reports/${report.id}`}
@@ -1697,6 +1704,26 @@ function CustomerReportCard({
                 >
                   View
                 </a>
+                <form
+                  action={`/api/admin/reports/${report.id}/payment-status`}
+                  method="POST"
+                >
+                  <input
+                    type="hidden"
+                    name="payment_status"
+                    value={report.paymentStatus === "paid" ? "unpaid" : "paid"}
+                  />
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={!databaseConfigured}
+                  >
+                    {report.paymentStatus === "paid"
+                      ? "Mark unpaid"
+                      : "Mark paid"}
+                  </Button>
+                </form>
                 <form
                   action={`/api/admin/reports/${report.id}/send`}
                   method="POST"
@@ -1743,6 +1770,23 @@ function CustomerReportCard({
                 required
                 className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
               />
+            </Field>
+            <Field label="Payment status">
+              <select
+                name="payment_status"
+                defaultValue="paid"
+                className={adminSelectClass}
+              >
+                {Object.entries(reportPaymentLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs font-normal text-slate-500">
+                Unpaid reports stay visible but locked in the customer
+                dashboard until you mark them as paid.
+              </span>
             </Field>
             <Button
               type="submit"

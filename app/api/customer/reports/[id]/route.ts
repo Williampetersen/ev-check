@@ -32,16 +32,26 @@ export async function GET(
     return NextResponse.json({ error: "Ikke godkendt." }, { status: 401 });
   }
 
-  const ownsReport = portal.reports.some((item) => item.id === id);
-  if (!ownsReport) {
+  const ownedReport = portal.reports.find((item) => item.id === id);
+  if (!ownedReport) {
     return NextResponse.json(
       { error: "Rapporten blev ikke fundet." },
       { status: 404 },
     );
   }
 
+  if (ownedReport.paymentStatus === "unpaid") {
+    return NextResponse.json(
+      {
+        error:
+          "Betaling er ikke modtaget endnu. Betal fakturaen for at se og downloade din rapport.",
+      },
+      { status: 402 },
+    );
+  }
+
   const report = await getReportPdf(id);
-  if (!report) {
+  if (!report || report.paymentStatus === "unpaid") {
     return NextResponse.json(
       { error: "Rapporten blev ikke fundet." },
       { status: 404 },
