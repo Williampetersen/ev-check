@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteUrl}/book-tid` },
 };
 
+// Always read live settings/services/schedule from the database instead of a
+// build-time snapshot, so admin dashboard changes show up immediately.
+export const dynamic = "force-dynamic";
+
 export default async function BookPage() {
   const config = await getBookingConfig();
 
