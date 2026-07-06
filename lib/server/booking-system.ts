@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import {
   defaultSettings,
+  normalizeWeeklySchedule,
   OTHER_MODEL_SUFFIX,
   type Appointment,
   type AppointmentStatus,
@@ -221,6 +222,21 @@ function normalizeStatus(value: string): AppointmentStatus {
 }
 
 function normalizeSettings(row: any): DashboardSettings {
+  const startHour = numberValue(row?.start_hour, defaultSettings.startHour);
+  const endHour = numberValue(row?.end_hour, defaultSettings.endHour);
+  const legacyWorkingDays =
+    Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
+      ? row.working_days_json
+          .map((value: unknown) => Number(value))
+          .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+      : defaultSettings.workingDays;
+  const weeklySchedule = normalizeWeeklySchedule(
+    row?.weekly_schedule_json,
+    startHour,
+    endHour,
+    legacyWorkingDays,
+  );
+
   return {
     companyName: sanitize(row?.company_name) || defaultSettings.companyName,
     supportEmail: sanitize(row?.support_email) || defaultSettings.supportEmail,
@@ -234,15 +250,11 @@ function normalizeSettings(row: any): DashboardSettings {
       row?.booking_enabled ?? defaultSettings.bookingEnabled,
     ),
     timezone: resolveTimeZone(row?.timezone ?? defaultSettings.timezone),
-    startHour: numberValue(row?.start_hour, defaultSettings.startHour),
-    endHour: numberValue(row?.end_hour, defaultSettings.endHour),
+    startHour,
+    endHour,
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
-    workingDays:
-      Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
-        ? row.working_days_json
-            .map((value: unknown) => Number(value))
-            .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
-        : defaultSettings.workingDays,
+    workingDays: weeklySchedule.filter((day) => day.enabled).map((day) => day.day),
+    weeklySchedule,
     serviceAreas: Array.isArray(row?.service_areas_json)
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
@@ -754,8 +766,6 @@ export async function getAvailableSlots(input: {
     60,
   );
   const requestedBufferAfter = minutesValue(selectedService.bufferAfterMinutes);
-  const start = config.settings.startHour * 60;
-  const end = config.settings.endHour * 60;
   const interval = Math.max(15, config.settings.slotMinutes);
   const [selectedYear, selectedMonth, selectedDay] = input.date
     .split("-")
@@ -764,7 +774,12 @@ export async function getAvailableSlots(input: {
     Date.UTC(selectedYear, selectedMonth - 1, selectedDay),
   ).getUTCDay();
 
-  if (!config.settings.workingDays.includes(weekday)) return [];
+  const daySchedule = config.settings.weeklySchedule.find(
+    (entry) => entry.day === weekday,
+  );
+  if (!daySchedule || !daySchedule.enabled) return [];
+  const start = timeToMinutes(daySchedule.startTime);
+  const end = timeToMinutes(daySchedule.endTime);
   if (input.date < config.minDate || input.date > config.maxDate) return [];
 
   // Live cutoff: a slot today must still be in the future in the configured

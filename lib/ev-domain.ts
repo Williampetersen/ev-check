@@ -97,6 +97,16 @@ export type DashboardUser = {
   workingArea: string;
 };
 
+/** Per-day opening hours, JS Date.getDay() convention (0 = Sunday … 6 = Saturday). */
+export type WeeklyScheduleDay = {
+  day: number;
+  enabled: boolean;
+  /** "HH:MM" 24h time */
+  startTime: string;
+  /** "HH:MM" 24h time */
+  endTime: string;
+};
+
 export type DashboardSettings = {
   companyName: string;
   supportEmail: string;
@@ -107,8 +117,10 @@ export type DashboardSettings = {
   startHour: number;
   endHour: number;
   slotMinutes: number;
-  /** Days the booking system accepts appointments on, JS Date.getDay() convention (0 = Sunday … 6 = Saturday). */
+  /** Days the booking system accepts appointments on, derived from weeklySchedule's enabled days. */
   workingDays: number[];
+  /** Opening hours for each day of the week, individually editable and toggleable. */
+  weeklySchedule: WeeklyScheduleDay[];
   serviceAreas: string[];
   services: Array<{ id: string; label: string; price: number; durationMinutes: number }>;
   emailAutomation: {
@@ -167,6 +179,64 @@ export const reportPaymentLabels: Record<ReportPaymentStatus, string> = {
   unpaid: "Unpaid",
 };
 
+export function isValidTimeString(value: unknown): value is string {
+  return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function formatHourAsTime(hour: number) {
+  const clamped = Math.min(23, Math.max(0, Math.round(hour)));
+  return `${String(clamped).padStart(2, "0")}:00`;
+}
+
+export function buildDefaultWeeklySchedule(
+  startHour: number,
+  endHour: number,
+  workingDays: number[],
+): WeeklyScheduleDay[] {
+  const startTime = formatHourAsTime(startHour);
+  const endTime = formatHourAsTime(endHour);
+  return [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+    day,
+    enabled: workingDays.includes(day),
+    startTime,
+    endTime,
+  }));
+}
+
+/** Parses a stored weekly schedule, filling in any missing/invalid days from the legacy start/end hour + working days settings. */
+export function normalizeWeeklySchedule(
+  value: unknown,
+  fallbackStartHour: number,
+  fallbackEndHour: number,
+  fallbackWorkingDays: number[],
+): WeeklyScheduleDay[] {
+  const fallback = buildDefaultWeeklySchedule(
+    fallbackStartHour,
+    fallbackEndHour,
+    fallbackWorkingDays,
+  );
+  if (!Array.isArray(value)) return fallback;
+
+  const byDay = new Map<number, WeeklyScheduleDay>();
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") continue;
+    const entry = raw as Record<string, unknown>;
+    const day = Number(entry.day);
+    if (!Number.isInteger(day) || day < 0 || day > 6) continue;
+    byDay.set(day, {
+      day,
+      enabled: Boolean(entry.enabled),
+      startTime: isValidTimeString(entry.startTime)
+        ? entry.startTime
+        : fallback[day].startTime,
+      endTime: isValidTimeString(entry.endTime)
+        ? entry.endTime
+        : fallback[day].endTime,
+    });
+  }
+  return fallback.map((day) => byDay.get(day.day) ?? day);
+}
+
 export const defaultSettings: DashboardSettings = {
   companyName: "EV-Check.dk",
   supportEmail: "info@ev-check.dk",
@@ -178,6 +248,7 @@ export const defaultSettings: DashboardSettings = {
   endHour: 18,
   slotMinutes: 15,
   workingDays: [0, 1, 2, 3, 4, 5, 6],
+  weeklySchedule: buildDefaultWeeklySchedule(9, 18, [0, 1, 2, 3, 4, 5, 6]),
   serviceAreas: ["København", "Nordsjælland", "Roskilde", "Køge", "Hele Sjælland"],
   services: [
     { id: "battery-health", label: "Batteritest af elbil", price: 1300, durationMinutes: 15 },

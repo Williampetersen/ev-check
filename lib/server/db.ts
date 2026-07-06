@@ -185,7 +185,8 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
       await sql`
         ALTER TABLE dashboard_settings
           ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Copenhagen',
-          ADD COLUMN IF NOT EXISTS working_days_json JSONB NOT NULL DEFAULT '[0,1,2,3,4,5,6]'::jsonb;
+          ADD COLUMN IF NOT EXISTS working_days_json JSONB NOT NULL DEFAULT '[0,1,2,3,4,5,6]'::jsonb,
+          ADD COLUMN IF NOT EXISTS weekly_schedule_json JSONB NOT NULL DEFAULT '[]'::jsonb;
       `;
 
       await sql`

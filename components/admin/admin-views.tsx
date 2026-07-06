@@ -2099,30 +2099,6 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
             </Field>
           </div>
 
-          <div className="glass-card rounded-lg p-4">
-            <p className="font-semibold text-slate-950">Opening days</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Days customers can book a slot on. Unchecked days are closed
-              every week, including in future months.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-              {weekdayOptions.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex min-h-11 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur"
-                >
-                  <input
-                    name="working_days"
-                    type="checkbox"
-                    value={option.value}
-                    defaultChecked={settings.workingDays.includes(option.value)}
-                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
         </FormTabPanel>
 
         <FormTabPanel active={activeTab === "areas"}>
@@ -2191,7 +2167,118 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
         </Button>
         </form>
       )}
+
+      {activeTab === "schedule" ? (
+        <WeeklyScheduleSettings dashboard={dashboard} />
+      ) : null}
     </Panel>
+  );
+}
+
+function WeeklyScheduleSettings({ dashboard }: { dashboard: AdminDashboardData }) {
+  const scheduleByDay = new Map(
+    dashboard.settings.weeklySchedule.map((entry) => [entry.day, entry]),
+  );
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+
+  return (
+    <div className="glass-card mt-5 rounded-lg p-4">
+      <p className="font-semibold text-slate-950">General Weekly Schedule</p>
+      <p className="mt-1 text-sm text-slate-500">
+        Set the opening hours for each day of the week. Toggle a day off to
+        close it every week, including in future months.
+      </p>
+      <form
+        action="/api/admin/weekly-schedule"
+        method="POST"
+        className="mt-3 grid gap-1"
+      >
+        {weekdayOptions.map((option) => {
+          const entry = scheduleByDay.get(option.value) ?? {
+            day: option.value,
+            enabled: true,
+            startTime: "08:00",
+            endTime: "22:00",
+          };
+          const isEditing = editingDay === option.value;
+          return (
+            <div
+              key={option.value}
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-white/60 py-3 last:border-b-0"
+            >
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  name={`schedule_enabled_${option.value}`}
+                  defaultChecked={entry.enabled}
+                  className="peer sr-only"
+                />
+                <span className="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors duration-200 after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:duration-200 peer-checked:bg-sky-500 peer-checked:after:translate-x-5" />
+                <span className="text-sm font-semibold text-slate-700">
+                  {option.label}
+                </span>
+              </label>
+
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <>
+                    <input
+                      key={`start-${option.value}-edit`}
+                      type="time"
+                      name={`schedule_start_${option.value}`}
+                      defaultValue={entry.startTime}
+                      className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm text-slate-700 outline-none backdrop-blur focus:border-sky-400"
+                    />
+                    <span className="text-slate-400">-</span>
+                    <input
+                      key={`end-${option.value}-edit`}
+                      type="time"
+                      name={`schedule_end_${option.value}`}
+                      defaultValue={entry.endTime}
+                      className="h-9 rounded-lg border border-white/70 bg-white/70 px-2 text-sm text-slate-700 outline-none backdrop-blur focus:border-sky-400"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-semibold text-slate-500">
+                      {entry.startTime}-{entry.endTime}
+                    </span>
+                    <input
+                      type="hidden"
+                      name={`schedule_start_${option.value}`}
+                      defaultValue={entry.startTime}
+                    />
+                    <input
+                      type="hidden"
+                      name={`schedule_end_${option.value}`}
+                      defaultValue={entry.endTime}
+                    />
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingDay(isEditing ? null : option.value)
+                  }
+                  className="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50 hover:text-sky-700"
+                  aria-label={`Edit ${option.label} hours`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+        <Button
+          type="submit"
+          disabled={!dashboard.databaseConfigured}
+          className="mt-3 w-full sm:w-fit sm:justify-self-end"
+        >
+          Save Weekly Schedule
+        </Button>
+      </form>
+    </div>
   );
 }
 

@@ -7,6 +7,8 @@ import {
   demoEmailLogs,
   demoReports,
   demoUsers,
+  isValidTimeString,
+  normalizeWeeklySchedule,
   type AdminDashboardData,
   type Appointment,
   type AppointmentStatus,
@@ -41,6 +43,21 @@ function normalizeStatus(value: string): AppointmentStatus {
 }
 
 function normalizeSettings(row: any): DashboardSettings {
+  const startHour = numberValue(row?.start_hour, defaultSettings.startHour);
+  const endHour = numberValue(row?.end_hour, defaultSettings.endHour);
+  const legacyWorkingDays =
+    Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
+      ? row.working_days_json
+          .map((value: unknown) => Number(value))
+          .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+      : defaultSettings.workingDays;
+  const weeklySchedule = normalizeWeeklySchedule(
+    row?.weekly_schedule_json,
+    startHour,
+    endHour,
+    legacyWorkingDays,
+  );
+
   return {
     companyName: text(row?.company_name, defaultSettings.companyName),
     supportEmail: text(row?.support_email, defaultSettings.supportEmail),
@@ -50,15 +67,11 @@ function normalizeSettings(row: any): DashboardSettings {
     ),
     bookingEnabled: Boolean(row?.booking_enabled ?? defaultSettings.bookingEnabled),
     timezone: resolveTimeZone(row?.timezone ?? defaultSettings.timezone),
-    startHour: numberValue(row?.start_hour, defaultSettings.startHour),
-    endHour: numberValue(row?.end_hour, defaultSettings.endHour),
+    startHour,
+    endHour,
     slotMinutes: numberValue(row?.slot_minutes, defaultSettings.slotMinutes),
-    workingDays:
-      Array.isArray(row?.working_days_json) && row.working_days_json.length > 0
-        ? row.working_days_json
-            .map((value: unknown) => Number(value))
-            .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
-        : defaultSettings.workingDays,
+    workingDays: weeklySchedule.filter((day) => day.enabled).map((day) => day.day),
+    weeklySchedule,
     serviceAreas: Array.isArray(row?.service_areas_json)
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
@@ -441,12 +454,6 @@ export async function saveDashboardSettings(formData: FormData) {
     startHour: numberValue(formData.get("start_hour"), 8),
     endHour: numberValue(formData.get("end_hour"), 18),
     slotMinutes: numberValue(formData.get("slot_minutes"), 60),
-    workingDays: formData.getAll("working_days").length > 0
-      ? formData
-          .getAll("working_days")
-          .map((value) => Number(value))
-          .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
-      : defaultSettings.workingDays,
     serviceAreas: text(formData.get("service_areas"), "")
       .split(/[\n,]+/)
       .map((item) => item.trim())
@@ -464,13 +471,13 @@ export async function saveDashboardSettings(formData: FormData) {
   await sql`
     INSERT INTO dashboard_settings (
       settings_key, company_name, support_email, admin_notify_email, default_appointment_status,
-      booking_enabled, timezone, start_hour, end_hour, slot_minutes, working_days_json, service_areas_json, services_json,
+      booking_enabled, timezone, start_hour, end_hour, slot_minutes, service_areas_json, services_json,
       email_automation_json, updated_at
     )
     VALUES (
       'default', ${settings.companyName}, ${settings.supportEmail}, ${settings.adminNotifyEmail},
       ${settings.defaultAppointmentStatus}, ${settings.bookingEnabled}, ${settings.timezone},
-      ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes}, ${sql.json(settings.workingDays)},
+      ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes},
       ${sql.json(settings.serviceAreas)},
       ${sql.json(settings.services)}, ${sql.json(settings.emailAutomation)}, NOW()
     )
@@ -485,10 +492,35 @@ export async function saveDashboardSettings(formData: FormData) {
       start_hour = EXCLUDED.start_hour,
       end_hour = EXCLUDED.end_hour,
       slot_minutes = EXCLUDED.slot_minutes,
-      working_days_json = EXCLUDED.working_days_json,
       service_areas_json = EXCLUDED.service_areas_json,
       services_json = EXCLUDED.services_json,
       email_automation_json = EXCLUDED.email_automation_json,
+      updated_at = NOW()
+  `;
+}
+
+export async function saveWeeklySchedule(formData: FormData) {
+  if (!isDatabaseConfigured()) return;
+  await ensureSchema({ force: true });
+  const sql = getSql();
+
+  const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => {
+    const start = formData.get(`schedule_start_${day}`);
+    const end = formData.get(`schedule_end_${day}`);
+    return {
+      day,
+      enabled: Boolean(formData.get(`schedule_enabled_${day}`)),
+      startTime: isValidTimeString(start) ? start : "08:00",
+      endTime: isValidTimeString(end) ? end : "22:00",
+    };
+  });
+
+  await sql`
+    INSERT INTO dashboard_settings (settings_key, weekly_schedule_json, updated_at)
+    VALUES ('default', ${sql.json(schedule)}, NOW())
+    ON CONFLICT (settings_key)
+    DO UPDATE SET
+      weekly_schedule_json = EXCLUDED.weekly_schedule_json,
       updated_at = NOW()
   `;
 }
