@@ -45,6 +45,7 @@ export { siteUrl };
 export const navItems = [
   { href: "/", label: "Forside" },
   { href: "/batteritest-elbil", label: "Batteritest" },
+  { href: "/aviloo", label: "AVILOO" },
   { href: "/erhverv", label: "Erhverv" },
   { href: "/privat", label: "Privat" },
   { href: "/kontakt", label: "Kontakt" },

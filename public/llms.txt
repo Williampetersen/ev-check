@@ -8,6 +8,7 @@ med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller f
 
 - Forside: https://evcheck.dk/
 - Batteritest af elbil (service detaljer): https://evcheck.dk/batteritest-elbil
+- AVILOO i Danmark: https://evcheck.dk/aviloo
 - Batteritest for privatkunder: https://evcheck.dk/privat
 - Batteritest for erhverv og flåder: https://evcheck.dk/erhverv
 - Book tid (privat booking): https://evcheck.dk/book-tid
@@ -37,6 +38,10 @@ med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller f
 - Rapport: professionel PDF-rapport, leveres samme dag
 - Målepunkter: SoH (State of Health), SoC, BMS-status, cellebalance, temperaturer og fejlkoder
 - Booking: 100% online, mobil test — vi kører ud til kunden
+- AVILOO-side: forklarer AVILOO i Danmark, AVILOO i København/Copenhagen,
+  AVILOO-baseret batteritest, forskellen på BMS-aflæsning og uafhængig
+  batteridiagnose, batteritest før køb af brugt elbil og hvordan man booker
+  via EV-Check.dk
 
 ## Hvornår giver en batteritest mening
 

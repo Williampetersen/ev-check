@@ -21,6 +21,12 @@ const routes: SitemapEntry[] = [
     lastModified: today,
   },
   {
+    path: "/aviloo",
+    changeFrequency: "weekly",
+    priority: 0.92,
+    lastModified: today,
+  },
+  {
     path: "/privat",
     changeFrequency: "weekly",
     priority: 0.9,
