@@ -25,7 +25,7 @@ const sections = [
     titleLine2: "hvor den står",
     formula: "15 minutter = Mobil test = Ingen værkstedsbesøg",
     text: "Kort besøg. Klar måling. Ingen værkstedsdag.",
-    image: "/wp/ev-car-danmark-1.png",
+    image: "/batterytest.jpg",
     imageAlt: "Mobil batteritest af elbil med diagnoseudstyr",
     href: "/book-tid",
     cta: "Book tid",
