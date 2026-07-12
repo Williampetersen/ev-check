@@ -6,6 +6,7 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { brandLogoPath, seoKeywords, siteName, siteUrl } from "@/lib/seo";
 
 const META_PIXEL_ID = "901758528938529";
+const GA_MEASUREMENT_ID = "G-JHKG94JKN7";
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -52,6 +53,18 @@ export default async function RootLayout({
           "bg-[#fbfaf5] text-slate-950",
         )}
       >
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
