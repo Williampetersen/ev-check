@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { updateBookingServiceRecord } from "@/lib/server/booking-system";
+import {
+  updateBookingServiceRecord,
+  type ServiceAudience,
+} from "@/lib/server/booking-system";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/server/sessions";
 import { fileToDataUrl } from "@/lib/server/uploads";
 
@@ -8,6 +11,9 @@ const minutesValue = (value: FormDataEntryValue | null, fallback: number) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
 };
+
+const audienceValue = (value: FormDataEntryValue | null): ServiceAudience =>
+  value === "erhverv" || value === "all" ? value : "private";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = verifySessionToken((await cookies()).get(ADMIN_COOKIE_NAME)?.value, "admin");
@@ -35,6 +41,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         .split("\n")
         .map((item) => item.trim())
         .filter(Boolean),
+      audience: audienceValue(formData.get("audience")),
+      priceExcludesVat: Boolean(formData.get("price_excludes_vat")),
     });
 
     return NextResponse.redirect(new URL("/admin?view=services&saved=service", request.url), 303);

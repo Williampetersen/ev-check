@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import { ErhvervBookingFlow } from "@/components/booking/erhverv-booking-flow";
 import { JsonLd, SitePage, siteUrl } from "@/components/site/public-site";
-import { getBookingConfig } from "@/lib/server/booking-system";
+import {
+  filterServicesForAudience,
+  getBookingConfig,
+} from "@/lib/server/booking-system";
 import {
   buildBreadcrumbJsonLd,
   businessJsonLd,
-  erhvervDiscountPercent,
   erhvervServiceJsonLd,
+  erhvervServicePriceExclVat,
 } from "@/lib/seo";
 
 const pageUrl = `${siteUrl}/erhverv/book-tid`;
 
 export const metadata: Metadata = {
-  title: `Book erhvervsbooking – ${erhvervDiscountPercent}% rabat`,
-  description:
-    "Book batteritest til jeres bilflåde online. Tilføj op til 50 biler, vælg ét tidspunkt, og få automatisk 15% erhvervsrabat med CVR-nummer.",
+  title: "Book erhvervsbooking – pris ekskl. moms",
+  description: `Book batteritest til jeres bilflåde online. Tilføj op til 50 biler, vælg ét tidspunkt, og se prisen fra ${erhvervServicePriceExclVat} kr. pr. bil ekskl. moms med CVR-nummer.`,
   alternates: { canonical: pageUrl },
 };
 
@@ -23,7 +25,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ErhvervBookPage() {
-  const config = await getBookingConfig();
+  const fullConfig = await getBookingConfig();
+  const config = {
+    ...fullConfig,
+    services: filterServicesForAudience(fullConfig.services, "erhverv"),
+  };
 
   return (
     <SitePage>
@@ -49,7 +55,7 @@ export default async function ErhvervBookPage() {
               object: config.services.map((service) => ({
                 "@type": "Offer",
                 name: service.title,
-                price: Math.round(service.price * (1 - erhvervDiscountPercent / 100)),
+                price: service.price,
                 priceCurrency: "DKK",
               })),
             },

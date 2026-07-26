@@ -202,7 +202,7 @@ function PrivatHero() {
               href="/erhverv"
               className="font-semibold text-sky-700 underline-offset-4 hover:underline"
             >
-              Se erhvervsrabat og flådebooking her
+              Se priser ekskl. moms og flådebooking her
             </Link>
             .
           </p>

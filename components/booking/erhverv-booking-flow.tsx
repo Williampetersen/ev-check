@@ -5,7 +5,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
-  BadgePercent,
   Building2,
   CalendarCheck,
   Car,
@@ -15,12 +14,18 @@ import {
   MapPin,
   Phone,
   Plus,
+  Receipt,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
 import type { BookingConfig, BookingService } from "@/lib/server/booking-system";
-import { formatPrice, OTHER_MODEL_SUFFIX } from "@/lib/ev-domain";
-import { erhvervDiscountPercent } from "@/lib/seo";
+import {
+  calculateServiceCharge,
+  formatPrice,
+  OTHER_MODEL_SUFFIX,
+  type ServiceChargeBreakdown,
+  type VatSettings,
+} from "@/lib/ev-domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,6 +104,16 @@ function minutesToTimeLabel(totalMinutes: number) {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
 
+/** Per-unit headline price label, honoring the admin's incl./excl. moms display preference. */
+function unitPriceLabel(service: BookingService, vat: VatSettings) {
+  const { unitHeadline, unitHeadlineIncludesVat } = calculateServiceCharge(
+    service,
+    1,
+    vat,
+  );
+  return `${formatPrice(unitHeadline)} ${unitHeadlineIncludesVat ? "inkl. moms" : "ekskl. moms"}`;
+}
+
 const newVehicle = (): ErhvervVehicle => ({
   id: Math.random().toString(36).slice(2),
   brand: "",
@@ -167,13 +182,16 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
   );
   const durationMinutes = Number(selectedService?.durationMinutes || 15);
   const carCount = vehicles.length;
-  const unitPrice = Math.max(
-    0,
-    Math.round(Number(selectedService?.price || 0) * (1 - erhvervDiscountPercent / 100)),
+  const vatSettings = config.settings.vat;
+  const charge = useMemo(
+    () =>
+      calculateServiceCharge(
+        selectedService || { price: 0, priceExcludesVat: false },
+        carCount,
+        vatSettings,
+      ),
+    [selectedService, carCount, vatSettings],
   );
-  const subtotal = Number(selectedService?.price || 0) * carCount;
-  const total = unitPrice * carCount;
-  const savings = subtotal - total;
 
   const calendarDays = useMemo(
     () =>
@@ -350,14 +368,15 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
-                <BadgePercent className="h-5 w-5" />
+                <Receipt className="h-5 w-5" />
               </span>
               <div>
                 <p className="text-lg font-bold leading-tight sm:text-xl">
-                  Spar {erhvervDiscountPercent}% som erhvervskund
+                  Priser for erhverv vises ekskl. moms
                 </p>
                 <p className="mt-0.5 text-sm text-white/85">
-                  Rabatten beregnes automatisk på alle biler i bookingen.
+                  Moms lægges til automatisk, så I altid ser den fulde pris,
+                  før I bekræfter bookingen.
                 </p>
               </div>
             </div>
@@ -399,6 +418,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
                 onUpdateVehicle={updateVehicle}
                 onContinue={() => goToStep(2)}
                 canContinue={step1Valid}
+                vatSettings={vatSettings}
               />
             ) : null}
 
@@ -460,9 +480,8 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
                 customer={customer}
                 vehicles={vehicles}
                 service={selectedService}
-                subtotal={subtotal}
-                savings={savings}
-                total={total}
+                charge={charge}
+                vatPercent={vatSettings.percent}
                 databaseConfigured={config.databaseConfigured}
                 isSubmitting={isSubmitting}
                 submitError={submitError}
@@ -480,9 +499,8 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
             appointmentDate={appointmentDate}
             appointmentTime={appointmentTime}
             blockDurationMinutes={blockDurationMinutes}
-            subtotal={subtotal}
-            savings={savings}
-            total={total}
+            charge={charge}
+            vatPercent={vatSettings.percent}
             className="order-1 hidden lg:order-2 lg:block lg:self-start"
           />
         </div>
@@ -567,6 +585,7 @@ function CarsStep({
   onUpdateVehicle,
   onContinue,
   canContinue,
+  vatSettings,
 }: {
   config: BookingConfig;
   serviceId: string;
@@ -577,7 +596,9 @@ function CarsStep({
   onUpdateVehicle: (id: string, patch: Partial<ErhvervVehicle>) => void;
   onContinue: () => void;
   canContinue: boolean;
+  vatSettings: VatSettings;
 }) {
+  const selectedService = config.services.find((item) => item.id === serviceId);
   return (
     <Card>
       <StepHeading
@@ -605,12 +626,22 @@ function CarsStep({
                 >
                   <span className="block">{service.title}</span>
                   <span className="mt-1 block text-xs font-bold text-sky-700">
-                    {formatPrice(service.price)} pr. bil
+                    {unitPriceLabel(service, vatSettings)} pr. bil
                   </span>
                 </button>
               );
             })}
           </div>
+        </div>
+      ) : selectedService ? (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/60 px-4 py-3">
+          <Receipt className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
+          <p className="text-sm leading-6 text-slate-700">
+            <strong className="text-slate-900">{selectedService.title}</strong>
+            {" · "}
+            {unitPriceLabel(selectedService, vatSettings)} pr. bil. Moms
+            tillægges automatisk, og I ser den fulde pris, før I bekræfter.
+          </p>
         </div>
       ) : null}
 
@@ -928,9 +959,8 @@ function ReviewStep({
   customer,
   vehicles,
   service,
-  subtotal,
-  savings,
-  total,
+  charge,
+  vatPercent,
   databaseConfigured,
   isSubmitting,
   submitError,
@@ -945,9 +975,8 @@ function ReviewStep({
   customer: ErhvervCustomerForm;
   vehicles: ErhvervVehicle[];
   service?: BookingService;
-  subtotal: number;
-  savings: number;
-  total: number;
+  charge: ServiceChargeBreakdown;
+  vatPercent: number;
   databaseConfigured: boolean;
   isSubmitting: boolean;
   submitError: string;
@@ -995,12 +1024,16 @@ function ReviewStep({
             .filter(Boolean)
             .join(", ")}
         />
-        <ReviewRow label="Pris uden rabat" value={formatPrice(subtotal)} />
+        <ReviewRow label="Pris ekskl. moms" value={formatPrice(charge.net)} />
         <ReviewRow
-          label={`Erhvervsrabat (${erhvervDiscountPercent}%)`}
-          value={`-${formatPrice(savings)}`}
+          label={`Moms (${vatPercent}%)`}
+          value={`+${formatPrice(charge.vat)}`}
         />
-        <ReviewRow label="Total" value={formatPrice(total)} highlight />
+        <ReviewRow
+          label="Total (inkl. moms)"
+          value={formatPrice(charge.gross)}
+          highlight
+        />
       </div>
 
       {submitError ? (
@@ -1043,9 +1076,8 @@ function ErhvervSummaryCard({
   appointmentDate,
   appointmentTime,
   blockDurationMinutes,
-  subtotal,
-  savings,
-  total,
+  charge,
+  vatPercent,
   className,
 }: {
   config: BookingConfig;
@@ -1054,9 +1086,8 @@ function ErhvervSummaryCard({
   appointmentDate: string;
   appointmentTime: string;
   blockDurationMinutes: number;
-  subtotal: number;
-  savings: number;
-  total: number;
+  charge: ServiceChargeBreakdown;
+  vatPercent: number;
   className?: string;
 }) {
   const endTime = appointmentTime
@@ -1128,18 +1159,20 @@ function ErhvervSummaryCard({
 
         <div className="mt-4 grid gap-1.5 border-t border-slate-100 pt-4 text-sm">
           <span className="flex items-center justify-between text-slate-500">
-            <span>Pris uden rabat</span>
-            <span>{formatPrice(subtotal)}</span>
+            <span>Pris ekskl. moms</span>
+            <span>{formatPrice(charge.net)}</span>
           </span>
-          <span className="flex items-center justify-between font-semibold text-emerald-600">
-            <span>Erhvervsrabat ({erhvervDiscountPercent}%)</span>
-            <span>-{formatPrice(savings)}</span>
+          <span className="flex items-center justify-between text-slate-500">
+            <span>Moms ({vatPercent}%)</span>
+            <span>+{formatPrice(charge.vat)}</span>
           </span>
         </div>
         <div className="mt-2 flex items-baseline justify-between border-t border-slate-100 pt-3">
-          <span className="text-sm font-semibold text-slate-500">Total</span>
+          <span className="text-sm font-semibold text-slate-500">
+            Total inkl. moms
+          </span>
           <span className="text-xl font-bold text-sky-700">
-            {formatPrice(total)}
+            {formatPrice(charge.gross)}
           </span>
         </div>
       </div>
@@ -1155,7 +1188,10 @@ type ErhvervConfirmation = {
   total: number;
   carCount: number;
   unitPrice: number;
-  discountPercent: number;
+  unitNet: number;
+  netAmount: number;
+  vatAmount: number;
+  vatPercent: number;
   appointmentDate: string;
   appointmentTime: string;
   appointmentEndTime: string;
@@ -1206,11 +1242,19 @@ function ErhvervConfirmationView({
             <ReviewRow label="Faktura" value={confirmation.invoiceNumber} />
           ) : null}
           <ReviewRow
-            label={`Erhvervsrabat (${confirmation.discountPercent}%)`}
-            value={`${formatPrice(confirmation.unitPrice)} pr. bil`}
+            label="Pris pr. bil (ekskl. moms)"
+            value={`${formatPrice(confirmation.unitNet)} pr. bil`}
           />
           <ReviewRow
-            label="Total"
+            label="Pris ekskl. moms"
+            value={formatPrice(confirmation.netAmount)}
+          />
+          <ReviewRow
+            label={`Moms (${confirmation.vatPercent}%)`}
+            value={`+${formatPrice(confirmation.vatAmount)}`}
+          />
+          <ReviewRow
+            label="Total (inkl. moms)"
             value={formatPrice(confirmation.total)}
             highlight
           />

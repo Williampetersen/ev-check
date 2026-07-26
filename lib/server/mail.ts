@@ -628,7 +628,9 @@ export async function sendCustomerErhvervBookingEmail(input: {
   settings: DashboardSettings;
   portalUrl?: string;
   totalPrice: number;
-  discountPercent: number;
+  netAmount: number;
+  vatAmount: number;
+  vatPercent: number;
 }) {
   const supportEmail =
     input.settings.supportEmail || defaultSettings.supportEmail;
@@ -652,8 +654,9 @@ export async function sendCustomerErhvervBookingEmail(input: {
     ["CVR-nummer", input.customer.cvr || ""],
     ["Dato", first?.appointmentDate || ""],
     ...carRows,
-    ["Rabat", `${input.discountPercent}%`],
-    ["Total pris", `${input.totalPrice} DKK`],
+    ["Pris ekskl. moms", `${input.netAmount} DKK`],
+    [`Moms (${input.vatPercent}%)`, `${input.vatAmount} DKK`],
+    ["Total inkl. moms", `${input.totalPrice} DKK`],
     [
       "Adresse",
       [
@@ -686,11 +689,11 @@ export async function sendCustomerErhvervBookingEmail(input: {
       to: input.customer.email,
       replyTo: supportEmail,
       subject,
-      text: `Jeres erhvervsbooking hos EV-Check.dk er modtaget til ${first?.appointmentDate} fra kl. ${first?.appointmentTime}. ${carCount} ${carWord}, total ${input.totalPrice} DKK efter ${input.discountPercent}% erhvervsrabat.`,
+      text: `Jeres erhvervsbooking hos EV-Check.dk er modtaget til ${first?.appointmentDate} fra kl. ${first?.appointmentTime}. ${carCount} ${carWord}, total ${input.totalPrice} DKK inkl. ${input.vatPercent}% moms (${input.netAmount} DKK ekskl. moms).`,
       html: renderMessage({
         title: "Jeres erhvervsbooking er modtaget",
         eyebrow: "Erhvervsbooking",
-        intro: `Tak for jeres booking. Vi har reserveret tid til batteritest af ${carCount} ${carWord}, og I har fået ${input.discountPercent}% erhvervsrabat på prisen.`,
+        intro: `Tak for jeres booking. Vi har reserveret tid til batteritest af ${carCount} ${carWord}. Prisen er ${input.netAmount} DKK ekskl. moms, og ${input.vatPercent}% moms lægges til, så totalprisen er ${input.totalPrice} DKK.`,
         rows,
         settings: input.settings,
         action: input.portalUrl
@@ -731,7 +734,9 @@ export async function sendAdminErhvervBookingEmail(input: {
   appointments: Appointment[];
   settings: DashboardSettings;
   totalPrice: number;
-  discountPercent: number;
+  netAmount: number;
+  vatAmount: number;
+  vatPercent: number;
 }) {
   const recipient =
     input.settings.adminNotifyEmail ||
@@ -775,8 +780,9 @@ export async function sendAdminErhvervBookingEmail(input: {
     ],
     ["Dato", first?.appointmentDate || ""],
     ...carRows,
-    ["Rabat", `${input.discountPercent}%`],
-    ["Total pris", `${input.totalPrice} DKK`],
+    ["Pris ekskl. moms", `${input.netAmount} DKK`],
+    [`Moms (${input.vatPercent}%)`, `${input.vatAmount} DKK`],
+    ["Total inkl. moms", `${input.totalPrice} DKK`],
     ["Besked", input.customer.notes],
   ];
 

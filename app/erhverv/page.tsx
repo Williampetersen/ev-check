@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgePercent,
   Briefcase,
   Building2,
   CalendarCheck,
@@ -14,6 +13,7 @@ import {
   Receipt,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 import {
   ContactSection,
@@ -26,21 +26,30 @@ import {
 } from "@/components/site/public-site";
 import { ButtonLink } from "@/components/ui/button";
 import {
+  calculateServiceCharge,
+  formatPrice,
+  type ServiceChargeBreakdown,
+} from "@/lib/ev-domain";
+import {
+  filterServicesForAudience,
+  getBookingConfig,
+} from "@/lib/server/booking-system";
+import {
   brandLogoUrl,
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
   businessJsonLd,
-  erhvervDiscountPercent,
   erhvervSeoKeywords,
   erhvervServiceJsonLd,
+  erhvervServicePriceExclVat,
   seoKeywords,
   siteUrl,
   websiteJsonLd,
 } from "@/lib/seo";
 
 const pageUrl = `${siteUrl}/erhverv`;
-const pageTitle = `Batteritest af elbil for erhverv – ${erhvervDiscountPercent}% rabat`;
-const pageDescription = `Batteritest af elbil og plug-in hybrid for virksomheder, leasingselskaber og bilforhandlere. Mobil test hos jer, PDF-rapport pr. bil og ${erhvervDiscountPercent}% rabat til erhverv. Bestil tid online i dag.`;
+const pageTitle = "Batteritest af elbil for erhverv – pris ekskl. moms";
+const pageDescription = `Batteritest af elbil og plug-in hybrid for virksomheder, leasingselskaber og bilforhandlere. Mobil test hos jer, PDF-rapport pr. bil og fast pris fra ${erhvervServicePriceExclVat} kr. ekskl. moms. Bestil tid online i dag.`;
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -75,12 +84,12 @@ const erhvervFaqs = [
   {
     question: "Hvem kan booke batteritest som erhvervskund?",
     answer:
-      "Virksomheder, leasingselskaber, bilforhandlere, flådeejere og andre med et gyldigt CVR-nummer kan booke som erhvervskund og få 15% rabat på alle batteritests.",
+      "Virksomheder, leasingselskaber, bilforhandlere, flådeejere og andre med et gyldigt CVR-nummer kan booke som erhvervskund til en fast pris pr. bil.",
   },
   {
-    question: "Hvordan får vi den 15% rabat til erhverv?",
+    question: "Er prisen inkl. eller ekskl. moms?",
     answer:
-      "Opgiv jeres CVR-nummer ved booking eller i kontaktformularen, så bliver erhvervsrabatten på 15% automatisk trukket fra normalprisen på fakturaen.",
+      "Prisen for erhverv vises ekskl. moms. Moms lægges automatisk til, når I booker, så I altid ser den fulde pris, før I bekræfter. Fakturaen viser pris ekskl. moms, moms og totalpris hver for sig.",
   },
   {
     question: "Kan I teste flere biler i flåden samme dag?",
@@ -105,7 +114,7 @@ const erhvervFaqs = [
   {
     question: "Hvordan booker vi som erhvervskund i dag?",
     answer:
-      "Brug vores dedikerede erhvervsbooking online: tilføj alle jeres biler, vælg ét tidspunkt, og udfyld virksomhedens oplysninger med CVR-nummer. Rabatten beregnes automatisk, og I kan også skrive til os på info@ev-check.dk, hvis I foretrækker det.",
+      "Brug vores dedikerede erhvervsbooking online: tilføj alle jeres biler, vælg ét tidspunkt, og udfyld virksomhedens oplysninger med CVR-nummer. Prisen ekskl. moms samt moms og totalpris beregnes automatisk, og I kan også skrive til os på info@ev-check.dk, hvis I foretrækker det.",
   },
   {
     question: "Hvor i landet udfører I erhvervstest?",
@@ -115,7 +124,6 @@ const erhvervFaqs = [
 ];
 
 const heroFacts = [
-  { label: "Erhvervsrabat", value: `${erhvervDiscountPercent}%`, icon: BadgePercent },
   { label: "Faktura", value: "Samlet til CVR", icon: Receipt },
   { label: "Testtid", value: "15 min./bil", icon: Clock },
   { label: "Booking", value: "100% online", icon: CalendarCheck },
@@ -148,7 +156,7 @@ const bookingSteps = [
   {
     step: "1",
     title: "Book online eller skriv til os",
-    text: "Angiv antal biler, ønsket lokation og jeres CVR-nummer, så I automatisk får erhvervsrabatten.",
+    text: "Angiv antal biler, ønsket lokation og jeres CVR-nummer. Prisen ekskl. moms samt moms og totalpris beregnes automatisk.",
   },
   {
     step: "2",
@@ -169,8 +177,8 @@ const bookingSteps = [
 
 const conditions = [
   "Ingen bindingsperiode eller minimumsantal — book én bil eller hele flåden.",
-  `${erhvervDiscountPercent}% rabat på alle batteritests ved booking som erhvervskund med gyldigt CVR-nummer.`,
-  "Normalprisen ses ved booking — erhvervsrabatten fratrækkes automatisk på fakturaen.",
+  "Prisen vises ekskl. moms — moms lægges automatisk til ved booking, så I ser den fulde pris før I bekræfter.",
+  "Fakturaen viser pris ekskl. moms, moms og totalpris hver for sig.",
   "Samlet fakturering til virksomheden med betalingsfrist på 8 dage.",
   "Vi kommer ud til jer — på adressen, depotet eller hvor bilerne holder.",
   "Testen tager ca. 15 minutter pr. bil og kan udføres på flere biler samme dag.",
@@ -178,7 +186,24 @@ const conditions = [
   "Testen åbner ikke batteripakken og påvirker hverken garanti eller bilens drift.",
 ];
 
-export default function ErhvervPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ErhvervPage() {
+  const fullConfig = await getBookingConfig();
+  const erhvervServices = filterServicesForAudience(
+    fullConfig.services,
+    "erhverv",
+  );
+  const service = erhvervServices[0];
+  const vatPercent = fullConfig.settings.vat.percent;
+  const charge = service
+    ? calculateServiceCharge(service, 1, fullConfig.settings.vat)
+    : calculateServiceCharge(
+        { price: erhvervServicePriceExclVat, priceExcludesVat: true },
+        1,
+        fullConfig.settings.vat,
+      );
+
   return (
     <SitePage>
       <JsonLd
@@ -205,12 +230,12 @@ export default function ErhvervPage() {
           },
         ]}
       />
-      <ErhvervHero />
-      <DiscountBanner />
+      <ErhvervHero charge={charge} />
+      <PriceBanner charge={charge} vatPercent={vatPercent} />
       <WhyErhvervSection />
       <DiagnosticDetailsSection />
       <BookingStepsSection />
-      <ConditionsSection />
+      <ConditionsSection charge={charge} vatPercent={vatPercent} />
       <ServiceAreaSection />
       <FaqSection
         eyebrow="FAQ erhverv"
@@ -223,7 +248,16 @@ export default function ErhvervPage() {
   );
 }
 
-function ErhvervHero() {
+function ErhvervHero({ charge }: { charge: ServiceChargeBreakdown }) {
+  const heroFactsWithPrice = [
+    {
+      label: "Fast pris",
+      value: `${formatPrice(charge.unitHeadline)} ${charge.unitHeadlineIncludesVat ? "inkl. moms" : "ekskl. moms"}`,
+      icon: Wallet,
+    },
+    ...heroFacts,
+  ];
+
   return (
     <section className="relative isolate overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
@@ -239,8 +273,8 @@ function ErhvervHero() {
             Få en uvildig batteritest af jeres elbiler og plug-in hybrider med
             EV-Check. Vi kommer ud til virksomheden, leasingselskabet eller
             bilforhandleren og leverer en professionel SoH-rapport pr. bil —
-            med {erhvervDiscountPercent}% rabat til erhvervskunder, når I
-            booker.
+            til en fast pris på {formatPrice(charge.unitNet)} ekskl. moms pr.
+            bil. Moms lægges automatisk til ved booking.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/erhverv/book-tid" className="h-12 px-5">
@@ -260,7 +294,7 @@ function ErhvervHero() {
             .
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-4">
-            {heroFacts.map((fact) => {
+            {heroFactsWithPrice.map((fact) => {
               const Icon = fact.icon;
               return (
                 <div
@@ -301,7 +335,13 @@ function ErhvervHero() {
   );
 }
 
-function DiscountBanner() {
+function PriceBanner({
+  charge,
+  vatPercent,
+}: {
+  charge: ServiceChargeBreakdown;
+  vatPercent: number;
+}) {
   return (
     <section className="px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -317,18 +357,19 @@ function DiscountBanner() {
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
               <p className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-bold tracking-[0.14em] uppercase backdrop-blur">
-                <BadgePercent className="h-4 w-4" />
-                Erhvervstilbud
+                <Receipt className="h-4 w-4" />
+                Pris for erhverv
               </p>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                {erhvervDiscountPercent}% rabat til erhverv, når I booker
+                {formatPrice(charge.unitNet)} ekskl. moms pr. bil
               </h2>
               <p className="mt-3 text-base leading-7 text-white/90">
-                Book jeres første batteritest som virksomhed og få{" "}
-                {erhvervDiscountPercent}% rabat på alle tests — gælder
-                leasingselskaber, bilforhandlere, flådeejere og virksomheder
-                med firmabiler. Opgiv blot jeres CVR-nummer ved booking, så
-                trækkes rabatten automatisk fra på fakturaen.
+                Gælder leasingselskaber, bilforhandlere, flådeejere og
+                virksomheder med firmabiler. Moms ({vatPercent}%) lægges
+                automatisk til ved booking, så I ser den fulde pris —{" "}
+                {formatPrice(charge.unitGross)} inkl. moms pr. bil — før I
+                bekræfter. Fakturaen viser altid pris ekskl. moms, moms og
+                totalpris.
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
@@ -338,7 +379,7 @@ function DiscountBanner() {
                 className="h-12 border-white/40 bg-white px-6 text-sky-700 hover:bg-white/90"
               >
                 <CalendarCheck className="h-4 w-4" />
-                Book med erhvervsrabat
+                Book batteritest
               </ButtonLink>
               <a
                 href="tel:+4571900530"
@@ -430,8 +471,8 @@ function BookingStepsSection() {
               Book batteritest til jeres flåde
             </ButtonLink>
             <p className="mt-3 text-xs text-slate-500">
-              Tilføj alle jeres biler i ét bookingforløb, og se rabatten
-              beregnet automatisk, før I bekræfter.
+              Tilføj alle jeres biler i ét bookingforløb, og se prisen ekskl.
+              moms, moms og totalpris beregnet automatisk, før I bekræfter.
             </p>
           </div>
         </div>
@@ -440,7 +481,13 @@ function BookingStepsSection() {
   );
 }
 
-function ConditionsSection() {
+function ConditionsSection({
+  charge,
+  vatPercent,
+}: {
+  charge: ServiceChargeBreakdown;
+  vatPercent: number;
+}) {
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.75fr_1.25fr] lg:px-8">
@@ -452,17 +499,18 @@ function ConditionsSection() {
           />
           <div className="glass-panel mt-6 rounded-lg p-5">
             <div className="flex items-center gap-2 text-sky-700">
-              <BadgePercent className="h-5 w-5" />
+              <Receipt className="h-5 w-5" />
               <p className="text-sm font-bold tracking-[0.1em] uppercase">
-                Erhvervsrabat
+                Pris pr. bil
               </p>
             </div>
             <p className="mt-3 text-4xl font-bold text-sky-700">
-              {erhvervDiscountPercent}%
+              {formatPrice(charge.unitNet)}
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Rabatten fratrækkes automatisk på fakturaen ved booking med
-              CVR-nummer.
+              Ekskl. moms. Moms ({vatPercent}%) lægges automatisk til ved
+              booking, så totalprisen bliver{" "}
+              {formatPrice(charge.unitGross)} inkl. moms pr. bil.
             </p>
           </div>
         </div>

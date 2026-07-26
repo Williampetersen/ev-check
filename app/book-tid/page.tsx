@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { EvBookingFlow } from "@/components/booking/ev-booking-flow";
 import { JsonLd, SitePage, siteUrl } from "@/components/site/public-site";
-import { getBookingConfig } from "@/lib/server/booking-system";
+import {
+  filterServicesForAudience,
+  getBookingConfig,
+} from "@/lib/server/booking-system";
 import {
   batteryServiceJsonLd,
   buildBreadcrumbJsonLd,
@@ -20,7 +23,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BookPage() {
-  const config = await getBookingConfig();
+  const fullConfig = await getBookingConfig();
+  const config = {
+    ...fullConfig,
+    services: filterServicesForAudience(fullConfig.services, "private"),
+  };
 
   return (
     <SitePage>

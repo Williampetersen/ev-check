@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import {
+  calculateServiceCharge,
   defaultSettings,
   normalizeWeeklySchedule,
   OTHER_MODEL_SUFFIX,
@@ -10,8 +11,9 @@ import {
   type BookingUnavailablePeriod,
   type Customer,
   type DashboardSettings,
+  type VatSettings,
 } from "@/lib/ev-domain";
-import { erhvervDiscountPercent, siteUrl } from "@/lib/seo";
+import { siteUrl } from "@/lib/seo";
 import { ensureSchema, getSql, isDatabaseConfigured } from "@/lib/server/db";
 import { ensureInvoiceRecord } from "@/lib/server/invoices";
 import {
@@ -26,6 +28,9 @@ import {
   todayKeyInTimeZone,
 } from "@/lib/server/timezone";
 
+/** Where a service is offered: on both public booking flows, private only, or erhverv only. */
+export type ServiceAudience = "all" | "private" | "erhverv";
+
 export type BookingService = {
   id: string;
   title: string;
@@ -38,7 +43,20 @@ export type BookingService = {
   price: number;
   imageUrl: string;
   features: string[];
+  /** Which booking flow(s) this service should be offered in. */
+  audience: ServiceAudience;
+  /** When true, `price` excludes moms and moms is added on top at checkout (e.g. Erhverv pricing). */
+  priceExcludesVat: boolean;
 };
+
+/** Services visible to a given public flow: "erhverv"-only services stay off the private flow and vice versa. */
+export function filterServicesForAudience(
+  services: BookingService[],
+  audience: "private" | "erhverv",
+) {
+  const exclude: ServiceAudience = audience === "private" ? "erhverv" : "private";
+  return services.filter((service) => service.audience !== exclude);
+}
 
 export type BookingAddon = {
   id: string;
@@ -261,6 +279,12 @@ function normalizeSettings(row: any): DashboardSettings {
     services: Array.isArray(row?.services_json)
       ? row.services_json
       : defaultSettings.services,
+    vat: {
+      percent: numberValue(row?.vat_percent, defaultSettings.vat.percent),
+      showInclusive: Boolean(
+        row?.vat_show_inclusive ?? defaultSettings.vat.showInclusive,
+      ),
+    },
     emailAutomation:
       row?.email_automation_json &&
       typeof row.email_automation_json === "object"
@@ -294,6 +318,15 @@ function formatDuration(minutes: number) {
   return rest ? `${hours} t. ${rest} min.` : `${hours} t.`;
 }
 
+const sharedBatteryTestFeatures = [
+  "Test af batteriets sundhed (SoH)",
+  "Opladningstilstand (SoC)",
+  "Celle-spændingsbalance",
+  "Temperaturmåling",
+  "BMS- og fejlkodekontrol",
+  "PDF-rapport samme dag",
+];
+
 export const bookingServices: BookingService[] = [
   {
     id: "battery-health",
@@ -307,20 +340,35 @@ export const bookingServices: BookingService[] = [
     badge: "Fast service",
     price: 1300,
     imageUrl: "/wp/ev-car-danmark-1.png",
-    features: [
-      "Test af batteriets sundhed (SoH)",
-      "Opladningstilstand (SoC)",
-      "Celle-spændingsbalance",
-      "Temperaturmåling",
-      "BMS- og fejlkodekontrol",
-      "PDF-rapport samme dag",
-    ],
+    features: sharedBatteryTestFeatures,
+    audience: "private",
+    priceExcludesVat: false,
+  },
+  {
+    id: "battery-health-erhverv",
+    title: "Batteritest af elbil (Erhverv)",
+    description:
+      "Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.",
+    duration: "15 min.",
+    durationMinutes: 15,
+    bufferBeforeMinutes: 60,
+    bufferAfterMinutes: 0,
+    badge: "Erhverv",
+    price: 750,
+    imageUrl: "/wp/ev-car-danmark-1.png",
+    features: sharedBatteryTestFeatures,
+    audience: "erhverv",
+    priceExcludesVat: true,
   },
 ];
 
 export const bookingAddons: BookingAddon[] = [];
 
 function mapServiceRow(row: any): BookingService {
+  const audience: ServiceAudience =
+    row.audience === "erhverv" || row.audience === "all"
+      ? row.audience
+      : "private";
   return {
     id: row.id,
     title: row.title || "",
@@ -333,6 +381,8 @@ function mapServiceRow(row: any): BookingService {
     price: Number(row.price || 0),
     imageUrl: row.image_data || "",
     features: Array.isArray(row.features_json) ? row.features_json : [],
+    audience,
+    priceExcludesVat: Boolean(row.price_excludes_vat),
   };
 }
 
@@ -363,6 +413,8 @@ export async function createBookingServiceRecord(input: {
   price: number;
   imageData: string;
   features: string[];
+  audience: ServiceAudience;
+  priceExcludesVat: boolean;
 }) {
   if (!isDatabaseConfigured()) {
     throw new Error("Bookingsystemet mangler databaseopsætning.");
@@ -376,13 +428,15 @@ export async function createBookingServiceRecord(input: {
   await sql`
     INSERT INTO booking_services (
       id, title, description, badge, duration_minutes, buffer_before_minutes,
-      buffer_after_minutes, price, image_data, features_json, sort_order
+      buffer_after_minutes, price, image_data, features_json, sort_order,
+      audience, price_excludes_vat
     )
     VALUES (
       ${serviceId}, ${input.title}, ${input.description}, ${input.badge},
       ${input.durationMinutes}, ${Math.max(0, input.bufferBeforeMinutes)},
       ${Math.max(0, input.bufferAfterMinutes)}, ${input.price}, ${input.imageData},
-      ${sql.json(input.features)}, ${next_order}
+      ${sql.json(input.features)}, ${next_order},
+      ${input.audience}, ${input.priceExcludesVat}
     )
   `;
   return serviceId;
@@ -400,6 +454,8 @@ export async function updateBookingServiceRecord(
     price: number;
     imageData: string | null;
     features: string[];
+    audience: ServiceAudience;
+    priceExcludesVat: boolean;
   },
 ) {
   if (!isDatabaseConfigured()) {
@@ -417,7 +473,8 @@ export async function updateBookingServiceRecord(
           buffer_before_minutes = ${Math.max(0, input.bufferBeforeMinutes)},
           buffer_after_minutes = ${Math.max(0, input.bufferAfterMinutes)},
           price = ${input.price},
-          features_json = ${sql.json(input.features)}, updated_at = NOW()
+          features_json = ${sql.json(input.features)}, updated_at = NOW(),
+          audience = ${input.audience}, price_excludes_vat = ${input.priceExcludesVat}
       WHERE id = ${serviceId}
     `;
   } else {
@@ -433,7 +490,8 @@ export async function updateBookingServiceRecord(
           image_data = ${input.imageData}, features_json = ${sql.json(
       input.features,
     )},
-          updated_at = NOW()
+          updated_at = NOW(),
+          audience = ${input.audience}, price_excludes_vat = ${input.priceExcludesVat}
       WHERE id = ${serviceId}
     `;
   }
@@ -673,6 +731,7 @@ export function calculateBooking(
   input: { serviceId: string; addonIds: string[] },
   services: BookingService[] = bookingServices,
   availableAddons: BookingAddon[] = bookingAddons,
+  vat: VatSettings = defaultSettings.vat,
 ) {
   const service =
     getBookingService(input.serviceId, services) ||
@@ -683,12 +742,16 @@ export function calculateBooking(
   const durationMinutes =
     service.durationMinutes +
     addons.reduce((sum, addon) => sum + addon.durationMinutes, 0);
+  // Addons have no moms handling of their own (the feature is unused today —
+  // bookingAddons is always []) and are added on top of the service's charge.
+  const charge = calculateServiceCharge(service, 1, vat);
 
   return {
     service,
     addons,
-    subtotal: service.price + addonTotal,
-    total: service.price + addonTotal,
+    charge,
+    subtotal: charge.net + addonTotal,
+    total: charge.gross + addonTotal,
     durationMinutes,
   };
 }
@@ -907,7 +970,8 @@ function validateBooking(
     !validateTime(input.appointmentTime)
   )
     return "Vælg en ledig dato og tid.";
-  if (!getBookingService(input.serviceId, services))
+  const selectedService = getBookingService(input.serviceId, services);
+  if (!selectedService || selectedService.audience === "erhverv")
     return "Vælg en gyldig testpakke.";
   return "";
 }
@@ -940,7 +1004,8 @@ function validateErhvervBooking(
     !validateTime(input.appointmentTime)
   )
     return "Vælg en ledig dato og tid.";
-  if (!getBookingService(input.serviceId, services))
+  const selectedService = getBookingService(input.serviceId, services);
+  if (!selectedService || selectedService.audience === "private")
     return "Vælg en gyldig testpakke.";
   return "";
 }
@@ -969,6 +1034,7 @@ export async function createBooking(input: BookingCreateInput) {
     { serviceId: bookingInput.serviceId, addonIds },
     config.services,
     config.addons,
+    config.settings.vat,
   );
   const slots = await getAvailableSlots({
     date: bookingInput.appointmentDate,
@@ -1043,7 +1109,7 @@ export async function createBooking(input: BookingCreateInput) {
         id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
         appointment_date, appointment_time, appointment_end_time, status, payment_status,
         invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
-        booking_payload_json, source
+        booking_payload_json, source, vat_percent
       )
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
@@ -1060,7 +1126,7 @@ export async function createBooking(input: BookingCreateInput) {
           vehicle: bookingInput.vehicle,
           customer: bookingInput.customer,
           pricing,
-        })}, 'website'
+        })}, 'website', ${config.settings.vat.percent}
       )
       RETURNING id
     `;
@@ -1108,6 +1174,7 @@ export async function createBooking(input: BookingCreateInput) {
     areaName: customer.city,
     adminNotes: customer.notes,
     createdAt: todayKeyInTimeZone(config.settings.timezone),
+    vatPercent: config.settings.vat.percent,
   };
 
   try {
@@ -1181,11 +1248,10 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
   const carCount = bookingInput.vehicles.length;
   // Total block duration for the whole fleet visit (e.g. 5 cars × 15 min = 75 min).
   const totalDurationMinutes = carCount * durationMinutes;
-  const unitPrice = Math.max(
-    0,
-    Math.round(service.price * (1 - erhvervDiscountPercent / 100)),
-  );
-  const totalPrice = unitPrice * carCount;
+  // VAT is computed once on the whole fleet's net subtotal (not per-car then
+  // summed), matching standard invoice practice and avoiding rounding drift.
+  const charge = calculateServiceCharge(service, carCount, config.settings.vat);
+  const totalPrice = charge.gross;
 
   // Check that a single contiguous block of totalDurationMinutes is available
   // at the chosen start time — no per-car slot juggling needed.
@@ -1268,7 +1334,7 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
         id, customer_id, vehicle_label, registration_number, service_label, service_id, report_label,
         appointment_date, appointment_time, appointment_end_time, status, payment_status,
         invoice_status, total, assigned_user, area_name, admin_notes, addons_json,
-        booking_payload_json, source, customer_type, booking_group_id, discount_percent
+        booking_payload_json, source, customer_type, booking_group_id, vat_percent
       )
       VALUES (
         ${appointmentId}, ${finalCustomerId}, ${vehicleLabel},
@@ -1283,11 +1349,13 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
           carCount,
           customer: bookingInput.customer,
           totalDurationMinutes,
-          unitPrice,
-          discountPercent: erhvervDiscountPercent,
+          unitNet: charge.unitNet,
+          unitGross: charge.unitGross,
+          netAmount: charge.net,
+          vatAmount: charge.vat,
           erhverv: true,
         })},
-        'website', 'business', ${groupId}, ${erhvervDiscountPercent}
+        'website', 'business', ${groupId}, ${config.settings.vat.percent}
       )
     `;
 
@@ -1337,7 +1405,7 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     createdAt: todayKeyInTimeZone(config.settings.timezone),
     customerType: "business",
     groupId,
-    discountPercent: erhvervDiscountPercent,
+    vatPercent: config.settings.vat.percent,
   };
 
   try {
@@ -1360,7 +1428,9 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
         settings: config.settings,
         portalUrl: `${siteUrl}/kunde/${created.portalToken}`,
         totalPrice,
-        discountPercent: erhvervDiscountPercent,
+        netAmount: charge.net,
+        vatAmount: charge.vat,
+        vatPercent: config.settings.vat.percent,
       });
     }
   } catch {
@@ -1374,7 +1444,9 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
         appointments: [appointment],
         settings: config.settings,
         totalPrice,
-        discountPercent: erhvervDiscountPercent,
+        netAmount: charge.net,
+        vatAmount: charge.vat,
+        vatPercent: config.settings.vat.percent,
       });
     }
   } catch {
@@ -1388,8 +1460,11 @@ export async function createErhvervBooking(input: ErhvervBookingCreateInput) {
     portalUrl: `/kunde/${created.portalToken}`,
     total: totalPrice,
     carCount,
-    unitPrice,
-    discountPercent: erhvervDiscountPercent,
+    unitPrice: charge.unitGross,
+    unitNet: charge.unitNet,
+    netAmount: charge.net,
+    vatAmount: charge.vat,
+    vatPercent: config.settings.vat.percent,
     appointmentDate: bookingInput.appointmentDate,
     appointmentTime: bookingInput.appointmentTime,
     appointmentEndTime,

@@ -45,8 +45,8 @@ export type Appointment = {
   customerType?: "private" | "business";
   /** Shared id linking the appointments created together in one multi-car erhverv booking. */
   groupId?: string;
-  /** Discount percent applied to this appointment's price (e.g. 15 for erhverv rabat). */
-  discountPercent?: number;
+  /** Moms (Danish VAT) percent captured at booking time, e.g. 25. Stored per-booking so historical invoices stay accurate even if the site-wide rate changes later. */
+  vatPercent?: number;
 };
 
 export type CustomerReport = {
@@ -107,6 +107,18 @@ export type WeeklyScheduleDay = {
   endTime: string;
 };
 
+export type VatSettings = {
+  /** Moms percentage applied to VAT-enabled services, e.g. 25 for standard Danish VAT. */
+  percent: number;
+  /**
+   * When true, VAT-enabled services show their headline/browsing price inclusive of moms.
+   * When false, the headline shows the excl.-moms price instead.
+   * Either way, the booking review step and every invoice always show the full
+   * net / moms / total breakdown, regardless of this setting.
+   */
+  showInclusive: boolean;
+};
+
 export type DashboardSettings = {
   companyName: string;
   supportEmail: string;
@@ -123,6 +135,8 @@ export type DashboardSettings = {
   weeklySchedule: WeeklyScheduleDay[];
   serviceAreas: string[];
   services: Array<{ id: string; label: string; price: number; durationMinutes: number }>;
+  /** Site-wide moms (Danish VAT) configuration for VAT-enabled services. */
+  vat: VatSettings;
   emailAutomation: {
     customerOnCreate: boolean;
     customerOnApprove: boolean;
@@ -253,6 +267,7 @@ export const defaultSettings: DashboardSettings = {
   services: [
     { id: "battery-health", label: "Batteritest af elbil", price: 1300, durationMinutes: 15 },
   ],
+  vat: { percent: 25, showInclusive: false },
   emailAutomation: {
     customerOnCreate: true,
     customerOnApprove: true,
@@ -430,6 +445,77 @@ export function formatPrice(value: number) {
     currency: "DKK",
     maximumFractionDigits: 0,
   }).format(value || 0);
+}
+
+/** Net (excl. moms), moms, and gross (incl. moms) amounts, always whole DKK. */
+export type VatBreakdown = { net: number; vat: number; gross: number };
+
+/** Splits a gross (moms-inclusive) amount into its net + moms parts. */
+export function splitVatFromGross(gross: number, vatPercent: number): VatBreakdown {
+  const net = Math.round(gross / (1 + vatPercent / 100));
+  return { net, vat: gross - net, gross };
+}
+
+/** Adds moms on top of a net (excl.-moms) amount to get the final charged total. */
+export function addVatToNet(net: number, vatPercent: number): VatBreakdown {
+  const vat = Math.round(net * (vatPercent / 100));
+  return { net, vat, gross: net + vat };
+}
+
+export type ServiceChargeBreakdown = VatBreakdown & {
+  /** Per-unit net (excl. moms) price. */
+  unitNet: number;
+  /** Per-unit gross (incl. moms, charged) price. */
+  unitGross: number;
+  /** Per-unit price to show as the headline, honoring the admin's incl./excl. moms display preference. */
+  unitHeadline: number;
+  /** Whether unitHeadline includes moms. */
+  unitHeadlineIncludesVat: boolean;
+};
+
+/**
+ * Computes the net/moms/gross breakdown for `quantity` units of a service.
+ *
+ * When `service.priceExcludesVat` is true, `service.price` is the net (excl.-moms)
+ * base price and moms is added on top — used by VAT-enabled services such as the
+ * Erhverv batteritest. Otherwise `service.price` is treated as the final, already
+ * moms-inclusive price (legacy behaviour), and net/moms are only derived for display.
+ * VAT is always computed once on the quantity subtotal (not per-unit then summed),
+ * matching standard invoice practice and avoiding rounding drift.
+ */
+export function calculateServiceCharge(
+  service: { price: number; priceExcludesVat?: boolean },
+  quantity: number,
+  vat: VatSettings,
+): ServiceChargeBreakdown {
+  const qty = Math.max(1, Math.round(quantity) || 1);
+
+  if (service.priceExcludesVat) {
+    const unitNet = service.price;
+    const { net, vat: vatAmount, gross } = addVatToNet(unitNet * qty, vat.percent);
+    const unitGross = Math.round(gross / qty);
+    return {
+      net,
+      vat: vatAmount,
+      gross,
+      unitNet,
+      unitGross,
+      unitHeadline: vat.showInclusive ? unitGross : unitNet,
+      unitHeadlineIncludesVat: vat.showInclusive,
+    };
+  }
+
+  const unitGross = service.price;
+  const { net, vat: vatAmount, gross } = splitVatFromGross(unitGross * qty, vat.percent);
+  return {
+    net,
+    vat: vatAmount,
+    gross,
+    unitNet: Math.round(net / qty),
+    unitGross,
+    unitHeadline: unitGross,
+    unitHeadlineIncludesVat: true,
+  };
 }
 
 export function formatShortDate(date: string) {

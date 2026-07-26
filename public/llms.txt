@@ -32,7 +32,7 @@ med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller f
 ## Servicefakta
 
 - Pris: 1300 DKK pr. bil (privat, inkl. moms)
-- Erhvervspris: 1105 DKK pr. bil (15% rabat med CVR-nummer)
+- Erhvervspris: 750 DKK pr. bil ekskl. moms (moms tillægges ved booking med CVR-nummer)
 - Testtid: ca. 15 minutter pr. bil
 - Område: København, Storkøbenhavn og store dele af Sjælland
 - Rapport: professionel PDF-rapport, leveres samme dag
@@ -55,7 +55,7 @@ med at forstå højvoltsbatteriets tilstand — før køb, salg, service eller f
 ## Erhverv og flåde
 
 - Målgruppe: virksomheder med firmabiler, leasingselskaber, bilforhandlere og flådeejere
-- Rabat: 15% på alle batteritests ved booking med gyldigt CVR-nummer
+- Pris: 750 DKK pr. bil ekskl. moms — moms lægges automatisk til ved booking med gyldigt CVR-nummer
 - Fakturering: samlet faktura til virksomheden, betalingsfrist 8 dage
 - Kapacitet: op til 50 biler i én erhvervsbooking
 - Booking: 100% online via dedikeret erhvervsbooking, ingen binding eller minimumsantal

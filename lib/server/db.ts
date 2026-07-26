@@ -135,6 +135,7 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
           ADD COLUMN IF NOT EXISTS customer_type TEXT NOT NULL DEFAULT 'private',
           ADD COLUMN IF NOT EXISTS booking_group_id TEXT DEFAULT '',
           ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS vat_percent INTEGER NOT NULL DEFAULT 25,
           ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
       `;
@@ -186,7 +187,9 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
         ALTER TABLE dashboard_settings
           ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Copenhagen',
           ADD COLUMN IF NOT EXISTS working_days_json JSONB NOT NULL DEFAULT '[0,1,2,3,4,5,6]'::jsonb,
-          ADD COLUMN IF NOT EXISTS weekly_schedule_json JSONB NOT NULL DEFAULT '[]'::jsonb;
+          ADD COLUMN IF NOT EXISTS weekly_schedule_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+          ADD COLUMN IF NOT EXISTS vat_percent INTEGER NOT NULL DEFAULT 25,
+          ADD COLUMN IF NOT EXISTS vat_show_inclusive BOOLEAN NOT NULL DEFAULT false;
       `;
 
       await sql`
@@ -327,26 +330,50 @@ export async function ensureSchema(options: { force?: boolean } = {}) {
       await sql`
         ALTER TABLE booking_services
           ADD COLUMN IF NOT EXISTS buffer_before_minutes INTEGER NOT NULL DEFAULT 60,
-          ADD COLUMN IF NOT EXISTS buffer_after_minutes INTEGER NOT NULL DEFAULT 0;
+          ADD COLUMN IF NOT EXISTS buffer_after_minutes INTEGER NOT NULL DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS audience TEXT NOT NULL DEFAULT 'private',
+          ADD COLUMN IF NOT EXISTS price_excludes_vat BOOLEAN NOT NULL DEFAULT false;
       `;
+
+      const batteryHealthFeatures = [
+        "Test af batteriets sundhed (SoH)",
+        "Opladningstilstand (SoC)",
+        "Celle-spændingsbalance",
+        "Temperaturmåling",
+        "BMS- og fejlkodekontrol",
+        "PDF-rapport samme dag",
+      ];
 
       await sql`
         INSERT INTO booking_services (
           id, title, description, badge, duration_minutes, buffer_before_minutes,
-          buffer_after_minutes, price, image_data, features_json, sort_order
+          buffer_after_minutes, price, image_data, features_json, sort_order,
+          audience, price_excludes_vat
         )
         VALUES (
           'battery-health', 'Batteritest af elbil',
           'Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.',
           'Fast service', 15, 60, 0, 1300, '/wp/ev-car-danmark-1.png',
-          ${sql.json([
-            "Test af batteriets sundhed (SoH)",
-            "Opladningstilstand (SoC)",
-            "Celle-spændingsbalance",
-            "Temperaturmåling",
-            "BMS- og fejlkodekontrol",
-            "PDF-rapport samme dag",
-          ])}, 0
+          ${sql.json(batteryHealthFeatures)}, 0,
+          'private', false
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `;
+
+      // Dedicated Erhverv (business) service: same description/image/features as the
+      // private service above, quoted excl. moms — moms is added on top at checkout.
+      await sql`
+        INSERT INTO booking_services (
+          id, title, description, badge, duration_minutes, buffer_before_minutes,
+          buffer_after_minutes, price, image_data, features_json, sort_order,
+          audience, price_excludes_vat
+        )
+        VALUES (
+          'battery-health-erhverv', 'Batteritest af elbil (Erhverv)',
+          'Fast batteritest med gennemgang af bilens batteristatus og en klar rapport.',
+          'Erhverv', 15, 60, 0, 750, '/wp/ev-car-danmark-1.png',
+          ${sql.json(batteryHealthFeatures)}, 1,
+          'erhverv', true
         )
         ON CONFLICT (id) DO NOTHING;
       `;

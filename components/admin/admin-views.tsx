@@ -19,6 +19,7 @@ import {
   ListChecks,
   Mail,
   Pencil,
+  Percent,
   Plus,
   Search,
   Send,
@@ -57,7 +58,7 @@ import {
   type EmailLog,
   type ReportPaymentStatus,
 } from "@/lib/ev-domain";
-import { type BookingService } from "@/lib/server/booking-system";
+import { type BookingService, type ServiceAudience } from "@/lib/server/booking-system";
 import { SUPPORTED_TIMEZONES, nowLabelInTimeZone } from "@/lib/server/timezone";
 import { cn } from "@/lib/utils";
 
@@ -951,6 +952,12 @@ export function ServicesView({
   );
 }
 
+const audienceLabels: Record<ServiceAudience, string> = {
+  all: "Private + Erhverv",
+  private: "Private only",
+  erhverv: "Erhverv only",
+};
+
 function ServiceCardHeader({ service }: { service: BookingService }) {
   return (
     <div className="flex items-start gap-3">
@@ -971,11 +978,15 @@ function ServiceCardHeader({ service }: { service: BookingService }) {
       <div className="min-w-0 flex-1">
         <h3 className="truncate font-bold text-slate-950">{service.title}</h3>
         <p className="text-sm text-slate-500">
-          {formatPrice(service.price)} - {service.duration}
+          {formatPrice(service.price)}
+          {service.priceExcludesVat ? " excl. moms" : ""} - {service.duration}
         </p>
         <p className="mt-1 text-xs font-semibold text-slate-400">
           Buffer {service.bufferBeforeMinutes} min before /{" "}
           {service.bufferAfterMinutes} min after
+        </p>
+        <p className="mt-1 text-xs font-bold tracking-wide text-sky-700 uppercase">
+          {audienceLabels[service.audience]}
         </p>
       </div>
     </div>
@@ -1017,6 +1028,30 @@ function ServiceFields({ service }: { service?: BookingService }) {
             min={0}
             defaultValue={service?.price ?? 0}
           />
+        </Field>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Visible on">
+          <select
+            name="audience"
+            defaultValue={service?.audience ?? "private"}
+            className={adminSelectClass}
+          >
+            <option value="all">Both private and Erhverv</option>
+            <option value="private">Private booking flow only</option>
+            <option value="erhverv">Erhverv booking flow only</option>
+          </select>
+        </Field>
+        <Field label="Moms handling">
+          <label className="flex h-12 items-center gap-2 rounded-lg border border-white/70 bg-white/70 px-3 text-sm font-medium text-slate-700 backdrop-blur sm:h-10">
+            <input
+              name="price_excludes_vat"
+              type="checkbox"
+              defaultChecked={service?.priceExcludesVat ?? false}
+              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            />
+            Price above excludes moms (moms is added at checkout)
+          </label>
         </Field>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
@@ -1909,6 +1944,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
   type SettingsTab =
     | "company"
     | "booking"
+    | "pricing"
     | "schedule"
     | "blocks"
     | "areas"
@@ -1918,7 +1954,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
   return (
     <Panel
       title="Settings"
-      description="Company, appointment, closed time, service area, and email automation settings."
+      description="Company, appointment, pricing, closed time, service area, and email automation settings."
       icon={Settings2}
     >
       <div className="mb-4">
@@ -1927,6 +1963,7 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
           items={[
             { id: "company", label: "Company", icon: Building2 },
             { id: "booking", label: "Booking", icon: CalendarCheck2 },
+            { id: "pricing", label: "Pricing", icon: Percent },
             { id: "schedule", label: "Schedule", icon: CalendarClock },
             {
               id: "blocks",
@@ -2037,6 +2074,44 @@ export function SettingsView({ dashboard }: { dashboard: AdminDashboardData }) {
             />
             Online appointments enabled
           </label>
+        </FormTabPanel>
+
+        <FormTabPanel active={activeTab === "pricing"}>
+          <div className="glass-card rounded-lg p-4">
+            <p className="font-semibold text-slate-950">Moms (VAT)</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Applies to services marked &ldquo;Price above excludes
+              moms&rdquo; in Services — such as the Erhverv batteritest. The
+              booking review step and every invoice always show the full net
+              / moms / total breakdown, no matter what you choose below.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Field label="Moms percentage (%)">
+                <Input
+                  name="vat_percent"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  defaultValue={settings.vat.percent}
+                />
+              </Field>
+              <label className="flex h-12 items-center gap-2 rounded-lg border border-white/60 bg-white/45 px-3 py-2 text-sm font-semibold text-slate-700 backdrop-blur sm:h-10 sm:self-end">
+                <input
+                  name="vat_show_inclusive"
+                  type="checkbox"
+                  defaultChecked={settings.vat.showInclusive}
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                />
+                Show prices inclusive of moms on the site
+              </label>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Checked: the headline price customers browse with already
+              includes moms. Unchecked: the headline price excludes moms, and
+              moms is added on top when they check out.
+            </p>
+          </div>
         </FormTabPanel>
 
         <FormTabPanel active={activeTab === "schedule"}>

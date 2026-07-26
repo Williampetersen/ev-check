@@ -10,7 +10,10 @@ import {
 import { brandLogoPath, companyCvr, contactPhone } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const DANISH_VAT_RATE = 0.25;
+// Falls back to the standard Danish rate for bookings made before vatPercent
+// was captured per-appointment, keeping historical invoices unchanged.
+const vatRateFor = (appointment: Appointment) =>
+  (Number(appointment.vatPercent) || 25) / 100;
 
 export function InvoiceDocument({
   invoiceNumber,
@@ -29,11 +32,14 @@ export function InvoiceDocument({
   ].filter(Boolean);
   const paid = appointment.paymentStatus === "paid";
 
-  // appointment.total is the price including moms (Danish VAT). The excl.
-  // amount is rounded first so the three displayed figures always sum up
-  // exactly, even though formatPrice() itself rounds to whole kroner too.
-  const amountExclVat = Math.round(appointment.total / (1 + DANISH_VAT_RATE));
+  // appointment.total is the price including moms (Danish VAT), at the rate
+  // captured when the booking was made. The excl. amount is rounded first so
+  // the three displayed figures always sum up exactly, even though
+  // formatPrice() itself rounds to whole kroner too.
+  const vatRate = vatRateFor(appointment);
+  const amountExclVat = Math.round(appointment.total / (1 + vatRate));
   const vatAmount = appointment.total - amountExclVat;
+  const vatPercent = Math.round(vatRate * 100);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl [-webkit-print-color-adjust:exact] [print-color-adjust:exact] print:rounded-none print:border-0 print:shadow-none">
@@ -147,7 +153,7 @@ export function InvoiceDocument({
               <span>{formatPrice(amountExclVat)}</span>
             </div>
             <div className="flex items-center justify-between text-sm text-slate-600">
-              <span>Moms ({Math.round(DANISH_VAT_RATE * 100)}%)</span>
+              <span>Moms ({vatPercent}%)</span>
               <span>{formatPrice(vatAmount)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-950">
@@ -172,7 +178,7 @@ export function InvoiceDocument({
           {paymentLabels[appointment.paymentStatus]}
         </span>
         <p className="text-xs text-slate-500">
-          Alle priser er i DKK og inkl. {Math.round(DANISH_VAT_RATE * 100)}%
+          Alle priser er i DKK og inkl. {vatPercent}%
           moms. Tak for din booking hos {settings.companyName || "EV-Check.dk"}.
         </p>
       </div>

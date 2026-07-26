@@ -76,6 +76,12 @@ function normalizeSettings(row: any): DashboardSettings {
       ? row.service_areas_json
       : defaultSettings.serviceAreas,
     services: Array.isArray(row?.services_json) ? row.services_json : defaultSettings.services,
+    vat: {
+      percent: numberValue(row?.vat_percent, defaultSettings.vat.percent),
+      showInclusive: Boolean(
+        row?.vat_show_inclusive ?? defaultSettings.vat.showInclusive,
+      ),
+    },
     emailAutomation:
       row?.email_automation_json && typeof row.email_automation_json === "object"
         ? { ...defaultSettings.emailAutomation, ...row.email_automation_json }
@@ -191,7 +197,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       createdAt: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : "",
       customerType: row.customer_type === "business" ? "business" : "private",
       groupId: row.booking_group_id || "",
-      discountPercent: Number(row.discount_percent || 0),
+      vatPercent: Number(row.vat_percent || 25),
     }));
 
     const mappedUsers: DashboardUser[] = users.map((row) => ({
@@ -459,6 +465,10 @@ export async function saveDashboardSettings(formData: FormData) {
       .map((item) => item.trim())
       .filter(Boolean),
     services: defaultSettings.services,
+    vat: {
+      percent: numberValue(formData.get("vat_percent"), defaultSettings.vat.percent),
+      showInclusive: Boolean(formData.get("vat_show_inclusive")),
+    },
     emailAutomation: {
       customerOnCreate: Boolean(formData.get("customer_on_create")),
       customerOnApprove: Boolean(formData.get("customer_on_approve")),
@@ -472,14 +482,15 @@ export async function saveDashboardSettings(formData: FormData) {
     INSERT INTO dashboard_settings (
       settings_key, company_name, support_email, admin_notify_email, default_appointment_status,
       booking_enabled, timezone, start_hour, end_hour, slot_minutes, service_areas_json, services_json,
-      email_automation_json, updated_at
+      vat_percent, vat_show_inclusive, email_automation_json, updated_at
     )
     VALUES (
       'default', ${settings.companyName}, ${settings.supportEmail}, ${settings.adminNotifyEmail},
       ${settings.defaultAppointmentStatus}, ${settings.bookingEnabled}, ${settings.timezone},
       ${settings.startHour}, ${settings.endHour}, ${settings.slotMinutes},
       ${sql.json(settings.serviceAreas)},
-      ${sql.json(settings.services)}, ${sql.json(settings.emailAutomation)}, NOW()
+      ${sql.json(settings.services)}, ${settings.vat.percent}, ${settings.vat.showInclusive},
+      ${sql.json(settings.emailAutomation)}, NOW()
     )
     ON CONFLICT (settings_key)
     DO UPDATE SET
@@ -494,6 +505,8 @@ export async function saveDashboardSettings(formData: FormData) {
       slot_minutes = EXCLUDED.slot_minutes,
       service_areas_json = EXCLUDED.service_areas_json,
       services_json = EXCLUDED.services_json,
+      vat_percent = EXCLUDED.vat_percent,
+      vat_show_inclusive = EXCLUDED.vat_show_inclusive,
       email_automation_json = EXCLUDED.email_automation_json,
       updated_at = NOW()
   `;

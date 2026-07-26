@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import {
   ArrowRight,
   Award,
-  BadgePercent,
   BatteryCharging,
   Briefcase,
   CalendarCheck,
@@ -34,7 +33,6 @@ import { MobileNav } from "@/components/site/mobile-nav";
 import {
   brandLogoPath,
   companyCvr,
-  erhvervDiscountPercent,
   sameAsLinks,
   siteUrl,
 } from "@/lib/seo";
@@ -762,7 +760,7 @@ export function AvilooSection() {
 }
 
 const erhvervHomePoints = [
-  `${erhvervDiscountPercent}% rabat til erhverv med CVR-nummer`,
+  "Priser vises ekskl. moms til erhverv med CVR-nummer",
   "Book op til 50 biler i én bestilling",
   "Ét samlet besøg — biler testes efter hinanden",
   "Samlet faktura til virksomheden, 8 dages betalingsfrist",
@@ -784,15 +782,15 @@ export function ErhvervHomeSection() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/64 via-slate-950/5 to-transparent" />
           <p className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-white uppercase backdrop-blur">
-            <BadgePercent className="h-3.5 w-3.5" />
-            {erhvervDiscountPercent}% erhvervsrabat
+            <Receipt className="h-3.5 w-3.5" />
+            Pris ekskl. moms for erhverv
           </p>
         </div>
         <div className="self-center">
           <SectionHeading
             eyebrow="Erhverv og flåde"
             title="Batteritest af elbil til virksomheder og bilflåder"
-            description="Leasingselskaber, bilforhandlere og virksomheder med firmabiler kan booke batteritest til hele flåden online, med automatisk erhvervsrabat og samlet fakturering."
+            description="Leasingselskaber, bilforhandlere og virksomheder med firmabiler kan booke batteritest til hele flåden online, med priser ekskl. moms og samlet fakturering."
           />
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {erhvervHomePoints.map((point) => (

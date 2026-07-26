@@ -137,12 +137,15 @@ export const erhvervSeoKeywords = [
   "batteritest CVR faktura",
   "mobil batteritest virksomhed",
   "batteritest flåde Sjælland",
-  "erhvervsrabat batteritest",
 ];
 
-export const erhvervDiscountPercent = 15;
-export const erhvervServicePrice = Math.round(
-  servicePrice * (1 - erhvervDiscountPercent / 100),
+// Erhverv pricing is quoted excl. moms (standard B2B practice); moms is added
+// on top at checkout. The admin-configurable rate lives in DashboardSettings.vat
+// — this constant (standard 25% Danish moms) is only a static approximation for
+// SEO structured data, which has no access to live settings at module-eval time.
+export const erhvervServicePriceExclVat = 750;
+export const erhvervServicePriceInclVat = Math.round(
+  erhvervServicePriceExclVat * 1.25,
 );
 
 export const erhvervServiceJsonLd = {
@@ -172,14 +175,14 @@ export const erhvervServiceJsonLd = {
   ],
   offers: {
     "@type": "Offer",
-    url: `${siteUrl}/book-tid`,
-    price: erhvervServicePrice,
+    url: `${siteUrl}/erhverv/book-tid`,
+    price: erhvervServicePriceExclVat,
     priceCurrency: "DKK",
     availability: "https://schema.org/InStock",
-    description: `${servicePrice} kr. pr. bil før rabat. Erhvervskunder med CVR-nummer får ${erhvervDiscountPercent}% rabat, svarende til ${erhvervServicePrice} kr. pr. bil.`,
+    description: `${erhvervServicePriceExclVat} kr. pr. bil ekskl. moms. Moms tillægges ved booking, så totalprisen ses tydeligt før I bekræfter.`,
   },
   description:
-    "Mobil batteritest af firmabiler, leasingbiler og bilflåder med SoH, BMS-status, cellebalance, fejlkoder og PDF-rapport pr. bil. Samlet fakturering til virksomheden og 15% rabat til erhvervskunder.",
+    "Mobil batteritest af firmabiler, leasingbiler og bilflåder med SoH, BMS-status, cellebalance, fejlkoder og PDF-rapport pr. bil. Samlet fakturering til virksomheden, priser ekskl. moms.",
 };
 
 export function buildBreadcrumbJsonLd(

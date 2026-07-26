@@ -16,7 +16,10 @@ type InvoiceResult = {
   pdf: Buffer;
 };
 
-const DANISH_VAT_RATE = 0.25;
+// Falls back to the standard Danish rate for bookings made before vatPercent
+// was captured per-appointment, keeping historical invoices unchanged.
+const vatRateFor = (appointment: Appointment) =>
+  (Number(appointment.vatPercent) || 25) / 100;
 
 const invoiceId = () => `inv_${randomBytes(8).toString("hex")}`;
 
@@ -126,11 +129,10 @@ async function renderInvoicePdf(input: {
     y += 34;
   }
 
-  const amountExclVat = Math.round(
-    input.appointment.total / (1 + DANISH_VAT_RATE),
-  );
+  const vatRate = vatRateFor(input.appointment);
+  const amountExclVat = Math.round(input.appointment.total / (1 + vatRate));
   const vatAmount = input.appointment.total - amountExclVat;
-  const vatPercent = Math.round(DANISH_VAT_RATE * 100);
+  const vatPercent = Math.round(vatRate * 100);
 
   doc
     .moveTo(48, y + 10)
