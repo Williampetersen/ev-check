@@ -4,9 +4,9 @@ import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Building2,
   CalendarCheck,
   Car,
   CheckCircle2,
@@ -381,29 +381,6 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
   return (
     <section className="bg-gradient-to-b from-sky-50 via-slate-50 to-slate-50 px-4 pt-10 pb-32 sm:px-6 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-6 overflow-hidden rounded-2xl border border-sky-400/30 bg-gradient-to-br from-sky-600 via-sky-500 to-cyan-400 px-5 py-5 text-white shadow-[0_18px_50px_rgba(14,116,184,0.28)] sm:px-7 sm:py-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="hidden items-center gap-3 sm:flex">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
-                <Receipt className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-lg font-bold leading-tight sm:text-xl">
-                  Priser for erhverv vises ekskl. moms
-                </p>
-                <p className="mt-0.5 text-sm text-white/85">
-                  Moms lægges til automatisk, så I altid ser den fulde pris,
-                  før I bekræfter bookingen.
-                </p>
-              </div>
-            </div>
-            <p className="inline-flex items-center gap-2 self-start rounded-lg border border-white/30 bg-white/15 px-3 py-2 text-xs font-bold tracking-[0.1em] uppercase backdrop-blur sm:self-auto">
-              <Building2 className="h-3.5 w-3.5" />
-              CVR-nummer er et krav
-            </p>
-          </div>
-        </div>
-
         <div className="mb-8 text-center">
           <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm shadow-sky-700/20">
             <CalendarCheck className="h-5 w-5" />
@@ -414,10 +391,6 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Book batteritest til jeres flåde
           </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Tilføj op til {MAX_CARS} biler, vælg ét tidspunkt, og bekræft jeres
-            erhvervsbooking.
-          </p>
         </div>
 
         <Stepper activeStep={step} stepValid={stepValid} onStepClick={goToStep} />
@@ -639,11 +612,6 @@ function CarsStep({
   const selectedService = config.services.find((item) => item.id === serviceId);
   return (
     <Card>
-      <StepHeading
-        title="Tilføj jeres biler"
-        description={`Tilføj alle biler, der skal batteritestes. I kan tilføje op til ${MAX_CARS} biler i samme booking.`}
-      />
-
       {config.services.length > 1 ? (
         <div className="mb-5">
           <p className="mb-2 text-sm font-semibold text-slate-700">Service</p>
@@ -672,15 +640,10 @@ function CarsStep({
           </div>
         </div>
       ) : selectedService ? (
-        <div className="mb-5 flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/60 px-4 py-3">
-          <Receipt className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
-          <p className="text-sm leading-6 text-slate-700">
-            <strong className="text-slate-900">{selectedService.title}</strong>
-            {" · "}
-            {unitPriceLabel(selectedService, vatSettings)} pr. bil. Moms
-            tillægges automatisk, og I ser den fulde pris, før I bekræfter.
-          </p>
-        </div>
+        <p className="mb-5 flex items-center gap-2 text-sm font-bold text-slate-900">
+          <Receipt className="h-4 w-4 shrink-0 text-sky-700" />
+          {selectedService.title}
+        </p>
       ) : null}
 
       <div className="grid gap-3">
@@ -977,7 +940,12 @@ function DetailsStep({
           <CheckCircle2 className="h-4 w-4" />
           Oplysningerne er klar.
         </p>
-      ) : null}
+      ) : (
+        <p className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>Mangler: {missingDetails.join(", ")}.</span>
+        </p>
+      )}
 
       <StepNav
         onBack={onBack}
