@@ -186,7 +186,10 @@ const conditions = [
   "Testen åbner ikke batteripakken og påvirker hverken garanti eller bilens drift.",
 ];
 
-export const dynamic = "force-dynamic";
+// Revalidate periodically instead of on every request (force-dynamic) so the
+// page is served from cache and stays fast, while still picking up admin
+// dashboard price changes within a minute.
+export const revalidate = 60;
 
 export default async function ErhvervPage() {
   const fullConfig = await getBookingConfig();

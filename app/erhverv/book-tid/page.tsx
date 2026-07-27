@@ -20,9 +20,10 @@ export const metadata: Metadata = {
   alternates: { canonical: pageUrl },
 };
 
-// Always read live settings/services/schedule from the database instead of a
-// build-time snapshot, so admin dashboard changes show up immediately.
-export const dynamic = "force-dynamic";
+// Revalidate periodically instead of on every request (force-dynamic) so the
+// page is served from cache and stays fast, while still picking up admin
+// dashboard changes (price, schedule, services) within a minute.
+export const revalidate = 60;
 
 export default async function ErhvervBookPage() {
   const fullConfig = await getBookingConfig();

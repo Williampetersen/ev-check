@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   Building2,
   CalendarCheck,
   Car,
@@ -17,6 +18,7 @@ import {
   Receipt,
   ShieldCheck,
   Trash2,
+  X,
 } from "lucide-react";
 import type { BookingConfig, BookingService } from "@/lib/server/booking-system";
 import {
@@ -173,6 +175,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
   const [confirmation, setConfirmation] = useState<ErhvervConfirmation | null>(
     null,
   );
+  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   const selectedService = useMemo(
     () =>
@@ -258,6 +261,20 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
       slots.includes(current) ? current : "",
     );
   }, [slots]);
+
+  useEffect(() => {
+    if (!isMobileSummaryOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileSummaryOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileSummaryOpen]);
 
   const step1Valid =
     Boolean(serviceId) &&
@@ -366,7 +383,7 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 overflow-hidden rounded-2xl border border-sky-400/30 bg-gradient-to-br from-sky-600 via-sky-500 to-cyan-400 px-5 py-5 text-white shadow-[0_18px_50px_rgba(14,116,184,0.28)] sm:px-7 sm:py-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-3 sm:flex">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
                 <Receipt className="h-5 w-5" />
               </span>
@@ -505,6 +522,27 @@ export function ErhvervBookingFlow({ config }: ErhvervFlowProps) {
           />
         </div>
       </div>
+      <ErhvervMobileSummarySheet
+        open={isMobileSummaryOpen}
+        onClose={() => setIsMobileSummaryOpen(false)}
+        config={config}
+        service={selectedService}
+        vehicles={vehicles}
+        appointmentDate={appointmentDate}
+        appointmentTime={appointmentTime}
+        blockDurationMinutes={blockDurationMinutes}
+        charge={charge}
+        vatPercent={vatSettings.percent}
+        step={step}
+      />
+      <ErhvervMobileBottomBar
+        service={selectedService}
+        total={charge.gross}
+        vehicleCount={vehicles.length}
+        step={step}
+        hidden={isMobileSummaryOpen}
+        onOpen={() => setIsMobileSummaryOpen(true)}
+      />
     </section>
   );
 }
@@ -1069,7 +1107,18 @@ function ReviewStep({
   );
 }
 
-function ErhvervSummaryCard({
+type ErhvervSummaryProps = {
+  config: BookingConfig;
+  service?: BookingService;
+  vehicles: ErhvervVehicle[];
+  appointmentDate: string;
+  appointmentTime: string;
+  blockDurationMinutes: number;
+  charge: ServiceChargeBreakdown;
+  vatPercent: number;
+};
+
+function ErhvervSummaryDetails({
   config,
   service,
   vehicles,
@@ -1079,17 +1128,7 @@ function ErhvervSummaryCard({
   charge,
   vatPercent,
   className,
-}: {
-  config: BookingConfig;
-  service?: BookingService;
-  vehicles: ErhvervVehicle[];
-  appointmentDate: string;
-  appointmentTime: string;
-  blockDurationMinutes: number;
-  charge: ServiceChargeBreakdown;
-  vatPercent: number;
-  className?: string;
-}) {
+}: ErhvervSummaryProps & { className?: string }) {
   const endTime = appointmentTime
     ? minutesToTimeLabel(
         (() => {
@@ -1099,6 +1138,78 @@ function ErhvervSummaryCard({
       )
     : "";
 
+  return (
+    <div className={className}>
+      <p className="text-lg font-bold text-slate-900">
+        {service?.title || "Batteritest"}
+      </p>
+      <div className="mt-3 grid gap-2 text-sm text-slate-600">
+        <span className="flex items-center gap-2">
+          <Car className="h-4 w-4 text-sky-700" />
+          {vehicles.length} {vehicles.length === 1 ? "bil" : "biler"} · ca.{" "}
+          {blockDurationMinutes} min. i alt
+        </span>
+        <span className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-sky-700" />
+          Hos jer på Sjælland
+        </span>
+      </div>
+
+      <div className="mt-4 grid max-h-36 gap-1.5 overflow-y-auto pr-1">
+        {vehicles.map((vehicle, index) => {
+          const label = vehicleLabel(vehicle, config);
+          return (
+            <p
+              key={vehicle.id}
+              className="truncate rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600"
+            >
+              {index + 1}. {label || "Vælg bil"}
+            </p>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-3 py-2.5 text-sm">
+        {appointmentTime ? (
+          <>
+            <p className="font-semibold text-slate-900">
+              {dateLabel(appointmentDate)}
+            </p>
+            <p className="mt-0.5 text-slate-600">
+              kl. {appointmentTime}–{endTime}
+            </p>
+          </>
+        ) : (
+          <p className="font-semibold text-sky-700">Vælg dato og tid.</p>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-1.5 border-t border-slate-100 pt-4 text-sm">
+        <span className="flex items-center justify-between text-slate-500">
+          <span>Pris ekskl. moms</span>
+          <span>{formatPrice(charge.net)}</span>
+        </span>
+        <span className="flex items-center justify-between text-slate-500">
+          <span>Moms ({vatPercent}%)</span>
+          <span>+{formatPrice(charge.vat)}</span>
+        </span>
+      </div>
+      <div className="mt-2 flex items-baseline justify-between border-t border-slate-100 pt-3">
+        <span className="text-sm font-semibold text-slate-500">
+          Total inkl. moms
+        </span>
+        <span className="text-xl font-bold text-sky-700">
+          {formatPrice(charge.gross)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ErhvervSummaryCard({
+  className,
+  ...summary
+}: ErhvervSummaryProps & { className?: string }) {
   return (
     <div
       className={cn(
@@ -1112,69 +1223,123 @@ function ErhvervSummaryCard({
           Jeres erhvervsbooking
         </p>
       </div>
-      <div className="p-5 sm:p-6">
-        <p className="text-lg font-bold text-slate-900">
-          {service?.title || "Batteritest"}
-        </p>
-        <div className="mt-3 grid gap-2 text-sm text-slate-600">
-          <span className="flex items-center gap-2">
-            <Car className="h-4 w-4 text-sky-700" />
-            {vehicles.length} {vehicles.length === 1 ? "bil" : "biler"} · ca.{" "}
-            {blockDurationMinutes} min. i alt
-          </span>
-          <span className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-sky-700" />
-            Hos jer på Sjælland
-          </span>
-        </div>
+      <ErhvervSummaryDetails {...summary} className="p-5 sm:p-6" />
+    </div>
+  );
+}
 
-        <div className="mt-4 grid max-h-36 gap-1.5 overflow-y-auto pr-1">
-          {vehicles.map((vehicle, index) => {
-            const label = vehicleLabel(vehicle, config);
-            return (
-              <p
-                key={vehicle.id}
-                className="truncate rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600"
+function ErhvervMobileSummarySheet({
+  open,
+  onClose,
+  step,
+  ...summary
+}: ErhvervSummaryProps & {
+  open: boolean;
+  onClose: () => void;
+  step: ErhvervStep;
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end bg-slate-950/50 px-3 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="erhverv-mobile-booking-summary-title"
+        className="mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-white/70 bg-white shadow-[0_-22px_64px_rgba(15,23,42,0.24)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+              <CalendarCheck className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h3
+                id="erhverv-mobile-booking-summary-title"
+                className="text-lg font-bold text-slate-900"
               >
-                {index + 1}. {label || "Vælg bil"}
+                Jeres erhvervsbooking
+              </h3>
+              <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
+                Trin {step} af {steps.length}
               </p>
-            );
-          })}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Luk bookingoversigt"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
+        <div className="overflow-y-auto">
+          <ErhvervSummaryDetails {...summary} className="px-5 py-4" />
+        </div>
+        <div className="border-t border-slate-100 bg-white px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(14,116,184,0.24)] transition hover:bg-sky-600"
+          >
+            Fortsæt booking
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50/60 px-3 py-2.5 text-sm">
-          {appointmentTime ? (
-            <>
-              <p className="font-semibold text-slate-900">
-                {dateLabel(appointmentDate)}
-              </p>
-              <p className="mt-0.5 text-slate-600">
-                kl. {appointmentTime}–{endTime}
-              </p>
-            </>
-          ) : (
-            <p className="font-semibold text-sky-700">Vælg dato og tid.</p>
-          )}
+function ErhvervMobileBottomBar({
+  service,
+  total,
+  vehicleCount,
+  step,
+  hidden,
+  onOpen,
+}: {
+  service?: BookingService;
+  total: number;
+  vehicleCount: number;
+  step: ErhvervStep;
+  hidden?: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl lg:hidden",
+        hidden && "hidden",
+      )}
+    >
+      <div className="mx-auto flex max-w-xl items-center gap-3 overflow-hidden">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+          <CalendarCheck className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xl leading-none font-bold text-sky-700">
+            {formatPrice(total)}
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+            {service?.title || "Batteritest"} · {vehicleCount}{" "}
+            {vehicleCount === 1 ? "bil" : "biler"} · Trin {step} af{" "}
+            {steps.length}
+          </p>
         </div>
-
-        <div className="mt-4 grid gap-1.5 border-t border-slate-100 pt-4 text-sm">
-          <span className="flex items-center justify-between text-slate-500">
-            <span>Pris ekskl. moms</span>
-            <span>{formatPrice(charge.net)}</span>
-          </span>
-          <span className="flex items-center justify-between text-slate-500">
-            <span>Moms ({vatPercent}%)</span>
-            <span>+{formatPrice(charge.vat)}</span>
-          </span>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between border-t border-slate-100 pt-3">
-          <span className="text-sm font-semibold text-slate-500">
-            Total inkl. moms
-          </span>
-          <span className="text-xl font-bold text-sky-700">
-            {formatPrice(charge.gross)}
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-controls="erhverv-mobile-booking-summary-title"
+          className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,116,184,0.26)] transition hover:bg-sky-600"
+        >
+          Se oversigt
+        </button>
       </div>
     </div>
   );
